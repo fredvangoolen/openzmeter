@@ -1,8 +1,8 @@
 <template>
   <div id="app">
-    <div class="sidenav-overlay" :class="{ 'overlay-enabled': Expanded }" @mouseenter="Expanded=false"></div>
-    <topbar :analyzer="Analyzer" :expanded.sync="Expanded"></topbar>
-    <sidebar :analyzer.sync="Analyzer" :user.sync="User" :expanded.sync="Expanded"></sidebar>
+    <div class="sidenav-overlay" :class="{ 'overlay-enabled': Expanded }" @mouseenter="CloseBar"></div>
+    <topbar :analyzer="Analyzer" @expandmenu="ShowBar" :expanded="Expanded" :status="TransferStatus.Data"></topbar>
+    <sidebar :analyzer.sync="Analyzer" :user.sync="User" @expandmenu="ShowBar" :expanded="Expanded" :status="TransferStatus.Data"></sidebar>
     <router-view :analyzer="Analyzer" :user="User" id="contents"></router-view>
     <portal-target name="dialogs" :multiple="true"></portal-target>
   </div>
@@ -11,12 +11,23 @@
 <script>
   import Topbar from './Topbar.vue';
   import Sidebar from './Sidebar.vue';
-  import moment from 'moment';
-  import * as oZm from 'JS/openZmeter.js';
-  import Graph from 'Components/Graph.vue';
   export default {
     data: function() {
-      return { Analyzer: null, User: null, Expanded: false };
+      return { Analyzer: null, User: null, Expanded: false, CloseTimer: null, TransferStatus: this.StatusTransfer(['Events', 'Alarms']) };
+    },
+    watch: {
+      Analyzer: function() {
+        this.TransferStatus.Update(this.Analyzer);
+      }
+    },
+    methods: {
+      ShowBar: function() {
+        if(this.CloseTimer) clearTimeout(this.CloseTimer);
+        this.Expanded = true;
+      },
+      CloseBar: function() {
+        this.CloseTimer = setTimeout(() => { this.Expanded = false; }, 250);
+      }
     },
     components: { Topbar,  Sidebar }
   }
@@ -34,7 +45,7 @@
     bottom: 0px;
     right: 0px;
   }
-  @media (min-width: 640px) {
+  @media (min-width: 840px) {
     #contents {
       top: 56px;
     }
@@ -64,5 +75,4 @@
       top: 56px;
     }
   }
-
 </style>

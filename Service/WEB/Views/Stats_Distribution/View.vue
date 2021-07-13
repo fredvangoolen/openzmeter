@@ -14,7 +14,7 @@
             </div>
           </div>
           <div class="panel-body">
-            <spinner v-if="ShowSpinner"></spinner>
+            <spinner v-if="ShowSpinner" :progress="Progress"></spinner>
             <calendar :data="Data" :analyzer="analyzer" :year="Year" :range.sync="Range" @update:export="CalendarData=$event"></calendar>
           </div>
         </div>
@@ -43,23 +43,39 @@
   export default {
     props: { analyzer: { type: Object } },
     data: function() {
-      return { Range: [0, 1], Year: null, Data: null, ShowSpinner: true, CalendarData: [] };
+      return { Range: [0, 1], Year: null, Data: null, ShowSpinner: true, Progress: 0, CalendarData: [] };
     },
     watch: {
-      Year: function(val) {
-        this.ShowSpinner = true;
-        this.Data = {};
-        var To = moment.tz(this.analyzer.TimeZone).year(val).endOf('year').valueOf();
-        var From = moment.tz(this.analyzer.TimeZone).year(val).startOf('year').valueOf();
-        this.$http.post('getPrices', { From: From, To: To, Aggreg: '1H', Series: ['ACTIVE_POWER', 'PERIOD_NAME'], Analyzer: this.analyzer.Analyzer }).then(
-          (result) => {
-            this.ShowSpinner = false;
-            this.Data = Object.seal(result.data);
-          }
-        );
-      }
+      Year: function() { this.Update(); },
+      analyzer: function() { this.Update(); }
     },
     methods: {
+      Update: function() {
+        this.ShowSpinner = true;
+        this.Progress = 0;
+        this.Data = null;
+        var Count = 0;
+        var Blocks = [];
+        if((this.Year == null) || (this.analyzer == null)) return;
+        var GetMonth = (month) => {
+          var To = moment.tz(this.analyzer.TimeZone).year(this.Year).month(month).endOf('month').valueOf();
+          var From = moment.tz(this.analyzer.TimeZone).year(this.Year).month(month).startOf('month').valueOf();
+          this.Post('getCosts', { From: From, To: To, Series: ['Active_Energy', 'Period'], Analyzer: this.analyzer.Analyzer, Group: 0 }).then(
+            (result) => {
+              Blocks[month] = (month == 0) ? result : result.slice(1);
+              Count++;
+              this.Progress = (Count / 12.0) * 100.0;
+              if(Count == 12) {
+                var Data = [];
+                for(var n = 0; n < Count; n++) Data = Data.concat(Blocks[n]);
+                this.Data = Object.seal(Data);
+                this.ShowSpinner = false;
+              }
+            }
+          );
+        };
+        for(var month = 0; month < 12; month++) GetMonth(month);
+      },
       Export: function() {
         return this.CalendarData;
       }

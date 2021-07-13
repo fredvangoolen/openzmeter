@@ -55,20 +55,21 @@
       return { };
     },
     updated: function() {
-      this.$emit('update:height', this.$el.clientHeight);
+      this.$emit('update:height', this.$el.clientHeight - 14);
     },
     computed: {
       Min: function() {
         var Val = +Infinity;
         var Min = { Value: [], Time: 0, Count: 0 };
-        if(this.dataGraph == null) return Min;
-        for(var x in this.dataGraph.Sampletime) {
-          for(var p in this.dataGraph.Current[x]) {
-            if(this.dataGraph.Current[x][p] == null) continue;
-            if(this.dataGraph.Current[x][p] < Val) {
-              Val = this.dataGraph.Current[x][p];
-              Min = { Value: this.dataGraph.Current[x], Time: this.dataGraph.Sampletime[x], Count: 0 };
-            } else if(this.dataGraph.Current[x][p] == Val) {
+        if((this.dataGraph == null) || (this.dataGraph.Rows.length == 0)) return Min;
+        var TimeCol = this.dataGraph.Headers.indexOf('Time');
+        var ValueCol = this.dataGraph.Headers.indexOf('Current');
+        for(var x = 0; x < this.dataGraph.Rows.length; x++) {
+          for(var p = 0; p < this.dataGraph.Rows[x][ValueCol].length; p++) {
+            if(this.dataGraph.Rows[x][ValueCol][p] < Val) {
+              Val = this.dataGraph.Rows[x][ValueCol][p];
+              Min = { Value: this.dataGraph.Rows[x][ValueCol], Time: this.dataGraph.Rows[x][TimeCol], Count: 0 };
+            } else if(this.dataGraph.Rows[x][ValueCol][p] == Val) {
               Min.Count++;
             }
           }
@@ -78,14 +79,15 @@
       Max: function() {
         var Val = -Infinity;
         var Max = { Value: [], Time: 0, Count: 0 };
-        if(this.dataGraph == null) return Max;
-        for(var x in this.dataGraph.Sampletime) {
-          for(var p in this.dataGraph.Current[x]) {
-            if(this.dataGraph.Current[x][p] == null) continue;
-            if(this.dataGraph.Current[x][p] > Val) {
-              Val = this.dataGraph.Current[x][p];
-              Max = { Value: this.dataGraph.Current[x], Time: this.dataGraph.Sampletime[x], Count: 0 };
-            } else if(this.dataGraph.Current[x][p] == Val) {
+        if((this.dataGraph == null) || (this.dataGraph.Rows.length == 0)) return Max;
+        var TimeCol = this.dataGraph.Headers.indexOf('Time');
+        var ValueCol = this.dataGraph.Headers.indexOf('Current');
+        for(var x = 0; x < this.dataGraph.Rows.length; x++) {
+          for(var p = 0; p < this.dataGraph.Rows[x][ValueCol].length; p++) {
+            if(this.dataGraph.Rows[x][ValueCol][p] > Val) {
+              Val = this.dataGraph.Rows[x][ValueCol][p];
+              Max = { Value: this.dataGraph.Rows[x][ValueCol], Time: this.dataGraph.Rows[x][TimeCol], Count: 0 };
+            } else if(this.dataGraph.Rows[x][ValueCol][p] == Val) {
               Max.Count++;
             }
           }
@@ -95,7 +97,7 @@
     },
     methods: {
       FormatHTML: function(val) {
-        var Units = oZm.GetBestUnits(val);
+        var Units = this.BestUnits(val);
         return this.Round(oZm.ScaleToUnits(val, Units), 2, true) + ' ' + Units + 'A';
       },
       FormatRMS: function(val) {
@@ -105,7 +107,7 @@
       },
       FormatPhases: function(val) {
         var Return = [];
-        for(var n in val.Current.length) Return.push(this.FormatHTML(val.Current[n]));
+        for(var n in val.Current) Return.push(this.FormatHTML(val.Current[n]));
         return Return;
       }
     }

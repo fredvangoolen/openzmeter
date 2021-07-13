@@ -1,0 +1,62 @@
+{
+  "components": {
+    "schemas": {
+      "CostTemplate": {
+        "type": "array",
+        "items": {
+          "type": "array",
+          "items": { "type": "string" },
+          "example": [
+            [ "Time", "Active_Power", "Active_Energy", "Reactive_Power", "Reactive_Energy", "Cost", "Power_Cost", "Energy_Cost", "Period", "Color", "Contracted", "Bill" ],
+            [ 1600000000000, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1, "#000", 4400.0, false ]
+          ]
+        }
+      }
+    }
+  },
+  "paths": {
+    "/getCosts": {
+      "post": {
+        "summary": "Get analyzer calculated cost for each time period",
+        "tags": [ "Analyzers" ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "example": {
+                  "Analyzer": "VIRTUAL_3PN",
+                  "From": 1590000000000,
+                  "To": 1600000000000,
+                  "Group": 0,
+                  "Series": []
+                },
+                "properties": {
+                  "Analyzer": { "type": "string" },
+                  "From": { "type": "number" },
+                  "To": { "type": "number" },
+                  "Group": { "type": "number" },
+                  "Series": { "type": "array", "items": { "type": "string", "enum": [ "Active_Power", "Active_Energy", "Reactive_Power", "Reactive_Energy", "Cost", "Power_Cost", "Energy_Cost", "Period", "Color", "Contracted", "Bill" ] } }
+                },
+                "required": [ "Analyzer", "From", "To", "Group", "Series" ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The method executed without error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/CostTemplate" }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/400Response" },
+          "401": { "$ref": "#/components/responses/401Response" },
+          "500": { "$ref": "#/components/responses/500Response" }
+        }
+      }
+    }
+  }
+}

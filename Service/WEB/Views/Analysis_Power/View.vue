@@ -9,6 +9,7 @@
               <toolbar-aggregation storage="AggregationEnergy" :options="['15M', '1H']" v-model="Aggreg"></toolbar-aggregation>
               <toolbar-period storage="Period" v-model="Range" :analyzer="analyzer"></toolbar-period>
               <div class="btn-group">
+                <button type="button" class="btn btn-default btn-xs" :class="{ active: ShowContracted }" @click="ShowContracted=!ShowContracted" title="Scale includes contracted power limit"><img :src="require('Imgs/tag_blue.png')"></button>
                 <button-export file="Power" :rows="Export"></button-export>
                 <button-expand v-model="ExpandedActive"></button-expand>
               </div>
@@ -17,17 +18,17 @@
           <div class="panel-body">
             <spinner v-if="TransferGraph.Data==null"></spinner>
             <div class="row">
-              <counters class="col-md-6 col-lg-4 col-xl-3" serie="ACTIVE_POWER" :analyzer="analyzer" :data3S="Transfer3S.LastData" :data1M="Transfer1M.LastData" :dataGraph="TransferGraph.Data" :height.sync="ActiveHeight"></counters>
+              <counters class="col-md-6 col-lg-4 col-xl-3" serie="Active_Power" :analyzer="analyzer" :data3S="Transfer3S.LastData" :data1M="Transfer1M.LastData" :dataGraph="TransferGraph.Data" :height.sync="ActiveHeight"></counters>
               <div class="col-md-6 col-lg-8 col-xl-9">
                 <portal to="fs-body" :disabled="!ExpandedActive" class="panel-body">
-                  <power serie="Active_Power" :analyzer="analyzer" :data="TransferGraph.Data" :periods="TransferGraph.Periods" :height="ExpandedActive?DialogHeight:ActiveHeight" @range="Range=$event"></power>
+                  <power serie="Active_Power" :analyzer="analyzer" :data="TransferGraph.Data" :showContracted="ShowContracted" :height="ExpandedActive?DialogHeight:ActiveHeight" @range="Range=$event"></power>
                 </portal>
               </div>
             </div>
           </div>
         </div>
       </div>
-      <div class="col-lg-12">
+      <div class="col-lg-12" v-if="analyzer.NominalFrequency!=0">
         <div class="panel panel-reactive-power">
           <div class="panel-heading">
             <div class="header-text">Fund. Reactive Power</div>
@@ -41,10 +42,34 @@
           <div class="panel-body">
             <spinner v-if="TransferGraph.Data==null"></spinner>
             <div class="row">
-              <counters class="col-md-6 col-lg-4 col-xl-3" serie="REACTIVE_POWER" :analyzer="analyzer" :data3S="Transfer3S.LastData" :data1M="Transfer1M.LastData" :dataGraph="TransferGraph.Data" :height.sync="ReactiveHeight"></counters>
+              <counters class="col-md-6 col-lg-4 col-xl-3" serie="Reactive_Power" :analyzer="analyzer" :data3S="Transfer3S.LastData" :data1M="Transfer1M.LastData" :dataGraph="TransferGraph.Data" :height.sync="ReactiveHeight"></counters>
               <div class="col-md-6 col-lg-8 col-xl-9">
                 <portal to="fs-body" :disabled="!ExpandedReactive" class="panel-body">
-                  <power serie="Reactive_Power" :analyzer="analyzer" :data="TransferGraph.Data" :periods="TransferGraph.Periods" :height="ExpandedReactive?DialogHeight:ReactiveHeight" :range.sync="Range"></power>
+                  <power serie="Reactive_Power" :analyzer="analyzer" :data="TransferGraph.Data" :height="ExpandedReactive?DialogHeight:ReactiveHeight" @range="Range=$event"></power>
+                </portal>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-lg-12" v-if="analyzer.NominalFrequency!=0">
+        <div class="panel panel-reactive-power">
+          <div class="panel-heading">
+            <div class="header-text">Apparent Power</div>
+            <portal to="fs-toolbar" :disabled="!ExpandedApparent" class="header-buttons">
+              <div class="btn-group">
+                <button-export file="Power" :rows="Export"></button-export>
+                <button-expand v-model="ExpandedApparent"></button-expand>
+              </div>
+            </portal>
+          </div>
+          <div class="panel-body">
+            <spinner v-if="TransferGraph.Data==null"></spinner>
+            <div class="row">
+              <counters class="col-md-6 col-lg-4 col-xl-3" serie="Apparent_Power" :analyzer="analyzer" :data3S="Transfer3S.LastData" :data1M="Transfer1M.LastData" :dataGraph="TransferGraph.Data" :height.sync="ReactiveHeight"></counters>
+              <div class="col-md-6 col-lg-8 col-xl-9">
+                <portal to="fs-body" :disabled="!ExpandedApparent" class="panel-body">
+                  <power serie="Apparent_Power" :analyzer="analyzer" :data="TransferGraph.Data" :height="ExpandedApparent?DialogHeight:AppaerentHeight" @range="Range=$event"></power>
                 </portal>
               </div>
             </div>
@@ -52,9 +77,11 @@
         </div>
       </div>
       <div class="col-lg-12">
-        <detail-tabs :tabs="['Waveform', 'Harmonics', 'Evolution', 'Distribution', 'Parameters', 'Lissajou']" storage="PowerDetailTab" v-model="ActiveTab"></detail-tabs>
+        <detail-tabs v-if="analyzer.NominalFrequency!=0" :tabs="['Waveform', 'Harmonics', /*'GA',*/ 'Evolution', /*'Distribution',*/ 'Parameters', 'Lissajou']" storage="Power.Detail.Tab.AC" v-model="ActiveTab"></detail-tabs>
+        <detail-tabs v-if="analyzer.NominalFrequency==0" :tabs="['Waveform']" storage="Power.Details.Tabs.DC" v-model="ActiveTab"></detail-tabs>
         <waveform v-if="ActiveTab=='Waveform'" :data="TransferNow.Data" :analyzer="analyzer" :paused.sync="Paused"></waveform>
         <harmonics v-if="ActiveTab=='Harmonics'" :data="TransferNow.Data" :analyzer="analyzer" :paused.sync="Paused"></harmonics>
+        <ga v-if="ActiveTab=='GA'" :data="TransferNow.Data" :analyzer="analyzer" :paused.sync="Paused"></ga>
         <evolution v-if="ActiveTab=='Evolution'" :data="TransferCubism.Data" :analyzer="analyzer"></evolution>
         <distribution v-if="ActiveTab=='Distribution'" :analyzer="analyzer"></distribution>
         <parameters v-if="ActiveTab=='Parameters'" :data="TransferCubism.Data" :dataNow="TransferNow.Data" :analyzer="analyzer" :paused.sync="Paused"></parameters>
@@ -63,6 +90,7 @@
     </div>
     <dlg-fs v-if="ExpandedActive" title="Active Power" :height.sync="DialogHeight"></dlg-fs>
     <dlg-fs v-if="ExpandedReactive" title="Reactive Power" :height.sync="DialogHeight"></dlg-fs>
+    <dlg-fs v-if="ExpandedApparent" title="Apparent Power" :height.sync="DialogHeight"></dlg-fs>
   </div>
   <div v-else-if="analyzer == null">
     <div class="alert alert-danger text-center">
@@ -77,24 +105,25 @@
   import Parameters from './Parameters.vue';
   import Waveform from './Waveform.vue';
   import Harmonics from './Harmonics.vue';
+//  import Ga from './GA.vue';
   import Evolution from './Evolution.vue';
-  import Distribution from './Distribution.vue';
+//  import Distribution from './Distribution.vue';
   import Lissajou from './Lissajou.vue';
   export default {
     props: { analyzer: { type: Object } },
     data: function() {
-      return { ActiveTab: null, Aggreg: null, Range: null, ActiveHeight: 300, ReactiveHeight: 300, ExpandedActive: false, ExpandedReactive: false, DialogHeight: 300, Paused: false,
-               TransferNow: this.CreateSeriesTransfer(this, ['VOLTAGE_SAMPLES', 'CURRENT_SAMPLES', 'POWER_HARMONICS', 'CURRENT', 'ACTIVE_POWER', 'REACTIVE_POWER', 'APPARENT_POWER', 'POWER_FACTOR', 'PHI']),
-               Transfer3S: this.CreateSeriesTransfer(this, ['ACTIVE_POWER', 'REACTIVE_POWER']),
-               Transfer1M: this.CreateSeriesTransfer(this, ['ACTIVE_POWER', 'REACTIVE_POWER']),
-               TransferGraph: this.CreateSeriesTransfer(this, ['ACTIVE_POWER', 'REACTIVE_POWER', 'PERIOD_POWER', 'PERIOD_NAME', 'PERIOD_COLOR', 'BILLS']),
-               TransferCubism: this.CreateSeriesTransfer(this, ['POWER_HARMONICS', 'ACTIVE_POWER', 'REACTIVE_POWER', 'VOLTAGE', 'CURRENT', 'POWER_FACTOR', 'PHI'])
+      return { ActiveTab: null, Aggreg: null, Range: null, ActiveHeight: 300, ReactiveHeight: 300, ExpandedActive: false, ExpandedReactive: false, DialogHeight: 300, Paused: false, ShowContracted: true,
+               ExpandedApparent: false, AppaerentHeight: 300,
+               TransferNow: this.NowTransfer(['Frequency', 'Voltage_Samples', 'Current_Samples', 'Power_Harmonics', 'Current', 'Active_Power', 'Reactive_Power', 'Apparent_Power', 'Power_Factor', 'Phi']),
+               Transfer3S: this.SeriesTransfer(['Active_Power', 'Reactive_Power']),
+               Transfer1M: this.SeriesTransfer(['Active_Power', 'Reactive_Power']),
+               TransferGraph: this.PriceTransfer(['Active_Power', 'Reactive_Power', 'Contracted', 'Period', 'Color', 'Bill']),
+               TransferCubism: this.SeriesTransfer(['Power_Harmonics', 'Active_Power', 'Reactive_Power', 'Apparent_Power', 'Power_Factor', 'Phi'])
       };
     },
     created: function() {
-      this.TransferGraph.AggregFail = () => { this.Aggreg = null };
       this.TransferGraph.Update(this.analyzer, this.Aggreg, this.Range);
-      this.TransferNow.UpdateNow(this.analyzer);
+      this.TransferNow.Update(this.analyzer);
       this.TransferCubism.Update(this.analyzer, '1M', 'LastDay');
       this.Transfer1M.Update(this.analyzer, '1M', 'LastSamples');
       this.Transfer3S.Update(this.analyzer, '3S', 'LastSamples');
@@ -108,36 +137,41 @@
     },
     watch: {
       analyzer: function() {
-        this.TransferGraph.UpdatePrices(this.analyzer, this.Aggreg, this.Range);
-        this.TransferNow.UpdateNow(this.analyzer);
+        this.TransferGraph.Update(this.analyzer, this.Aggreg, this.Range);
+        this.TransferNow.Update(this.analyzer);
         this.TransferCubism.Update(this.analyzer, '1M', 'LastDay');
         this.Transfer1M.Update(this.analyzer, '1M', 'LastSamples');
         this.Transfer3S.Update(this.analyzer, '3S', 'LastSamples');
       },
       Aggreg: function() {
-        this.TransferGraph.UpdatePrices(this.analyzer, this.Aggreg, this.Range);
+        this.TransferGraph.Update(this.analyzer, this.Aggreg, this.Range);
       },
       Range: function(val, prev) {
-        if(prev != null) this.TransferGraph.UpdatePrices(this.analyzer, this.Aggreg, this.Range);
+        if(prev != null) this.TransferGraph.Update(this.analyzer, this.Aggreg, this.Range);
       },
       Paused: function() {
         if(this.Paused == true) {
           this.TransferNow.Destroy();
         } else {
-          this.TransferNow.UpdateNow(this.analyzer);
+          this.TransferNow.Update(this.analyzer);
         }
       }
     },
     methods: {
       Export: function() {
-        var Data = [['Time', 'Period', 'Contracted', 'Active power', 'Reactive power']];
-        if(this.TransferGraph.Data != null) {
-          for(var n in this.TransferGraph.Data.Sampletime) Data.push([this.TransferGraph.Data.Sampletime[n], this.TransferGraph.Data.Period_Name[n], this.Round(this.TransferGraph.Data.Period_Power[n], 3), this.Round(this.TransferGraph.Data.Active_Power[n], 3), this.Round(this.TransferGraph.Data.Reactive_Power[n], 3)]);
+        if(this.TransferGraph.Data == null) return [];
+        var Data = [['Time', 'Active power', 'Reactive power', 'Apparent power']];
+        var TimeCol = this.TransferGraph.Data.Headers.indexOf('Time');
+        var ActiveCol = this.TransferGraph.Data.Headers.indexOf("Active_Power");
+        var ReactiveCol = this.TransferGraph.Data.Headers.indexOf("Reactive_Power");
+        for(var i = 0; i < this.TransferGraph.Data.Rows.length; i++) {
+          if(this.TransferGraph.Data.Rows[i][ActiveCol] == null) continue;
+          Data.push([this.analyzer.FormatDateTime(this.TransferGraph.Data.Rows[i][TimeCol]), this.Round(this.TransferGraph.Data.Rows[i][ActiveCol], 3), this.Round(this.TransferGraph.Data.Rows[i][ReactiveCol], 3), this.Round(Math.sqrt(Math.pow(this.TransferGraph.Data.Rows[i][ReactiveCol], 2.0) + Math.pow(this.TransferGraph.Data.Rows[i][ActiveCol], 2.0)), 3)]);
         }
         return Object.seal(Data);
       }
     },
-    components: { Power, Counters, Distribution, Waveform, Harmonics, Evolution, Parameters, Lissajou }
+    components: { Power, Counters, /*Distribution, */Waveform, Harmonics, /*Ga,*/ Evolution, Parameters, Lissajou }
   }
 </script>
 

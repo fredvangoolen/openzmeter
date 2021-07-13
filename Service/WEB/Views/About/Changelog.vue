@@ -16,7 +16,7 @@
    mounted: function() {
      this.$http.get('Changelog.md').then(
        (result) => {
-         this.Content = marked(result.data, { sanitize: true });
+         this.Content = marked(result.data, { });
          this.ShowSpinner = false;
        },
        (fail) => { }
@@ -32,5 +32,9 @@
   }
   .panel-body >>> p {
     font-size: 110%;
+  }
+  .panel-other {
+    border-top-left-radius: 0px;
+    border-top-right-radius: 0px;
   }
 </style>

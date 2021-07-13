@@ -1,0 +1,62 @@
+{
+    "components": {
+      "schemas": {
+        "SeriesTemplate": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "items": { "type": "string" },
+            "example": [
+              [ "Time", "Voltage" ],
+              [ 1600000000000, [230.0, 230.0, 230.0] ]
+            ]
+          }
+        }
+      }
+    },
+    "paths": {
+      "/getSeries": {
+        "post": {
+          "summary": "Get analyzer calculated series in a date range. Not all series are allowed for all aggregations",
+          "tags": [ "Analyzers" ],
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "Analyzer": "VIRTUAL_3PN",
+                    "From": 1590000000000,
+                    "To": 1600000000000,
+                    "Aggreg": "3S",
+                    "Series": ["Voltage"]
+                  },
+                  "properties": {
+                    "Analyzer": { "type": "string" },
+                    "From": { "type": "number" },
+                    "To": { "type": "number" },
+                    "Aggreg": { "type": "string", "enum": [ "200MS", "3S", "1M", "10M", "15M", "1H" ] },
+                    "Series": { "type": "array", "items": { "type": "string", "enum": [ "Frequency", "Unbalance", "Flag", "Voltage", "Current", "Active_Power", "Active_Energy", "Reactive_Power", "Reactive_Energy", "Apparent_Power", "Power_Factor", "Voltage_THD", "Current_THD", "Phi", "Voltage_Harmonics", "Voltage_Harmonics_Complex", "Current_Harmonics", "Current_Harmonics_Complex", "Power_Harmonics", "Voltage_Stats", "Frequency_Stats", "THD_Stats", "Harmonics_Stats", "Unbalance_Stats" ] } }
+                  },
+                  "required": [ "Analyzer", "From", "To", "Aggreg", "Series" ]
+                }
+              }
+            }
+          },
+          "responses": {
+            "200": {
+              "description": "The method executed without error",
+              "content": {
+                "application/json": {
+                  "schema": { "$ref": "#/components/schemas/SeriesTemplate" }
+                }
+              }
+            },
+            "400": { "$ref": "#/components/responses/400Response" },
+            "401": { "$ref": "#/components/responses/401Response" },
+            "500": { "$ref": "#/components/responses/500Response" }
+          }
+        }
+      }
+    }
+  }

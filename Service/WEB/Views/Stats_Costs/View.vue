@@ -6,6 +6,9 @@
           <div class="panel-heading">
             <span class="header-text">Energy costs</span>
             <div class="header-buttons clearfix">
+              <div class="btn-group">
+                <option-picker v-model="Group" :options="[{name: 'Contracted', value: 0}, {name: 'Compare group 1', value: 1}, {name: 'Compare group 2', value: 2}, {name: 'Compare group 3', value: 3}, {name: 'Compare group 4', value: 4}, {name: 'Compare group 5', value: 5}, {name: 'Compare group 6', value: 6}, {name: 'Compare group 7', value: 7}, {name: 'Compare group 8', value: 8}, {name: 'Compare group 9', value: 9}, {name: 'Compare group 10', value: 10}]"></option-picker>
+              </div>
               <toolbar-years :analyzer="analyzer" v-model="Year" aggreg="1H" storage="StatsYear"></toolbar-years>
               <div class="btn-group">
                 <button-export file="Cost" :rows="Export"></button-export>
@@ -15,9 +18,16 @@
           <div class="panel-body">
             <spinner v-if="Bills==null"></spinner>
             <summary-graph :data="Bills" :analyzer="analyzer"></summary-graph>
-            <div class="alert alert-warning text-center" style="margin-bottom: 5px; padding: 5px" v-if="Bills!=null&&Bills.length==0">No bills in selected year. No one generated yet or no rate is assigned for required period.</div>
-            <bill v-for="(bill, idx) in Bills" :bill="bill" :currency="Currency" :key="idx"></bill>
           </div>
+        </div>
+      </div>
+      <div class="col-lg-12" v-if="Bills!=null&&Bills.length==0">
+        <div class="alert alert-warning text-center" style="margin-bottom: 5px; padding: 5px">No bills in selected year. No one generated yet or no rate is assigned for required period.</div>
+      </div>
+      <div class="col-lg-12" v-if="Bills!=null&&Bills.length>0">
+        <detail-tabs :tabs="BillNames" v-model="Active"></detail-tabs>
+        <div v-for="(bill, idx) in Bills" :key="idx">
+          <bill :analyzer="analyzer" :bill="bill" :group="Group" v-if="BillNames[idx]==Active"></bill>
         </div>
       </div>
     </div>
@@ -36,22 +46,37 @@
   export default {
     props: { analyzer: Object },
     data: function() {
-      return { Year: null, Bills: null, Currency: '€' };
+      return { Year: null, Bills: null, Active: null, Group: 0 };
+    },
+    computed: {
+      BillNames: function() {
+        var Names = [];
+        for(var n in this.Bills) Names.push(moment(this.Bills[n].To).tz(this.analyzer.TimeZone).format('DD-MMM'));
+        return Names;
+      }
     },
     watch: {
+      analyzer: function() {
+        this.GetYear();
+      },
+      Group: function() {
+        this.GetYear();
+      },
       Year: function(val) {
-        this.Bills = null;
-        var To   = moment().tz(this.analyzer.TimeZone).year(val).endOf('year').valueOf();
-        var From = moment().tz(this.analyzer.TimeZone).year(val).startOf('year').valueOf();
-        this.$http.post('getPrices', { From: From, To: To, Analyzer: this.analyzer.Analyzer, Aggreg: '1H', Series: ['BILLS'] }).then(
-          (result) => {
-            this.Bills = result.data.Bills.filter(function(value) { return value.Complete === true; });
-          },
-          (fail) => {}
-        );
+        this.GetYear();
       }
     },
     methods: {
+      GetYear: function() {
+        this.Bills = null;
+        if((this.analyzer == null) || (this.Group == null) || (this.Year == null)) return;
+        var To   = moment().tz(this.analyzer.TimeZone).year(this.Year).endOf('year').valueOf();
+        var From = moment().tz(this.analyzer.TimeZone).year(this.Year).startOf('year').valueOf();
+        this.Post('getBills', { From: From, To: To, Analyzer: this.analyzer.Analyzer, Group: this.Group }).then(
+          (result) => { this.Bills = result; },
+          (fail) => { }
+        );
+      },
       Export: function() {
         var Data = [];
 //        for(var i = 0; i < this.$refs.bills.length; i++) {

@@ -18,83 +18,89 @@
 #include <string.h>
 #include "Analyzer.h"
 #include "Tools.h"
+#include "LogFile.h"
 //----------------------------------------------------------------------------------------------------------------------
-Analyzer::Analyzer(const string &id) : Serial(id) {
-  pName     = "Unnamed analyzer";
-  pLastSave = 0;
+constexpr float   Analyzer::FrequencyRanges[];
+const     uint8_t Analyzer::FrequencyRangesLen;
+constexpr float   Analyzer::VoltageRanges[];
+const     uint8_t Analyzer::VoltageRangesLen;
+constexpr float   Analyzer::THDRanges[];
+const     uint8_t Analyzer::THDRangesLen;
+constexpr float   Analyzer::HarmonicsAllowed[];
+const     uint8_t Analyzer::HarmonicsAllowedLen;
+constexpr float   Analyzer::UnbalanceRanges[];
+const     uint8_t Analyzer::UnbalanceRangesLen;
+//----------------------------------------------------------------------------------------------------------------------
+Analyzer::Analyzer(const string &id, const AnalyzerMode mode, const string &user) : pSerial(id), pOwner(user), pMode(mode) {
+  LogFile::Debug("Starting Analyzer...");
+  pMembersLocks = PTHREAD_RWLOCK_INITIALIZER;
+  pName         = "Unnamed analyzer";
+  pState        = UNCONFIGURED;
+  LogFile::Debug("Analyzer started");
 }
 Analyzer::~Analyzer() {
 }
-json Analyzer::GetJSONDescriptor() {
-  json Response = json::object();
-  Response["Analyzer"] = Serial;
-  pMembersLocks.ReadLock();
-  Response["Name"] = pName;
-  Response["Online"] = ((Tools::GetTime() - pLastSave) < 20000);
-  pMembersLocks.Unlock();
-  return Response;
+string Analyzer::Serial() {
+  return pSerial;
 }
-string Analyzer::GetName() {
-  pMembersLocks.ReadLock();
+string Analyzer::Owner() {
+  return pOwner;
+}
+string Analyzer::Name() {
+  pthread_rwlock_rdlock(&pMembersLocks);
   string Name = pName;
-  pMembersLocks.Unlock();
+  pthread_rwlock_unlock(&pMembersLocks);
   return Name;
 }
-void Analyzer::SetName(const string &name) {
-  pMembersLocks.WriteLock();
+void Analyzer::Name(const string &name) {
+  pthread_rwlock_wrlock(&pMembersLocks);
   pName = name;
-  pMembersLocks.Unlock();
+  pthread_rwlock_unlock(&pMembersLocks);
 }
-void Analyzer::SetOnline() {
-  pMembersLocks.WriteLock();
-  pLastSave = Tools::GetTime();
-  pMembersLocks.Unlock();
+void Analyzer::State(const Analyzer::AnalyzerState state) {
+  pthread_rwlock_wrlock(&pMembersLocks);
+  pState    = state;
+  pLastTime = Tools::GetTime64();
+  pthread_rwlock_unlock(&pMembersLocks);
 }
-bool Analyzer::IsOnline() {
-  pMembersLocks.ReadLock();
-  bool Online = ((Tools::GetTime() - pLastSave) < 20000);
-  pMembersLocks.Unlock();
-  return Online;
+Analyzer::AnalyzerState Analyzer::State() {
+  uint64_t Now = Tools::GetTime64() - 10000;
+  pthread_rwlock_rdlock(&pMembersLocks);
+  AnalyzerState State = pState;
+  if((State != UNCONFIGURED) && (pLastTime < Now)) State = OFFLINE;
+  pthread_rwlock_unlock(&pMembersLocks);
+  return State;
 }
-bool Analyzer::CheckRights(const string &user, const AnalyzerRights neededAccess) {
-  if(user == "admin") return true;
-  Database DB;
-  string Permision = (neededAccess == READ) ? "read" : (neededAccess == WRITE) ? "write" : "config";
-  DB.ExecSentenceAsyncResult("SELECT " + Permision + " AS result FROM permissions WHERE username = " + DB.Bind(user) + " AND serial = " + DB.Bind(Serial));
-  bool Result = ((DB.FecthRow() == true) && (DB.ResultString("result") == "t"));
-  return Result;
+uint8_t Analyzer::VoltageChannels(const AnalyzerMode mode) {
+  if(mode == Analyzer::PHASE1)  return 1;
+  if(mode == Analyzer::PHASE2)  return 2;
+  if(mode == Analyzer::PHASE2N) return 2;
+  if(mode == Analyzer::PHASE3)  return 3;
+  if(mode == Analyzer::PHASE3N) return 3;
+  return 0;
 }
-void Analyzer::GetPermissions(const json &params, Response &response) {
-  if(CheckRights(params["UserName"], CONFIG) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
-  Database DB;
-  DB.ExecSentenceAsyncResult("SELECT COALESCE(to_json(array_agg(json_build_object('User', username, 'Read', read, 'Write', write, 'Configure', config))), '[]') AS result FROM permissions WHERE serial = " + DB.Bind(Serial));
-  if(DB.FecthRow() == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_INTERNAL_SERVER_ERROR);
-  HTTPServer::FillResponse(response, DB.ResultString("result"), "application/json", HTTP_OK);
+uint8_t Analyzer::CurrentChannels(const AnalyzerMode mode) {
+  if(mode == Analyzer::PHASE1)  return 1;
+  if(mode == Analyzer::PHASE2)  return 2;
+  if(mode == Analyzer::PHASE2N) return 3;
+  if(mode == Analyzer::PHASE3)  return 3;
+  if(mode == Analyzer::PHASE3N) return 4;
+  return 0;
 }
-void Analyzer::AddPermission(const json &params, Response &response) {
-  if(CheckRights(params["UserName"], CONFIG) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
-  Database DB;
-  string User   = params["User"];
-  bool   Read   = params["Read"];
-  bool   Write  = params["Write"];
-  bool   Config = params["Configure"];
-  bool   Result = DB.ExecSentenceNoResult("INSERT INTO permissions(username, serial, read, write, config) VALUES(" + DB.Bind(User) + ", " + DB.Bind(Serial) + ", " + DB.Bind(Read) + ", " + DB.Bind(Write) + ", " + DB.Bind(Config) + ")");
-  HTTPServer::FillResponse(response, "", "application/json", (Result == true) ? HTTP_OK : HTTP_INTERNAL_SERVER_ERROR);
+string Analyzer::ModeToString(const AnalyzerMode mode) {
+  if(mode == PHASE1)  return "1PHASE";
+  if(mode == PHASE2)  return "2PHASE";
+  if(mode == PHASE2N) return "2PHASE+N";
+  if(mode == PHASE3)  return "3PHASE";
+  if(mode == PHASE3N) return "3PHASE+N";
+  return "";
 }
-void Analyzer::SetPermission(const json &params, Response &response) {
-  if(CheckRights(params["UserName"], CONFIG) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
-  Database DB;
-  string User   = params["User"];
-  bool   Read   = params["Read"];
-  bool   Write  = params["Write"];
-  bool   Config = params["Configure"];
-  bool   Result = DB.ExecSentenceNoResult("UPDATE permissions SET read = " + DB.Bind(Read) + ", write = " + DB.Bind(Write) + ", config = " + DB.Bind(Config) + " WHERE username = " + DB.Bind(User) + " AND serial = " + DB.Bind(Serial));
-  HTTPServer::FillResponse(response, "", "application/json", (Result == true) ? HTTP_OK : HTTP_INTERNAL_SERVER_ERROR);
+Analyzer::AnalyzerMode Analyzer::StringToMode(const string mode) {
+  if(mode == "1PHASE")   return Analyzer::PHASE1;
+  if(mode == "2PHASE")   return Analyzer::PHASE2;
+  if(mode == "2PHASE+N") return Analyzer::PHASE2N;
+  if(mode == "3PHASE")   return Analyzer::PHASE3;
+  if(mode == "3PHASE+N") return Analyzer::PHASE3N;
+  return Analyzer::INVALID;
 }
-void Analyzer::DelPermission(const json &params, Response &response) {
-  if(CheckRights(params["UserName"], CONFIG) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
-  Database DB;
-  string User   = params["User"];
-  bool   Result = DB.ExecSentenceNoResult("DELETE FROM permissions WHERE userename = " + DB.Bind(User) + " AND serial = " + DB.Bind(Serial));
-  HTTPServer::FillResponse(response, "", "application/json", (Result == true) ? HTTP_OK : HTTP_INTERNAL_SERVER_ERROR);
-}
+//----------------------------------------------------------------------------------------------------------------------

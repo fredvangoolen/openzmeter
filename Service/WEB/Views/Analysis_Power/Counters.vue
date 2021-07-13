@@ -52,18 +52,26 @@
       return { };
     },
     updated: function() {
-      this.$emit('update:height', this.$el.clientHeight);
+      this.$emit('update:height', this.$el.clientHeight - 14);
     },
     computed: {
       Max: function() {
         var Max = { Value: -Infinity, Time: 0, Count: 0 };
+        var Value = 0;
         if(this.dataGraph == null) return Max;
-        for(var x in this.dataGraph.Sampletime) {
-          if((this.serie == 'ACTIVE_POWER') && (this.dataGraph.Active_Power[x] == null)) continue;
-          if((this.serie == 'REACTIVE_POWER') && (this.dataGraph.Reactive_Power[x] == null)) continue;
-          var Value = this.dataGraph[(this.serie == 'ACTIVE_POWER') ? 'Active_Power' : 'Reactive_Power'][x];
+        var TimeCol = this.dataGraph.Headers.indexOf('Time');
+        var ActiveCol = this.dataGraph.Headers.indexOf('Active_Power');
+        var ReactiveCol = this.dataGraph.Headers.indexOf('Reactive_Power');
+        var ContractedCol = this.dataGraph.Headers.indexOf('Power_Contracted');
+        for(var x in this.dataGraph.Rows) {
+          if((this.serie == 'Active_Power') && (this.dataGraph.Rows[x][ActiveCol] == null)) continue;
+          if((this.serie == 'Reactive_Power') && (this.dataGraph.Rows[x][ReactiveCol] == null)) continue;
+          if((this.serie == 'Apparent_Power') && ((this.dataGraph.Rows[x][ActiveCol] == null) || (this.dataGraph.Rows[x][ReactiveCol] == null))) continue;
+          if(this.serie == 'Active_Power') Value = this.dataGraph.Rows[x][ActiveCol];
+          if(this.serie == 'Reactive_Power') Value = this.dataGraph.Rows[x][ReactiveCol];
+          if(this.serie == 'Apparent_Power') Value = Math.sqrt(Math.pow(this.dataGraph.Rows[x][ActiveCol], 2.0) + Math.pow(this.dataGraph.Rows[x][ReactiveCol], 2.0));
           if(Value > Max.Value) {
-            Max = { Value: Value, Time: this.dataGraph.Sampletime[x], Count: 0 };
+            Max = { Value: Value, Time: this.dataGraph.Rows[x][TimeCol], Count: 0 };
           } else if(Value == Max.Value) {
             Max.Count++;
           }
@@ -72,13 +80,20 @@
       },
       Min: function() {
         var Min = { Value: +Infinity, Time: 0, Count: 0 };
+        var Value = 0;
         if(this.dataGraph == null) return Min;
-        for(var x in this.dataGraph.Sampletime) {
-          if((this.serie == 'ACTIVE_POWER') && (this.dataGraph.Active_Power[x] == null)) continue;
-          if((this.serie == 'REACTIVE_POWER') && (this.dataGraph.Reactive_Power[x] == null)) continue;
-          var Value = this.dataGraph[(this.serie == 'ACTIVE_POWER') ? 'Active_Power' : 'Reactive_Power'][x];
+        var TimeCol = this.dataGraph.Headers.indexOf('Time');
+        var ActiveCol = this.dataGraph.Headers.indexOf('Active_Power');
+        var ReactiveCol = this.dataGraph.Headers.indexOf('Reactive_Power');
+        for(var x in this.dataGraph.Rows) {
+          if((this.serie == 'Active_Power') && (this.dataGraph.Rows[x][ActiveCol] == null)) continue;
+          if((this.serie == 'Reactive_Power') && (this.dataGraph.Rows[x][ReactiveCol] == null)) continue;
+          if((this.serie == 'Apparent_Power') && ((this.dataGraph.Rows[x][ActiveCol] == null) || (this.dataGraph.Rows[x][ReactiveCol] == null))) continue;
+          if(this.serie == 'Active_Power') Value = this.dataGraph.Rows[x][ActiveCol];
+          if(this.serie == 'Reactive_Power') Value = this.dataGraph.Rows[x][ReactiveCol];
+          if(this.serie == 'Apparent_Power') Value = Math.sqrt(Math.pow(this.dataGraph.Rows[x][ActiveCol], 2.0) + Math.pow(this.dataGraph.Rows[x][ReactiveCol], 2.0));
           if(Value < Min.Value) {
-            Min = { Value: Value, Time: this.dataGraph.Sampletime[x], Count: 0 };
+            Min = { Value: Value, Time: this.dataGraph.Rows[x][TimeCol], Count: 0 };
           } else if(Value == Min.Value) {
             Min.Count++;
           }
@@ -88,81 +103,23 @@
     },
     methods: {
       FormatHTML: function(val) {
-        var Units = oZm.GetBestUnits(val);
-        return oZm.RoundHTML(oZm.ScaleToUnits(val, Units), 2) + ' ' + Units + ((this.serie == 'ACTIVE_POWER') ? 'W' : 'VAr');
+        var Units = this.BestUnits(val);
+        return oZm.RoundHTML(oZm.ScaleToUnits(val, Units), 2) + ' ' + Units + ((this.serie == 'Active_Power') ? 'W' : (this.serie == 'Reactive_Power') ? 'VAr' : 'VA');
       },
       FormatSum: function(val) {
-        var Val = (this.serie == 'ACTIVE_POWER') ? val.Active_Power : val.Reactive_Power;
         var Sum = 0;
-        for(var n in Val) Sum = Sum + Val[n];
+        for(var n in val.Active_Power) Sum = Sum + ((this.serie == 'Active_Power') ? val.Active_Power[n] : (this.serie == 'Reactive_Power') ? val.Reactive_Power[n] : Math.sqrt(Math.pow(val.Active_Power[n], 2.0) + Math.pow(val.Reactive_Power[n], 2.0)));
         return this.FormatHTML(Sum);
       },
-
-
-      FormatPhases: function(values) {
-        var Return = '';
-        if(values.length > 1) {
-          for(var n = 0; n < values.length; n++) {
-            var Format = oZm.Series[this.variable].FormatValue(values[n]);
-            Return += Format.Value + Format.Units +'<br>';
-          }
+      FormatPhases: function(val) {
+        var Return = [];
+        if(this.serie == 'Apparent_Power') {
+          for(var n in val.Active_Power) Return.push(this.FormatHTML(Math.sqrt(Math.pow(val.Active_Power[n], 2.0) + Math.pow(val.Reactive_Power[n], 2.0))));
+        } else {
+          for(var n in val.Active_Power) Return.push(this.FormatHTML(val[this.serie][n]));
         }
         return Return;
       },
-//      SumPhases: function(values) {
-//        var Sum = 0;
-//        for(var n = 0; n < values.length; n++) Sum += values[n];
-//        return Sum;
-//      },
-//      FormatAggregBlock(result) {
-//        if(result === null) return ['', 'No data', ''];
-//        if(result['Sampletime'].length === 0) return ['', 'No data', ''];
-//        var Pos = result['Sampletime'].length - 1;
-//        var Time = 'At ' + moment(result.Sampletime[Pos]).format('HH:mm:ss');
-//        var Value = 'No data';
-//        var Phases = '';
-//        if(result[oZm.Series[this.variable].Serie][Pos] !== null) {
-//          Phases = this.FormatPhases(result[oZm.Series[this.variable].Serie][Pos]);
-//          var Format = oZm.Series[this.variable].FormatValue(this.SumPhases(result[oZm.Series[this.variable].Serie][Pos]));
-//          Value = Format.Value + ' ' + Format.Units;
-//        }
-//        return [Time, Value, Phases];
-//      },
-//      Set3SValues: function(result) {
-//        [this.Time3S, this.CurrentValue3S, this.CurrentValue3SPhases] = this.FormatAggregBlock(result);
-//      },
-//      Set1MValues: function(result) {
-//          [this.Time1M, this.CurrentValue1M, this.CurrentValue1MPhases] = this.FormatAggregBlock(result);
-//      },
-//      SetStats: function(window, data, aggreg) {
-//        this.CountersAggregation = 'From ' + oZm.GetAggregLongName(aggreg) + ' aggregation';
-//        this.TimeStatsFrom = moment(window[0]).format('DD/MM/YYYY HH:mm:ss');
-//        this.TimeStatsTo = moment(window[1]).format('DD/MM/YYYY HH:mm:ss');
-//        var MinValue = +Infinity, MaxValue = -Infinity, MinCount = 0, MaxCount = 0, MinTime = null, MaxTime = null;
-//        for(var x = 0; x < data.length; x++) {
-//          if(data[x][1] === null) data[x][1] = 0;
-//          if(data[x][1] < MinValue) {
-//            MinValue = data[x][1];
-//            MinCount = 0;
-//            MinTime = data[x][0];
-//          } else if(data[x][1] === MinValue) {
-//            MinCount++;
-//          }
-//          if(data[x][1] > MaxValue) {
-//            MaxValue = data[x][1];
-//            MaxCount = 0;
-//            MaxTime = data[x][0];
-//          } else if(data[x][1] === MaxValue) {
-//            MaxCount++;
-//          }
-//        }
-//        this.MinTime = moment(MinTime).format("hh:mm:ss - DD/MM/YYYY") + ((MinCount > 1) ? ' (and ' + MinCount + ' times more)' : '');
-//        this.MaxTime = moment(MaxTime).format("hh:mm:ss - DD/MM/YYYY") + ((MaxCount > 1) ? ' (and ' + MaxCount + ' times more)' : '');
-//        var Format = oZm.Series[this.variable].FormatValue(MinValue);
-//        this.MinValue = Format.Value + ' ' + Format.Units;
-//        var Format = oZm.Series[this.variable].FormatValue(MaxValue);
-//        this.MaxValue = Format.Value + ' ' + Format.Units;
-//      }
     }
   }
 </script>

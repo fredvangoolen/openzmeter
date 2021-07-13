@@ -1,6 +1,6 @@
 <template>
-  <div class="progress" data-toggle="tooltip" :title="text">
-    <div class="progress-bar" role="progressbar" v-bind:style="{width:value + '%'}"></div>
+  <div class="progress" :title="text">
+    <div class="progress-bar" role="progressbar" :style="{width:value + '%'}"></div>
   </div>
 </template>
 <script>

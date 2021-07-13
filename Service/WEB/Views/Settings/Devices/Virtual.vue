@@ -16,27 +16,27 @@
       </div>
       <div class="col-xs-12 col-sm-6">
         <label class="control-label">Voltage</label>
-        <input-spin :min="10" :max="350" :big="true" v-model="Settings.Voltage" :increment="10" :decimals="2" prepend="V"></input-spin>
+        <input-spin :min="10" :max="350" v-model="Settings.Voltage" :increment="10" :decimals="2" prepend="V"></input-spin>
       </div>
       <div class="col-xs-12 col-sm-6">
         <label class="control-label">Frequency</label>
-        <input-spin :min="0" :max="100" :big="true" v-model="Settings.Frequency" :increment="1" :decimals="2" prepend="Hz"></input-spin>
+        <input-spin :min="0" :max="100" v-model="Settings.Frequency" :increment="1" :decimals="2" prepend="Hz"></input-spin>
       </div>
       <div class="col-xs-12 col-sm-6">
         <label class="control-label">Current</label>
-        <input-spin :min="0.1" :max="1000" :big="true" v-model="Settings.Current" :increment="0.1" :decimals="2" prepend="A"></input-spin>
+        <input-spin :min="0.1" :max="1000" v-model="Settings.Current" :increment="0.1" :decimals="2" prepend="A"></input-spin>
       </div>
       <div class="col-xs-12 col-sm-6">
         <label class="control-label">Current phase</label>
-        <input-spin :min="-180" :max="180" :big="true" v-model="Settings.CurrentPhase" :increment="0.1" :decimals="2" prepend="°"></input-spin>
+        <input-spin :min="-180" :max="180" v-model="Settings.CurrentPhase" :increment="0.1" :decimals="2" prepend="°"></input-spin>
       </div>
       <div class="col-xs-12 col-sm-6">
         <label class="control-label">Mode</label>
-        <option-picker :options="[ {name: '1PHASE', value: '1PHASE'}, {name: '3PHASE', value: '3PHASE'}, {name: '3PHASE+N', value: '3PHASE+N'} ]" v-model="Settings.Mode" :big="true"></option-picker>
+        <option-picker :options="[ {name: '1PHASE', value: '1PHASE'}, {name: '2PHASE', value: '2PHASE'}, {name: '2PHASE+N', value: '2PHASE+N'}, {name: '3PHASE', value: '3PHASE'}, {name: '3PHASE+N', value: '3PHASE+N'} ]" v-model="Settings.Mode"></option-picker>
       </div>
       <div class="col-xs-12 col-sm-6">
         <label class="control-label">Samplerate</label>
-        <input-spin :min="10000" :max="100000" :big="true" v-model="Settings.SampleRate" :increment="100" :decimals="0" prepend="Hz"></input-spin>
+        <input-spin :min="10000" :max="1000000" v-model="Settings.SampleRate" :increment="100" :decimals="0" prepend="Hz"></input-spin>
       </div>
     </div>
   </dlg>
@@ -49,12 +49,12 @@
       return { Loading: false, Error: null, Settings: null };
     },
     created: function() {
-      this.Settings = Object.assign(this.settings);
+      this.Settings = Object.assign({}, this.settings);
     },
     methods: {
       Save: function () {
         this.Loading = true;
-        this.$http.post('setDevice', this.Settings).then(
+        this.Post('setDevice', this.Settings).then(
           (result) => { this.$emit('close', true); },
           (fail) => {
             this.Loading = false;

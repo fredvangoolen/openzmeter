@@ -22,7 +22,7 @@
     };
   } (jQuery));
   export default {
-    props: { data: Object, analyzer: Object, year: Number },
+    props: { data: Array, analyzer: Object, year: Number },
     data: function() {
       return { };
     },
@@ -38,9 +38,12 @@
     methods: {
       SetData: function() {
         this.Days = [];
-        for(var i in this.data['Active_Power']) {
-          var Day = moment(this.data.Sampletime[i]).tz(this.analyzer.TimeZone).dayOfYear();
-          if(this.data.Active_Power[i] != null) this.Days[Day] = (this.Days[Day] === undefined) ? this.data.Active_Power[i] / 4.0 : this.Days[Day] + this.data.Active_Power[i] / 4.0;
+        if(this.data == null) return;
+        var TimeCol = this.data[0].indexOf('Time');
+        var EnergyCol = this.data[0].indexOf('Active_Energy');
+        for(var i = 1; i < this.data.length; i++) {
+          var Day = moment(this.data[i][TimeCol]).tz(this.analyzer.TimeZone).dayOfYear();
+          if(this.data[i][EnergyCol] != null) this.Days[Day] = (this.Days[Day] == null) ? this.data[i][EnergyCol] : this.Days[Day] + this.data[i][EnergyCol];
         }
         var ColorScale = chroma.bezier(['#00429d', '#96ffea', '#ffffe0', '#ff005e', '#93003a']);
         var Max = -Infinity;

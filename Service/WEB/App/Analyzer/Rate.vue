@@ -1,25 +1,23 @@
 <template>
-  <dlg :loading="ShowSpinner">
+  <div>
+  <dlg :loading="ShowSpinner" v-if="(View!=='PowerCostExpression')&&(View!=='EnergyCostExpression')">
     <template v-slot:header>
       <div class="pull-left"><h4 class="modal-title">Analyzers &raquo; Rates &raquo; Edit</h4></div>
-      <div class="pull-right input-group input-group-xs" style="width:200px" v-if="Rate.Template==null">
-        <input type="text" class="form-control" placeholder="Filter..." v-model="Filter">
-        <span class="input-group-btn">
-          <button type="button" class="btn btn-default btn-xs" @click="$emit('endEdit', index, Rate)"><img :src="require('Imgs/arrow_undo.png')" alt="Back"></button>
-        </span>
+      <div class="pull-right btn-group" v-if="Rate.Periods==null">
+        <button type="button" class="btn btn-default btn-xs" @click="$emit('update', Rate)"><img :src="require('Imgs/arrow_undo.png')" alt="Back"></button>
       </div>
-      <div class="pull-right btn-group" v-if="Rate.Template!=null">
+      <toolbar-pager v-if="Rate.Periods==null" class="pull-right" :pageSize="10" :input="Tariffs" :output.sync="FilterTariffs" :filtercols="['Name', 'StartDate', 'EndDate']"></toolbar-pager>
+      <div class="pull-right btn-group" v-if="Rate.Periods!=null">
         <button type="button" class="btn btn-default btn-xs" :class="{ active: View=='Main' }" @click="View='Main'">Main</button>
         <button type="button" class="btn btn-default btn-xs" :class="{ active: View=='Periods' }" @click="View='Periods'">Periods</button>
         <button type="button" class="btn btn-default btn-xs" :class="{ active: View=='Concepts' }" @click="View='Concepts'">Concepts</button>
         <button type="button" class="btn btn-default btn-xs" :class="{ active: View=='Cycles' }" @click="View='Cycles'">Cycles</button>
-        <button type="button" class="btn btn-default btn-xs" @click="$emit('endEdit', index, Rate)"><img :src="require('Imgs/arrow_undo.png')" alt="Back"></button>
+        <button type="button" class="btn btn-default btn-xs" @click="$emit('update', Rate)"><img :src="require('Imgs/arrow_undo.png')" alt="Back"></button>
       </div>
     </template>
-    <div class="alert alert-danger text-center" style="margin-bottom: 5px; padding: 5px" v-if="Error!=null">{{ Error }}</div>
-    <div class="row" v-if="Rate.Template==null">
+    <div class="row" v-if="Rate.Periods==null">
       <spinner v-if="ShowSpinner"></spinner>
-      <vuetable ref="table" :fields="Columns" :api-mode="false" :data="Tariffs" class="table small table-striped">
+      <vuetable :fields="ColumnsTariffs" :api-mode="false" :data="FilterTariffs" class="tariffs table small table-striped">
         <template slot="actions" slot-scope="props">
           <div class="btn-group" >
             <button class="btn btn-xs btn-default" @click="LoadTariff(props.rowData)">Load</button>
@@ -27,166 +25,304 @@
         </template>
       </vuetable>
     </div>
-    <div v-if="Rate.Template!=null">
+    <div v-if="Rate.Periods!=null">
+      <div class="alert alert-danger text-center" style="margin-bottom: 5px; padding: 5px" v-if="Error!=null" v-html="Error"></div>
       <div class="row" v-if="View=='Main'">
-        <div class="alert alert-success text-center" style="margin-bottom: 5px; padding: 5px" v-if="Error==null">
-          {{ Rate.Template.Description }}<br>
-          <span style="font-size: 80%">Tariff contains {{ Rate.Template.Seasons.length }}  seasons, a total of {{ Rate.Template.Periods.length }}  day periods and {{ Rate.Template.Holidays.length }} holidays<br>
-          Rate contains {{ Rate.Config.Taxs.length }}  concepts and {{ Rate.Config.Billing.length + 1 }} bills</span>
+        <div class="col-xs-8">
+          <label class="control-label">Name</label>
+          <div class="input-group input-group-xs">
+            <input type="text" class="form-control rounded" v-model="Rate.Name">
+          </div>
         </div>
-        <div class="col-xs-12 col-sm-6">
+        <div class="col-xs-4">
+          <label class="control-label">Group:</label>
+          <option-picker v-model="Rate.Group" :options="[{name: 'Contracted', value: 0}, {name: 'Compare group 1', value: 1}, {name: 'Compare group 2', value: 2}, {name: 'Compare group 3', value: 3}, {name: 'Compare group 4', value: 4}, {name: 'Compare group 5', value: 5}, {name: 'Compare group 6', value: 6}, {name: 'Compare group 7', value: 7}, {name: 'Compare group 8', value: 8}, {name: 'Compare group 9', value: 9}, {name: 'Compare group 10', value: 10}]"></option-picker>
+        </div>
+        <div class="col-xs-12">
+          <label class="control-label">Description</label>
+          <textarea class="form-control" rows="5" v-model="Rate.Description" style="resize: none"></textarea>
+        </div>
+        <div class="col-xs-4">
           <label class="control-label">From</label>
-          <date-picker :options="{ format: 'DD/MM/YYYY', viewMode: 'months', timeZone: analyzer.TimeZone }" :big="true" v-model="Rate.StartDate"></date-picker>
+          <date-picker :options="{ format: 'DD/MM/YYYY', viewMode: 'months' }" :value="DateStringToTimestamp(Rate.StartDate)" @input="Rate.StartDate=TimestampToDateString($event)"></date-picker>
         </div>
-        <div class="col-xs-12 col-sm-6">
+        <div class="col-xs-4">
           <label class="control-label">To</label>
-          <date-picker :options="{ format: 'DD/MM/YYYY', viewMode: 'months', timeZone: analyzer.TimeZone }" :big="true" v-model="Rate.EndDate"></date-picker>
+          <date-picker :options="{ format: 'DD/MM/YYYY', viewMode: 'months' }" :value="DateStringToTimestamp(Rate.EndDate)" @input="Rate.EndDate=TimestampToDateString($event)"></date-picker>
         </div>
+        <div class="col-xs-4">
+          <label class="control-label">Price source</label>
+          <option-picker :options="[ {name: 'NONE', value: 'NONE'}, {name: 'ESP - ESIOS', value: 'ESP_ESIOS'} ]" v-model="Rate.Module"></option-picker>
+        </div>
+        <div class="col-xs-12"><hr style="margin-top: 10px; margin-bottom: 5px;"/></div>
         <div class="col-xs-12" style="margin-top: 5px">
           <button type="button" class="btn btn-default btn-xs btn-danger" style="width:100%" @click="LoadTariffs()">Change tariff template</button>
         </div>
       </div>
-      <div class="row periods" v-if="View=='Periods'">
+      <div class="row" v-if="View=='Periods'">
         <div class="col-xs-12">
-          <table>
-            <tr>
-              <td></td>
-              <td><strong>Contracted power</strong></td>
-              <td><strong>Power costs</strong></td>
-              <td><strong>Energy costs</strong></td>
-            </tr>
-            <tr v-for="(period, idx) in Rate.Config.Periods" :key="idx">
-              <td><strong>P{{idx + 1}}</strong></td>
-              <td>
-                <input-spin :max="100000" :min="0" prepend="kW" :decimals="6" :increment="1" :value="period.Contracted_Power/1000" @input="Rate.Config.Periods[idx].Contracted_Power=$event*1000; Rate = Object.assign({}, Rate)"></input-spin>
-              </td>
-              <td>
-                <input-spin :max="100000" :min="0" prepend="€/kW/day" :decimals="6" :increment="1" :value="period.Power_Cost*1000" @input="Rate.Config.Periods[idx].Power_Cost=$event/1000; Rate = Object.assign({}, Rate)"></input-spin>
-              </td>
-              <td>
-                <input-spin :max="100000" :min="0" prepend="€/kWh" :decimals="6" :increment="1" :value="period.Energy_Cost*1000" @input="Rate.Config.Periods[idx].Energy_Cost=$event/1000; Rate = Object.assign({}, Rate)"></input-spin>
-              </td>
-            </tr>
-          </table>
+          <div class="panel panel-dialog" style="margin-bottom: 6px">
+            <div class="panel-heading">
+              Contracted Power
+              <div class="pull-right btn-group">
+                <button type="button" class="btn btn-default btn-xs" :class="{ active: !Array.isArray(Rate.ContractedPower) }" @click="Rate.ContractedPower=Array.isArray(Rate.ContractedPower) ? Rate.ContractedPower[0] : Array(Rate.Periods.length).fill(Rate.ContractedPower)" title="Link all periods value"><img :src="require('Imgs/link.png')"></button>
+              </div>
+              <div class="clearfix"></div>
+            </div>
+            <div class="panel-body" v-if="!Array.isArray(Rate.ContractedPower)">
+              <input-spin :max="100000" :min="0" :prepend="Rate.PowerUnits" :decimals="6" :increment="0.1" v-model="Rate.ContractedPower"></input-spin>
+            </div>
+            <div class="panel-body" v-if="Array.isArray(Rate.ContractedPower)">
+              <table style="width:100%">
+                <tr v-for="(period, idx) in Rate.ContractedPower" :key="idx">
+                  <td class="text-center small" style="width:30px"><strong>P{{ idx + 1 }}</strong></td>
+                  <td>
+                    <input-spin :max="100000" :min="0" :prepend="Rate.PowerUnits" :decimals="6" :increment="0.1" v-model="Rate.ContractedPower[idx]"></input-spin>
+                  </td>
+                </tr>
+              </table>
+            </div>
+          </div>
+          <div class="panel panel-dialog" style="margin-bottom: 6px">
+            <div class="panel-heading">
+              Power Cost
+              <div class="pull-right btn-group">
+                <button type="button" class="btn btn-default btn-xs" :class="{ active: (typeof(Rate.PowerCost) != 'string') }" @click="Rate.PowerCost=Rate.Periods.map((val) => { return val.DefaultPowerCost;})" title="Power cost is a fixed value">Fixed</button>
+                <button type="button" class="btn btn-default btn-xs" :class="{ active: (typeof(Rate.PowerCost) == 'string') }" @click="Rate.PowerCost='0'" title="Power cost computed from avaliable variables">Computed</button>
+              </div>
+              <div class="clearfix"></div>
+            </div>
+            <div class="panel-body" v-if="Array.isArray(Rate.PowerCost)">
+              <table style="width:100%">
+                <tr v-for="(period, idx) in Rate.PowerCost" :key="idx">
+                  <td class="text-center small" style="width:30px"><strong>P{{ idx + 1 }}</strong></td>
+                  <td>
+                    <input-spin :max="100000" :min="0" :prepend="Rate.Currency + '/' + Rate.PowerUnits + '/day'" :decimals="6" :increment="0.1" v-model="Rate.PowerCost[idx]"></input-spin>
+                  </td>
+                  <td style="width:30px">
+                    <div class="btn-group">
+                      <button type="button" class="btn btn-default btn-xs" @click="$set(Rate.PowerCost, idx, Rate.Periods[idx].DefaultPowerCost)" title="Set tariff default costs"><img :src="require('Imgs/wand.png')"></button>
+                    </div>
+                  </td>
+                </tr>
+              </table>
+            </div>
+            <div class="panel-body" v-if="!Array.isArray(Rate.PowerCost)">
+              <div class="input-group input-group-xs">
+                <input type="text" class="form-control" value="Configured from expression" :disabled="true">
+                <span class="input-group-btn">
+                  <button type="button" class="btn btn-default btn-xs" @click="View='PowerCostExpression'" title="Set power costs expression"><img :src="require('Imgs/math_functions.png')"></button>
+                </span>
+              </div>
+            </div>
+          </div>
+          <div class="panel panel-dialog" style="margin-bottom: 0px">
+            <div class="panel-heading">
+              Energy Cost
+              <div class="pull-right btn-group">
+                <button type="button" class="btn btn-default btn-xs" :class="{ active: (typeof(Rate.EnergyCost) != 'string') }" @click="Rate.EnergyCost=Rate.Periods.map((val) => { return val.DefaultEnergyCost;})" title="Energy cost is a fixed value">Fixed</button>
+                <button type="button" class="btn btn-default btn-xs" :class="{ active: (typeof(Rate.EnergyCost) == 'string') }" @click="Rate.EnergyCost='0'" title="Energy cost computed from avaliable variables">Computed</button>
+              </div>
+              <div class="clearfix"></div>
+            </div>
+            <div class="panel-body" v-if="Array.isArray(Rate.EnergyCost)">
+              <table style="width:100%">
+                <tr v-for="(period, idx) in Rate.EnergyCost" :key="idx">
+                  <td class="text-center small" style="width:30px"><strong>P{{ idx + 1 }}</strong></td>
+                  <td>
+                    <input-spin :max="100000" :min="0" :prepend="Rate.Currency + '/' + Rate.EnergyUnits" :decimals="6" :increment="0.1" v-model="Rate.EnergyCost[idx]"></input-spin>
+                  </td>
+                  <td style="width:30px">
+                    <div class="btn-group">
+                      <button type="button" class="btn btn-default btn-xs" @click="Rate.EnergyCost[idx]=Rate.Periods[idx].DefaultEnergyCost" title="Set tariff default costs"><img :src="require('Imgs/wand.png')"></button>
+                    </div>
+                  </td>
+                </tr>
+              </table>
+            </div>
+            <div class="panel-body" v-if="!Array.isArray(Rate.EnergyCost)">
+              <div class="input-group input-group-xs">
+                <input type="text" class="form-control" value="Configured from expression" :disabled="true">
+                <span class="input-group-btn">
+                  <button type="button" class="btn btn-default btn-xs" @click="View='EnergyCostExpression'" title="Set energy costs expression"><img :src="require('Imgs/math_functions.png')"></button>
+                </span>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
       <div class="row" v-if="View=='Concepts'">
         <div class="col-xs-12">
-          <table>
-            <tr>
-              <td><strong>Concept</strong></td>
-              <td><strong>Type</strong></td>
-              <td class="text-right"><strong>Value</strong></td>
-            </tr>
-            <tr v-for="(tax, idx) in Rate.Config.Taxs" :key="idx">
-              <td>
-                <div class="input-group input-group-xs">
-                  <span class="input-group-btn"><button class="btn btn-default" type="button" @click="Rate.Config.Taxs.splice(idx, 1)"><img :src="require('Imgs/cross.png')"></button></span>
-                  <input type="text" class="form-control" v-model="tax.Name">
-                </div>
-              </td>
-              <td>
-                <option-picker :options="[ {name: 'Total', value: 'PERCENT_TOTAL'}, {name: 'Energy', value: 'PERCENT_ENERGY'}, {name: 'Power', value: 'PERCENT_POWER'}, {name: 'Energy+Power', value: 'PERCENT_ENERGY_POWER'}, {name: 'Fixed', value: 'FIXED_QUANTITY'} ]" v-model="tax.Type"></option-picker>
-              </td>
-              <td>
-                <input-spin :max="100000" :min="-100000" :prepend="(tax.Type == 'FIXED_QUANTITY') ? '€/Bill cycle' : '%'" :decimals="6" :increment="1" :value="tax.Value" @input="Rate.Config.Taxs[idx].Value=$event; Rate = Object.assign({}, Rate)"></input-spin>
-              </td>
-            </tr>
-            <tr>
-              <td colspan="3">
-                <button type="button" class="btn btn-default btn-xs" style="width:100%" @click="Rate.Config.Taxs.push({Name: 'Unnamed tax', Type: 'PERCENT_TOTAL', Value: 0.0})"><img :src="require('Imgs/plus.png')"> New concept</button>
-              </td>
-            </tr>
-          </table>
+          <div class="panel panel-dialog" style="margin-bottom: 0px">
+            <div class="panel-heading">
+              <div class="pull-right btn-group">
+                <button type="button" class="btn btn-default btn-xs" @click="Rate.Taxes.push({Description: 'Unnamed tax', Type: 'PERCENT_TOTAL', Value: 0.0})" title="Add concept"><img :src="require('Imgs/plus.png')"></button>
+              </div>
+              <toolbar-pager class="pull-right" :pageSize="10" :input="Rate.Taxes" :output.sync="FilterTaxes" :filtercols="['Description']"></toolbar-pager>
+              <div class="clearfix"></div>
+            </div>
+            <div class="panel-body">
+              <vuetable :fields="ColumnsTaxes" :api-mode="false" :data="FilterTaxes" class="taxes table small table-striped">
+                <template slot="tax" slot-scope="props">
+                  <div class="input-group input-group-xs">
+                    <span class="input-group-btn">
+                      <button class="btn btn-default" type="button" @click="Rate.Taxes.splice(props.rowData.rowNum, 1)"><img :src="require('Imgs/cross.png')"></button>
+                    </span>
+                    <input type="text" class="form-control" v-model="props.rowData.Description">
+                  </div>
+                </template>
+                <template slot="type" slot-scope="props">
+                  <option-picker :options="[ {name: 'Total', value: 'PERCENT_TOTAL'}, {name: 'Energy', value: 'PERCENT_ENERGY'}, {name: 'Power', value: 'PERCENT_POWER'}, {name: 'Energy+Power', value: 'PERCENT_ENERGY_POWER'}, {name: 'Fixed', value: 'FIXED_QUANTITY'} ]" v-model="props.rowData.Type"></option-picker>
+                </template>
+                <template slot="value" slot-scope="props">
+                  <input-spin :max="100000" :min="-100000" :prepend="(props.rowData.Type == 'FIXED_QUANTITY') ? '€/Bill cycle' : '%'" :decimals="6" :increment="1" v-model="props.rowData.Value"></input-spin>
+                </template>
+              </vuetable>
+            </div>
+          </div>
         </div>
       </div>
       <div class="row" v-if="View=='Cycles'">
         <div class="col-xs-12">
-          <table>
-            <tr>
-              <td style="min-width: 120px"><strong>From</strong></td>
-              <td style="width: 100%"><strong>To</strong></td>
-              <td class="text-right" style="min-width: 120px"><strong>Duration</strong></td>
-            </tr>
-            <tr v-for="(date, idx) in Rate.Config.Billing.concat([Rate.EndDate])" :key="idx">
-              <td>
-                <div class="input-group input-group-xs">
-                  <span class="input-group-btn" v-if="idx!=Rate.Config.Billing.length">
-                    <button class="btn btn-default" type="button" @click="Rate.Config.Billing.splice(idx, 1)"><img :src="require('Imgs/cross.png')"></button>
-                  </span>
-                  <input type="text" class="form-control" disabled="" :value="FormatDate(StartDate(idx))">
-                </div>
-              </td>
-              <td>
-                <date-picker :big="false" :options="{ format: 'DD/MM/YYYY', viewMode: 'months', timeZone: analyzer.TimeZone }" :value="EndDate(idx)" @input="SetBillPeriods(idx, $event)" :disabled="idx==Rate.Config.Billing.length"></date-picker>
-              </td>
-              <td class="text-right">
-                <div class="input-group input-group-xs">
-                  <input type="text" class="form-control text-right" disabled="" :value="CalcDays(idx)">
-                  <span class="input-group-addon">Days</span>
-                </div>
-              </td>
-            </tr>
-            <tr>
-              <td><button type="button" class="btn btn-default btn-xs" style="width:100%" @click="AddBillDay"><img :src="require('Imgs/plus.png')"> New bill</button></td>
-              <td style="display: flex">
-                <option-picker class="flex-item" :options="BillDayNames.map((val, idx) => { return { name: val, value: idx }; })" v-model="Day"></option-picker>&nbsp;
-                <option-picker class="flex-item" :options="PeriodNames.map((val, idx) => { return { name: val, value: idx }; })" v-model="Period"></option-picker>&nbsp;
-                <button type="button" class="btn btn-default btn-xs flex-item" @click="BuildPeriods" data-toggle="tooltip" title="Create or replace bill days according to selections"><img :src="require('Imgs/wand.png')"></button>
-              </td>
-              <td></td>
-            </tr>
-          </table>
+          <div class="panel panel-dialog" style="margin-bottom: 0px">
+            <div class="panel-heading">
+              <div class="btn-group pull-right">
+                <button type="button" class="btn btn-default btn-xs" title="Add end bill cycle day" :disabled="ValidBillDate" @click="AddBillDay"><img :src="require('Imgs/plus.png')"></button>
+                <button type="button" class="btn btn-default btn-xs dropdown-toggle" data-toggle="dropdown" title="Create bills on selected day of month"><img :src="require('Imgs/wand.png')"><span class="caret"></span></button>
+                <ul class="dropdown-menu" style="max-height: 142px; overflow-y: auto">
+                  <li v-for="(name, idx) in BillDayNames" :key="idx"><a @click="BuildPeriods(idx)">{{ name }}</a></li>
+                </ul>
+              </div>
+              <div class="pull-right btn-group" style="width: 110px">
+                <date-picker :options="{ format: 'DD/MM/YYYY', viewMode: 'months', minDate: Rate.StartDate, maxDate: Rate.EndDate, disabledDates: Rate.Billing.concat([ Rate.StartDate, Rate.EndDate]), date: SelDate }" @input="SelDate=TimestampToDateString($event)"></date-picker>
+              </div>
+              <toolbar-pager class="pull-right" style="width: 120px" :pageSize="10" :input="Cycles" :output.sync="FilterCycles" :filtercols="['From', 'To', 'Days']"></toolbar-pager>
+              <div class="clearfix"></div>
+            </div>
+            <div class="panel-body">
+              <div class="row">
+                <vuetable :fields="ColumnsCycles" :api-mode="false" :data="FilterCycles" class="bills table small table-striped">
+                  <template slot="actions" slot-scope="props">
+                    <div class="btn-group" v-if="!props.rowData.IsLast">
+                      <button class="btn btn-xs btn-danger" @click="DelBill(props.rowData)">Delete</button>
+                    </div>
+                  </template>
+                </vuetable>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
   </dlg>
+    <dlg v-if="View=='PowerCostExpression'">
+      <template v-slot:header>
+        <div class="pull-left"><h4 class="modal-title">Power cost expression</h4></div>
+        <div class="pull-right btn-group">
+          <button type="button" class="btn btn-default btn-xs" @click="View='Periods'"><img :src="require('Imgs/arrow_undo.png')" alt="Go back"></button>
+        </div>
+      </template>
+      <div class="row">
+        <div class="col-xs-12">
+          <label class="control-label">Expresion</label>
+          <input-math v-model="Rate.PowerCost" :vars="Vars"></input-math>
+        </div>
+      </div>
+    </dlg>
+    <dlg v-if="View=='EnergyCostExpression'">
+      <template v-slot:header>
+        <div class="pull-left"><h4 class="modal-title">Energy cost expression</h4></div>
+        <div class="pull-right btn-group">
+          <button type="button" class="btn btn-default btn-xs" @click="View='Periods'"><img :src="require('Imgs/arrow_undo.png')" alt="Go back"></button>
+        </div>
+      </template>
+      <div class="row">
+        <div class="col-xs-12">
+          <label class="control-label">Expresion</label>
+          <input-math v-model="Rate.EnergyCost" :vars="Vars"></input-math>
+        </div>
+      </div>
+    </dlg>
+  </div>
 </template>
 
 <script>
-  import Vuetable from 'vuetable-2';
-  import moment from 'moment';
+  import vuetable from 'vuetable-2';
   import * as oZm from 'JS/openZmeter.js';
+  import moment from 'moment';
   export default {
-    props: { analyzer: Object, index: Number },
+    props: { analyzer: Object, rate: Number },
     data() {
-      return { View: 'Main', Rate: null, Day: 0, Period: 0, ShowSpinner: false, Filter: '', Tariffs: null,
-        PeriodNames: ['Each month', 'Each two month', 'Each three month'],
+      return { View: 'Main', Rate: null, ShowSpinner: false, FilterTariffs: [], Tariffs: [], FilterTaxes: [], FilterCycles: [], FilterCycles: [], SelDate: null, Error: null,
         BillDayNames: ['1st', '2nd', '3rd', '4th', '5th', '6th', '7th', '8th', '9th', '10th', '11th', '12th', '13th', '14th', '15th', '16th', '17th', '18th', '19th', '20th', '21th', '22th', '23th', '24th', '25th', '26th', '27th', '28th'],
-        Columns: [
+        ColumnsTariffs: [
           { name: 'Name', title: 'Name' },
-          { name: 'StartDate', title: 'Start date' },
-          { name: 'EndDate', title: 'End date' },
+          { name: 'UserName', title: 'Owner' },
           { name: '__slot:actions', title: '' }
+        ],
+        ColumnsTaxes: [
+          { name: '__slot:tax', title: 'Concept' },
+          { name: '__slot:type', title: 'Type' },
+          { name: '__slot:value', title: 'Value' },
+        ],
+        ColumnsCycles: [
+          { name: 'From', title: 'From' },
+          { name: 'To', title: 'To' },
+          { name: 'Days', title: 'Days' },
+          { name: '__slot:actions', title: '' },
         ]
       };
     },
     created: function() {
-      this.Rate = Object.assign({}, this.analyzer.Rates[this.index]);
-      if(this.Rate.Template == null) this.LoadTariffs();
+      //if(this.rate == null) {
+      //  this.Rate = { Analyzer: this.analyzer.Analyzer, Name: 'Unname rate', Description: '', Group: 0, StartDate: moment().format('DD/MM/YYYY'), EndDate: moment().format('DD/MM/YYYY'), Module: 'NONE', ContractedPower: 0, PowerCost: '0', EnergyCost: '0', Taxes: [], Billing: [] };
+      //} else {
+        this.Rate = Object.assign({}, this.analyzer.Rates[this.rate]);
+      //}
+      this.SelDate = this.Rate.StartDate;
+      if(this.Rate.Periods == null) this.LoadTariffs();
     },
     computed: {
-      Error: function() {
-        if(this.Rate.Template == null) return 'Select a base tariff from table before continue';
-        if(this.Rate.StartDate < this.Rate.Template.Seasons[0].StartDate) return 'Date ranges is outside selected tariff ranges';
-        if(this.Rate.EndDate > this.Rate.Template.Seasons.slice(-1)[0].EndDate) return 'Date ranges is outside selected tariff ranges';
-        return null;
+      Vars: function() {
+        var Vars = [{ Name: 'Period', Description: 'Index of evaluated period (From 1 to ' + this.Rate.Periods.length + ')', Value: null, Units: ''}];
+        for(var V = 0; V < this.analyzer.PriceModules[this.Rate.Module].length; V++) Vars.push({ Name: this.analyzer.PriceModules[this.Rate.Module][V].Name, Description: this.analyzer.PriceModules[this.Rate.Module][V].Description, Value: this.Round(this.analyzer.PriceModules[this.Rate.Module][V].Value, 4), Units: ''});
+        return Vars;
       },
+      Cycles: function() {
+        var Bills = [];
+        var Bill = { From: this.Rate.StartDate };
+        for(var B = 0; B < this.Rate.Billing.length; B++) {
+          Bill.To = this.Rate.Billing[B];
+          Bill.Days = moment(Bill.To, 'DD/MM/YYYY').diff(moment(Bill.From, 'DD/MM/YYYY'), 'days') + 1;
+          Bill.ID = B;
+          Bill.IsLast = false;
+          Bills.push(Bill);
+          Bill = { From: moment(this.Rate.Billing[B], 'DD/MM/YYYY').add(1, 'days').format('DD/MM/YYYY')  };
+        }
+        Bill.To = this.Rate.EndDate;
+        Bill.Days = moment(Bill.To, 'DD/MM/YYYY').diff(moment(Bill.From, 'DD/MM/YYYY'), 'days') + 1;
+        Bill.IsLast = true;
+        Bills.push(Bill);
+        return Bills;
+      },
+      ValidBillDate: function() {
+        var Used = this.Rate.Billing.concat([ this.Rate.StartDate, this.Rate.EndDate]);
+        return Used.includes(this.SelDate);
+      }
     },
     methods: {
-      FormatDate: function(val) {
-        return moment(val).tz(this.analyzer.TimeZone).format('DD/MM/YYYY');
+      TimestampToDateString: function(val) {
+        return moment(val).format('DD/MM/YYYY');
+      },
+      DateStringToTimestamp: function(val) {
+        return moment(val, 'DD/MM/YYYY').valueOf();
       },
       LoadTariffs: function() {
         this.ShowSpinner = true;
-        this.Rate.Template = null;
-        this.$http.post('getTariffs', {}).then(
+        this.Rate.Periods = null;
+        this.Post('getTariffs', {}).then(
           (result) => {
-            this.Tariffs = result.body;
-            for(var n in this.Tariffs) {
-              this.Tariffs[n].StartDate = moment.tz(this.Tariffs[n].StartDate, this.Tariffs[n].TimeZone).format('DD/MM/YYYY');
-              this.Tariffs[n].EndDate   = moment.tz(this.Tariffs[n].EndDate,   this.Tariffs[n].TimeZone).format('DD/MM/YYYY');
-            }
+            this.Tariffs = result;
             this.ShowSpinner = false;
           },
           (fail) => { }
@@ -194,203 +330,78 @@
       },
       LoadTariff: function(tariff) {
         this.ShowSpinner = true;
-        this.$http.post('getTariff', { TariffID: tariff.TariffID }).then(
+        this.Post('getTariff', { Name: tariff.Name }).then(
           (result) => {
-            this.Rate.Template = result.body.Template;
-            this.Rate.Name = result.body.Name;
-            this.Rate.StartDate = result.body.StartDate;
-            this.Rate.EndDate = result.body.EndDate;
-            this.Rate.Config.Periods.length = this.Rate.Template.Periods.length;
-            for(var n = 0; n < this.Rate.Template.Periods.length; n++) this.Rate.Config.Periods[n] = Object.assign({ Contracted_Power: 0.0, Energy_Cost: 0.0, Power_Cost: 0.0 }, this.Rate.Config.Periods[n]);
+            var Rate = Object.assign(this.Rate, result.Template);
+            Rate.Name = result.Name;
+            if(Array.isArray(Rate.PowerCost) == true) Rate.PowerCost = Rate.Periods.map((val) => { return val.DefaultPowerCost; });
+            if(Array.isArray(Rate.EnergyCost) == true) Rate.EnergyCost = Rate.Periods.map((val) => { return val.DefaultEnergyCost; });
+            this.Rate = Rate;
             this.ShowSpinner = false;
           },
           (fail) => { }
         );
       },
-
-
-
-
-
-
-//      Show: function(analyzer, tariffs, rate) {
-//        this.Analyzer = analyzer;
-//        this.Tariffs = tariffs;
-//        for(var n = 0; n < this.Tariffs.length; n++) {
-//          this.Tariffs[n].id = this.Tariffs[n].TariffID;
-//          this.Tariffs[n].name = this.Tariffs[n].Name;
-//          this.Tariffs[n].description = 'From ' + moment.tz(this.Tariffs[n].StartDate, this.analyzer.TimeZone).format('DD/MM/YYYY') + ' to ' + moment.tz(this.Tariffs[n].EndDate, this.analyzer.TimeZone).format('DD/MM/YYYY');
-//        }
-//        this.Initial = rate;
-//        this.View = 'Main';
-//        if(rate === null) {
-//          this.Rate = this.EmptyRate;
-//        } else {
-//          this.Rate = Object.assign({}, rate);
-//        }
-//        this.$refs.Dialog.Show();
-//        this.$nextTick(() => {
-//          if(this.Rate.RateID !== undefined) {
-//            this.Tariffs.unshift({ id: 'CURRENT', name: '(*) ' + this.Rate.Name, description: 'From ' + moment.tz(this.Rate.StartDate, this.analyzer.TimeZone).format('DD/MM/YYYY') + ' to ' + moment.tz(this.Rate.EndDate, this.analyzer.TimeZone).format('DD/MM/YYYY')});
-//          } else {
-//            $(this.$refs.Base).attr('data-id', '');
-//            $(this.$refs.Base).val('');
-//            this.$refs.StartDate.Disable();
-//            this.$refs.EndDate.Disable();
-//          }
-//          this.SetTariffs();
-//        });
-//      },
-//      Round6: function(val) {
-//        return oZm.RoundPlain(val, 6);
-//      },
-
-      SetBillPeriods: function(idx, val) {
-        var Date = moment(val).tz(this.analyzer.TimeZone).endOf('day').valueOf();
-        if(this.Rate.Config.Billing[idx] == Date) return;
-        this.Rate.Config.Billing[idx] = Date;
-        this.Rate.Config.Billing = this.Rate.Config.Billing.sort();
+      DelBill: function(day) {
+        if(confirm("Delete day '" + day.To + "' ?")) this.Rate.Billing.splice(day.ID, 1);
       },
-      StartDate: function(idx) {
-        if(idx == 0)
-          return moment.tz(this.Rate.StartDate, this.analyzer.TimeZone).valueOf();
-        else if((idx > 0) && (idx <= this.Rate.Config.Billing.length))
-          return moment.tz(this.Rate.Config.Billing[idx - 1] + 1, this.analyzer.TimeZone).valueOf();
-      },
-      EndDate: function(idx) {
-        if((idx >= 0) && (idx < this.Rate.Config.Billing.length))
-          return moment.tz(this.Rate.Config.Billing[idx], this.analyzer.TimeZone).valueOf();
-        else
-          return moment.tz(this.Rate.EndDate, this.analyzer.TimeZone).valueOf();
-      },
-      CalcDays: function(idx) {
-        var To = moment(this.EndDate(idx)).add(1, 'ms');
-        var From = moment(this.StartDate(idx));
-        return To.diff(From, 'days');
-      },
-      Save: function() {
-        this.ShowSpinner = true;
-        this.$http.post((this.Rate.RateID == null) ? 'addRate' : 'setRate', Object.assign({ Analyzer: this.analyzer.Analyzer }, this.Rate)).then(
-          (result) => { this.$emit('close', true); },
-          (fail) => {
-            this.ShowSpinner = false;
-            this.Error = 'Failed to save rate to analyzer!';
-            setTimeout(() => { this.Error = null; }, 1000);
-          }
-        );
-      },
-//      SetStartDate: function(date) {
-//        this.Rate.StartDate = date.startOf('day').valueOf();
-//        this.Validate();
-//      },
-//      SetEndDate: function(date) {
-//        this.Rate.EndDate = date.endOf('day').valueOf();
-//        this.Validate();
-//      },
-//      Back: function() {
-//        this.$refs.Dialog.Close();
-//        this.$parent.$refs.Rates.Show(this.analyzer);
-//      },
-//      PeriodItemChanged: function(value, type, idx) {
-//        var Value = parseFloat(value.target.value);
-//        if(isNaN(Value) === true) Value = 0.0;
-//        if(type === 'Contracted_Power')
-//          Value = Value * 1000;
-//        else
-//          Value = Value / 1000;
-//        this.Rate.Config.Periods[idx][type] = Value;
-//        this.Rate = Object.assign({}, this.Rate);
-//      },
-//      ValueConceptChanged: function(value, idx) {
-//        var Value = parseFloat(value.target.value);
-//        if(isNaN(Value) === true) Value = 0.0;
-//        this.Rate.Config.Taxs[idx].Value = Value;
-        //this.Rate = Object.assign({}, this.Tariff);
-//      },
       AddBillDay: function() {
-        this.Rate.Config.Billing.push(this.Rate.EndDate);
+        this.Rate.Billing.push(this.SelDate);
+        this.Rate.Billing.sort((a, b) => {
+          var A = this.DateStringToTimestamp(a);
+          var B = this.DateStringToTimestamp(b);
+          if(A > B) return 1;
+          if(A < B) return -1;
+          return 0;
+        });
       },
-      BuildPeriods: function() {
-        this.$set(this.Rate.Config, 'Billing', []);
-        var Date = moment.tz(this.Rate.StartDate, this.analyzer.TimeZone);
-        while(true) {
-          Date = Date.add(this.Period + 1, 'M').date(this.Day + 1);
-          if(Date.valueOf() >= this.Rate.EndDate) break;
-          this.Rate.Config.Billing.push(Date.startOf('day').valueOf() - 1);
+      BuildPeriods: function(day) {
+        var Bills = [];
+        var Date = moment(this.Rate.StartDate, 'DD/MM/YYYY');
+        var From = moment(this.Rate.StartDate, 'DD/MM/YYYY');
+        var To   = moment(this.Rate.EndDate, 'DD/MM/YYYY');
+        for(var M = 0; ; M++) {
+          Date = moment(From).add(M, 'M').date(day);
+          if(Date.isSameOrAfter(To)) break;
+          if(Date.isAfter(From)) Bills.push(Date.format('DD/MM/YYYY'));
         }
-      },
-//      FillPeriods: function() {
-//        this.Rate.Config.Periods.length = this.Rate.Template.Periods.length;
-//        for(var n = 0; n < this.Rate.Template.Periods.length; n++) this.Rate.Config.Periods[n] = Object.assign({ Contracted_Power: 0.0, Energy_Cost: 0.0, Power_Cost: 0.0 }, this.Rate.Config.Periods[n]);
-//      },
-//      SelectBase: function(e, keywork) {
-//        this.$refs.StartDate.Enable();
-//        this.$refs.EndDate.Enable();
-//        if(keywork.id === 'CURRENT') {
-//          this.LoadCurrent();
-//          this.Validate();
-//        } else {
-//          this.ShowSpinner = true;
-//          $.ajax({ url: "getTariff", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ TariffID: keywork.id }),
-//            success: function(result) {
-//              this.Rate.Template = result.Template;
-//              this.Rate.Name = result.Name;
-//              this.FillPeriods();
-//              this.Validate();
-//              this.ShowSpinner = false;
-//            }.bind(this)
-//          });
-//        }
-//      },
-//      DeselectBase: function(e) {
-//        this.$refs.StartDate.Disable();
-//        this.$refs.EndDate.Disable();
-//        this.Error = 'Select a base tariff from list';
-//      }
+        this.$set(this.Rate, 'Billing', Bills);
+      }
     },
-//    beforeDestroy: function() {
-//      $(this.$refs.Base).off('onSetSelectValue', this.SelectBase.bind(this));
-//      $(this.$refs.Base).off('onUnsetSelectValue', this.DeselectBase.bind(this));
-//      $(this.$refs.Base).bsSuggest("destroy");
-//    },
-    components: { Vuetable }
+    components: { vuetable }
   }
 </script>
 
 <style scoped>
-  .table >>> th:nth-child(2), .table >>> th:nth-child(3)  {
-    width: 100px;
-    text-align: center;
-  }
-  .table >>> td:nth-child(2), .table >>> td:nth-child(3) {
-    text-align: center;
-  }
-  .table >>> th:nth-child(4) {
-    width: 54px;
-  }
-  .table >>> td:nth-child(4) {
-    text-align: right;
-  }
-
-
-
-
-  .dropdown-menu >>> .jhover {
-    background: #337ab7;
-  }
-  .dropdown-menu >>> .table {
-    margin: 4px 0px 0px 0px !important;
-  }
-  .dropdown-menu >>> td {
-    border: none;
-  }
-  table, .input-group {
+  .input-group {
     width: 100%;
   }
-  table tr td {
-    padding: 1px 3px;
+  .rounded {
+    border-radius: 4px !important;
   }
-  .periods input, .periods td {
+  .tariffs.table >>> th:nth-child(2) {
+    width: 120px;
+    text-align: center;
+  }
+  .tariffs.table >>> td:nth-child(2) {
+    text-align: center;
+  }
+  .tariffs.table >>> th:nth-child(3) {
+    width: 54px;
+  }
+  .tariffs.table >>> td:nth-child(3) {
+    text-align: right;
+  }
+  .taxes.table >>> th:nth-child(3) {
+    width: 200px;
+  }
+  table tr td {
+    padding: 2px 0px;
+  }
+  .bills.table >>> th:nth-child(4) {
+    width: 62px;
+  }
+  .bills.table >>> td:nth-child(4) {
     text-align: right;
   }
 </style>

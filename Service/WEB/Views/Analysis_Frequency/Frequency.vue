@@ -30,16 +30,18 @@
         Opt.underlayCallback = Graph.Callbacks.Underlay_DrawBorder;
         Opt.labels = ['Time', 'Frequency'];
         Opt.interactionModel = Graph.InteractionModels.Scrollable(this);
-        Opt.colors = [this.analyzer.Color.Frequency];
-        Opt.xAxisHeight = 24;
+        Opt.colors = this.analyzer.SerieColors('Frequency');
+        Opt.xAxisHeight = 12;
         Opt.axes.y.pixelsPerLabel = 15;
         Opt.axes.y.axisLabelWidth = 34;
         Opt.axes.y.valueFormatter = (x) => { return this.Round(x, 3, false) + ' Hz'; };
         Opt.axes.y.axisLabelFormatter = (x) => { return this.Round(x, 3, false); };
-        Opt.axes.x.axisLabelFormatter = (x) => { return this.analyzer.FormatDateTime(x, '<br/>'); };
+        Opt.axes.x.ticker = (min, max, pixels) => { return Graph.Formatters.X_HourlyFull(min, max, pixels, (this.analyzer != null) ? this.analyzer.TimeZone : null); };
         Opt.axes.x.valueFormatter = (x) => { return this.analyzer.FormatDateTime(x); };
         if(this.data != null) {
-          for(var n in this.data.Sampletime) Opt.file.push([this.data.Sampletime[n], this.data.Frequency[n]]);
+          var TimeCol = this.data.Headers.indexOf('Time');
+          var ValueCol = this.data.Headers.indexOf('Frequency');
+          for(var n = 0; n < this.data.Rows.length; n++) Opt.file.push([this.data.Rows[n][TimeCol]].concat(this.data.Rows[n][ValueCol]));
           Opt.axes.y.valueRange = this.MatrixColsRange(Opt.file, [false, true], { rmsRange: 0.05 });
           Opt.dateWindow = [this.data.From, this.data.To];
         }

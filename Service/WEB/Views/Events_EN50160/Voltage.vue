@@ -2,8 +2,8 @@
   <div class="panel panel-voltage">
     <div class="panel-heading">
       <div class="float-left">Grid Voltage</div>
-      <div class="float-right" v-if="(((data[index].VoltageIN / data[index].VoltageSamples) * 100.0) < 95)">
-        <img :src="require('Imgs/exclamation.png')" data-toggle="tooltip" title="Limit exceded">
+      <div class="float-right" v-if="(((data.VoltageIN / data.VoltageSamples) * 100.0) < 95)">
+        <img :src="require('Imgs/exclamation.png')" title="Limit exceded">
       </div>
       <div class="clearfix"></div>
     </div>
@@ -12,10 +12,10 @@
     </div>
     <div class="panel-footer">
       <div class="text-center">95% of the year between {{ Round(analyzer.NominalVoltage, 2) }}V±10%</div>
-        <progress-bar :value="(((data[index].VoltageIN / data[index].VoltageSamples) * 100.0) - 80) * 5" :text="Round(((data[index].VoltageIN / data[index].VoltageSamples) * 100.0), 2) + '% of time in range'"></progress-bar>
+        <progress-bar :value="(((data.VoltageIN / data.VoltageSamples) * 100.0) - 80) * 5" :text="Round(((data.VoltageIN / data.VoltageSamples) * 100.0), 2) + '% of time in range'"></progress-bar>
         <div style="float: left; font-size: 10px">80%</div>
         <div style="float:right; font-size: 10px">100%</div>
-        <div class="clearfix text-center">{{ Round(((data[index].VoltageIN / data[index].VoltageSamples) * 100.0), 2) + '% of time in range' }}</div>
+        <div class="clearfix text-center">{{ Round(((data.VoltageIN / data.VoltageSamples) * 100.0), 2) + '% of time in range' }}</div>
     </div>
   </div>
 </template>
@@ -23,7 +23,7 @@
 <script>
   import Graph from 'Components/Graph.vue';
   export default {
-    props: { data: Array, index: Number, analyzer: Object, ranges: Array },
+    props: { data: Object, analyzer: Object, ranges: Array },
     data: function() {
       return { };
     },
@@ -69,9 +69,9 @@
           }
         };
         if(this.data != null) {
-          for(var i = 0; i < this.data[this.index].Voltage.length; i++) Opt.file.push([i, this.data[this.index].Voltage[i]]);
-          Opt.axes.y.valueFormatter = (x) => { return this.Round(x * 100.0 / this.data[this.index].VoltageSamples, 2) + ' %'; };
-          Opt.axes.y.axisLabelFormatter = (x) => { return this.Round(x * 100 / this.data[this.index].VoltageSamples, 0) + '%'; };
+          for(var i = 0; i < this.data.Voltage.length; i++) Opt.file.push([i, this.data.Voltage[i]]);
+          Opt.axes.y.valueFormatter = (x) => { return this.Round(x * 100.0 / this.data.VoltageSamples, 2) + ' %'; };
+          Opt.axes.y.axisLabelFormatter = (x) => { return this.Round(x * 100 / this.data.VoltageSamples, 0) + '%'; };
         }
         return Object.seal(Opt);
       }
@@ -84,7 +84,7 @@
         for(var i = 0; i < data.Voltage.length; i++) ToShow.push([i, data.Voltage[i]]);
         this.Warning = (In < 95);
         this.Voltage = (In - 90) * 10;
-        this.VoltageText = oZm.Round2Plain(In) + '% of time in range';
+        this.VoltageText = this.Round(In, 2, false) + '% of time in range';
       }
     }
   }

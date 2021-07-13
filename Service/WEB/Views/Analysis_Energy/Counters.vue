@@ -6,7 +6,7 @@
       <div class="clearfix"></div>
       <div>
         <div class="current-value" v-html="(data15M!=null) ? FormatSum(data15M) : '-'"></div>
-        <div class="counters-phases" v-if="(data15M!=null)&&(data15M.Active_Power.length>1)">
+        <div class="counters-phases" v-if="(data15M!=null)&&(data15M.Active_Energy.length>1)">
           <div v-for="(phase, idx) in FormatPhases(data15M)" :key="idx" v-html="phase"></div>
         </div>
       </div>
@@ -17,7 +17,7 @@
       <div class="clearfix"></div>
       <div>
         <div class="current-value" v-html="(data1H!=null) ? FormatSum(data1H) : '-'"></div>
-        <div class="counters-phases" v-if="(data1H!=null)&&(data1H.Active_Power.length>1)">
+        <div class="counters-phases" v-if="(data1H!=null)&&(data1H.Active_Energy.length>1)">
           <div v-for="(phase, idx) in FormatPhases(data1H)" :key="idx" v-html="phase"></div>
         </div>
       </div>
@@ -44,40 +44,38 @@
 </template>
 
 <script>
-//  import moment from 'moment';
-//  import 'moment-timezone';
   import * as oZm from 'JS/openZmeter.js';
   export default {
-    props: { analyzer: { type: Object}, serie: { type: String, required: true }, data15M: { type: Object }, data1H: { type: Object }, dataGraph: { type: Object } },
+    props: { analyzer: Object, serie: String, data15M: Object, data1H: Object, dataGraph: Object },
     data () {
       return { };
     },
     updated: function() {
-      this.$emit('update:height', this.$el.clientHeight);
+      this.$emit('update:height', this.$el.clientHeight - 14);
     },
     computed: {
       Sum: function() {
         var Sum = { Value: 0, Count: 0 };
-        if(this.dataGraph == null) return Sum;
-        var Divisor = (this.dataGraph.Aggregation_Source == '15M') ? 4 : 1;
-        for(var x in this.dataGraph.Sampletime) {
-          if((this.serie == 'ACTIVE_ENERGY') && (this.dataGraph.Active_Power[x] == null)) continue;
-          if((this.serie == 'REACTIVE_ENERGY') && (this.dataGraph.Reactive_Power[x] == null)) continue;
+        if((this.dataGraph == null) || (this.dataGraph.Rows.length == 0)) return Sum;
+        var TimeCol = this.dataGraph.Headers.indexOf('Time');
+        var ValueCol = this.dataGraph.Headers.indexOf(this.serie);
+        for(var x = 0; x < this.dataGraph.Rows.length; x++) {
+          if((this.dataGraph.Rows[x][ValueCol] == null)) continue;
           Sum.Count++;
-          Sum.Value += this.dataGraph[(this.serie == 'ACTIVE_ENERGY') ? 'Active_Power' : 'Reactive_Power'][x] / Divisor;
+          Sum.Value += this.dataGraph.Rows[x][ValueCol];
         }
         return Sum;
       },
       Max: function() {
         var Max = { Value: -Infinity, Time: 0, Count: 0 };
-        if(this.dataGraph == null) return Max;
-        var Divisor = (this.dataGraph.Aggregation_Source == '15M') ? 4 : 1;
-        for(var x in this.dataGraph.Sampletime) {
-          if((this.serie == 'ACTIVE_ENERGY') && (this.dataGraph.Active_Power[x] == null)) continue;
-          if((this.serie == 'REACTIVE_ENERGY') && (this.dataGraph.Reactive_Power[x] == null)) continue;
-          var Value = this.dataGraph[(this.serie == 'ACTIVE_ENERGY') ? 'Active_Power' : 'Reactive_Power'][x] / Divisor;
+        if((this.dataGraph == null) || (this.dataGraph.Rows.length == 0)) return Max;
+        var TimeCol = this.dataGraph.Headers.indexOf('Time');
+        var ValueCol = this.dataGraph.Headers.indexOf(this.serie);
+        for(var x = 0; x < this.dataGraph.Rows.length; x++) {
+          if((this.dataGraph.Rows[x][ValueCol] == null)) continue;
+          var Value = this.dataGraph.Rows[x][ValueCol];
           if(Value > Max.Value) {
-            Max = { Value: Value, Time: this.dataGraph.Sampletime[x], Count: 0 };
+            Max = { Value: Value, Time: this.dataGraph.Rows[x][TimeCol], Count: 0 };
           } else if(Value == Max.Value) {
             Max.Count++;
           }
@@ -87,48 +85,20 @@
     },
     methods: {
       FormatHTML: function(val) {
-        var Units = oZm.GetBestUnits(val);
-        return oZm.RoundHTML(oZm.ScaleToUnits(val, Units), 2) + ' ' + Units + ((this.serie == 'ACTIVE_ENERGY') ? 'Wh' : 'VArh');
+        var Units = this.BestUnits(val);
+        return oZm.RoundHTML(oZm.ScaleToUnits(val, Units), 2) + ' ' + Units + ((this.serie == 'Active_Energy') ? 'Wh' : 'VArh');
       },
       FormatSum: function(val) {
-        var Val = (this.serie == 'ACTIVE_ENERGY') ? val.Active_Power : val.Reactive_Power;
-        var Div = (val.Aggregation_Source == '15M') ? 4 : 1;
         var Sum = 0;
-        for(var n in Val) Sum = Sum + Val[n] / Div;
+        for(var n = 0; n < this.analyzer.VoltageChannels; n++) Sum = Sum + val[this.serie][n];
         return this.FormatHTML(Sum);
       },
-      FormatPhases: function(val) {
-        var Val = (this.serie == 'ACTIVE_ENERGY') ? val.Active_Power : val.Reactive_Power;
-        var Div = (val.Aggregation_Source == '15M') ? 4 : 1;
-        var Units = oZm.GetBestUnits(oZm.ArrayAbsMax(Val));
+      FormatPhases: function(val, div) {
+        var Units = this.BestUnits(oZm.ArrayAbsMax(val[this.serie]));
         var Result = [];
-        for(var n in Val) Result.push(this.FormatHTML(Val[n] / Div));
+        for(var n = 0; n < this.analyzer.VoltageChannels; n++) Result.push(this.FormatHTML(val[this.serie][n]));
         return Result;
-      },
-//      FormatAggregBlock(result, quarter) {
-//        var Variable = (this.variable == 'ACTIVE_ENERGY') ? 'ACTIVE_POWER' : 'REACTIVE_POWER';
-//        if(result === null) return ['', 'No data', ''];
-//        if(result['Sampletime'].length === 0) return ['', 'No data', ''];
-//        var Pos = result['Sampletime'].length - 1;
-//        var Time = 'At ' + moment(result.Sampletime[Pos]).format('HH:mm:ss');
-//        var Value = 'No data';
-//        var Phases = '';
-//        if(result[oZm.Series[Variable].Serie][Pos] !== null) {
-//          if(quarter) {
-//            for(var n = 0; n < result[oZm.Series[Variable].Serie][Pos].length; n++) result[oZm.Series[Variable].Serie][Pos][n] = result[oZm.Series[Variable].Serie][Pos][n] / 4.0;
-//          }
-//          Phases = this.FormatPhases(result[oZm.Series[Variable].Serie][Pos]);
-//          var Format = oZm.Series[this.variable].FormatValue(this.SumPhases(result[oZm.Series[Variable].Serie][Pos]));
-//          Value = Format.Value + '<em>' + Format.Units +'</em>';
-//        }
-//        return [Time, Value, Phases];
-//      },
-//      Set15MValues: function(result) {
-//        [this.Time15M, this.CurrentValue15M, this.CurrentValue15MPhases] = this.FormatAggregBlock(result, true);
-//      },
-//      Set1HValues: function(result) {
-//        [this.Time1H, this.CurrentValue1H, this.CurrentValue1HPhases] = this.FormatAggregBlock(result);
-//      },
+      }
     }
   }
 </script>

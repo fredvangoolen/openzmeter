@@ -4,8 +4,8 @@
       <div class="pull-left"><h4 class="modal-title">Telegram Bot</h4></div>
       <div class="pull-right btn-group">
         <div class="pull-right btn-group">
-          <button type="button" class="btn btn-default btn-xs" data-toggle="tooltip" title="Save" @click="Save"><img :src="require('Imgs/diskette.png')"></button>
-          <button type="button" class="btn btn-default btn-xs" data-toggle="tooltip" title="Back" @click="$emit('close')"><img :src="require('Imgs/arrow_undo.png')"></button>
+          <button type="button" class="btn btn-default btn-xs" title="Save and close" @click="Save"><img :src="require('Imgs/diskette.png')"></button>
+          <button type="button" class="btn btn-default btn-xs" title="Back" @click="$emit('close')"><img :src="require('Imgs/arrow_undo.png')"></button>
         </div>
       </div>
     </template>
@@ -18,6 +18,10 @@
       <div class="col-xs-12">
         <label class="control-label">Token</label>
         <input type="text" class="form-control" v-model="Config.Token">
+      </div>
+      <div class="col-xs-12">
+        <label class="control-label">Status</label>
+        <textarea rows="3" class="form-control" disabled :value="Details"></textarea>
       </div>
     </div>
   </dlg>
@@ -32,10 +36,16 @@
     created: function() {
       this.Config = Object.assign({}, this.settings);
     },
+    computed: {
+      Details: function() {
+        if(this.Config.Status.ID == null) return 'Status : Disconected';
+        return 'Status   : Connected\nUserName : ' + this.Config.Status.UserName + '(' + this.Config.Status.ID + ')\nName     : ' + this.Config.Status.FirstName + ' ' + this.Config.Status.LastName;
+      }
+    },
     methods: {
       Save: function() {
         this.ShowSpinner = true;
-        this.$http.post('setTelegram', this.Config).then(
+        this.Post('setTelegram', this.Config).then(
           (result) => {
             this.$emit('update:settings', this.Config);
             this.$emit('close');
@@ -52,7 +62,7 @@
 <style scoped>
   textarea {
     resize: none;
-    font-family: monospace;
+    font-family: 'Fira Code';
     font-size: 12px;
   }
 </style>

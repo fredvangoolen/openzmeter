@@ -2,6 +2,7 @@
   <div class="panel panel-other">
     <div class="panel-heading">By duration</div>
     <div class="panel-body">
+      <spinner v-if="data==null"></spinner>
       <graph :options="GraphOptions"></graph>
     </div>
   </div>
@@ -42,9 +43,12 @@
         Opt.axes.x.axisLabelFormatter = (x) => { return (((x % 1) == 0) && (x >= 0) && (x < this.Durations.length)) ? this.Durations[x][1] : ''; };
         for(var i = 0; i < this.Durations.length; i++) Opt.file.push([i, 0]);
         if(this.data != null) {
-          for(var i in this.data.StartTime) {
+          var DurationCol = this.data.Headers.indexOf('Duration');
+          var SamplerateCol = this.data.Headers.indexOf('SampleRate');
+          for(var i = 0; i < this.data.Rows.length; i++) {
+            var Duration = this.data.Rows[i][DurationCol] / this.data.Rows[i][SamplerateCol];
             for(var j = 0; j < this.Durations.length; j++) {
-              if(((this.data.Duration[i] / this.data.SampleRate[i]) >= this.Durations[j][0]) && ((this.data.Duration[i] / this.data.SampleRate[i]) < this.Durations[j + 1][0])) {
+              if((Duration >= this.Durations[j][0]) && (Duration < this.Durations[j + 1][0])) {
                 Opt.file[j][1] = Opt.file[j][1] + 1;
                 break;
               }

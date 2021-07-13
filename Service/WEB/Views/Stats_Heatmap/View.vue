@@ -15,7 +15,7 @@
             </div>
           </div>
           <div class="panel-body" style="min-height: 300px">
-            <spinner :class="{ 'hide': !ShowSpinner }"></spinner>
+            <spinner v-if="ShowSpinner" :progress="Progress"></spinner>
             <heatmap-table :data="Data" :aggreg="Aggreg" :analyzer="analyzer" :range.sync="Range" @update:export="ExportData=$event"></heatmap-table>
           </div>
         </div>
@@ -36,24 +36,40 @@
   export default {
     props: { analyzer: Object },
     data: function() {
-      return { Aggreg: '1H', Range: [0, 1], Data: {}, Year: 0, ShowSpinner: true, ExportData: null };
+      return { Aggreg: '1H', Range: [0, 1], Data: null, Year: 0, ShowSpinner: true, Progress: 0, ExportData: null };
     },
     watch: {
-      Year: function(val) {
-        this.ShowSpinner = true;
-        this.Data = null;
-        var To = moment.tz(this.analyzer.TimeZone).year(val).endOf('year').valueOf();
-        var From = moment.tz(this.analyzer.TimeZone).year(val).startOf('year').valueOf();
-        this.$http.post('getSeries', { From: From, To: To, Aggreg: '15M', Series: ['ACTIVE_POWER'], Analyzer: this.analyzer.Analyzer }).then(
-          (result) => {
-            this.ShowSpinner = false;
-            this.Data = Object.seal(result.data);
-          },
-          (fail) => {}
-        );
-      }
+      Year: function() { this.Update(); },
+      analyzer: function() { this.Update(); }
     },
     methods: {
+      Update: function() {
+        this.ShowSpinner = true;
+        this.Progress = 0;
+        this.Data = null;
+        var Count = 0;
+        var Blocks = [];
+        if((this.Year == null) || (this.analyzer == null)) return;
+        var GetMonth = (month) => {
+          var To = moment.tz(this.analyzer.TimeZone).year(this.Year).month(month).endOf('month').valueOf();
+          var From = moment.tz(this.analyzer.TimeZone).year(this.Year).month(month).startOf('month').valueOf();
+          this.Post('getSeries', { From: From, To: To, Aggreg: '15M', Series: ['Active_Energy'], Analyzer: this.analyzer.Analyzer }).then(
+            (result) => {
+              Blocks[month] = (month == 0) ? result : result.slice(1);
+              Count++;
+              this.Progress = (Count / 12.0) * 100.0;
+              if(Count == 12) {
+                var Data = [];
+                for(var n = 0; n < Count; n++) Data = Data.concat(Blocks[n]);
+                this.Data = Object.seal(Data);
+                this.ShowSpinner = false;
+              }
+            },
+            (fail) => {}
+          );
+        };
+        for(var month = 0; month < 12; month++) GetMonth(month);
+      },
       Export: function() {
         return this.ExportData;
       }

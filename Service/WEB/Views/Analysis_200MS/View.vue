@@ -41,7 +41,7 @@
       return { Paused: false, Range: null, AvaliableSeries:[], Series: [] };
     },
     created: function() {
-      var AllSeries = ['VOLTAGE', 'CURRENT', 'ACTIVE_POWER', 'FREQUENCY'].sort();
+      var AllSeries = ['Voltage', 'Current', 'Active_Power', 'Frequency'].sort();
       var Stored = JSON.parse(localStorage.getItem('200MS_Series'));
       if(Array.isArray(Stored) == false) Stored = [];
       for(var n in AllSeries) {

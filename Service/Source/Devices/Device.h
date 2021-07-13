@@ -16,66 +16,30 @@
 #pragma once
 #include <set>
 #include <pthread.h>
-#include "nlohmann/json.h"
+#include "nlohmann/json.hpp"
 #include "Analyzer.h"
-#include "HTTPServer.h"
+#include "HTTPRequest.h"
 #include "Tools.h"
 //----------------------------------------------------------------------------------------------------------------------
 using namespace std;
 using json = nlohmann::json;
 //----------------------------------------------------------------------------------------------------------------------
 class Device {
-  private :
-    struct Comp {
-      using is_transparent = void;
-      bool operator()(const Analyzer *a1, const Analyzer *a2) const {
-        return a1->Serial < a2->Serial;
-      }
-      bool operator()(const string &serial, const Analyzer *a) const {
-        return serial < a->Serial;
-      }
-      bool operator()(const Analyzer *a, const string &serial) const {
-        return a->Serial < serial;
-      }
-    };
   protected :
-    bool                   pEnabled;           //Enable flag
-    RWLocks                pAnalyzersLock;     //Analyzer list lock
-    set<Analyzer*, Comp>   pAnalyzers;         //Analyzers list
-  public :
-    const string           Serial;             //Device serial
-    const string           Driver;             //Driver name
-    const string           Name;               //Driver description
-  private :
-    bool CallAnalyzerFunction(const json &params, Response &response, void (Analyzer::*method)(const json &params, Response &response));
+    bool                   pEnabled;            //Enable flag
+    const string           pSerial;             //Device serial
+    const string           pDriver;             //Driver name
+    const string           pName;               //Driver description
   protected :
     Device(const string &serial, const string &driver, const string &name);
-    void AddAnalyzer(Analyzer *analyzer);
-    void ClearAnalyzers();
+  protected :
+    virtual uint32_t AnalyzersCount() = 0;
   public :
-    json GetJSONDescriptor();
-    json GetJSONAnalyzers(const string &user);
-    bool GetAnalyzer(const json &params, Response &response);
-    bool SetAnalyzer(const json &params, Response &response);
-    bool GetSeries(const json &params, Response &response);
-    bool GetSeriesNow(const json &params, Response &response);
-    bool GetSeriesRange(const json &params, Response &response);
-    bool GetEvents(const json &params, Response &response);
-    bool GetEvent(const json &params, Response &response);
-    bool SetEvent(const json &params, Response &response);
-    bool DelEvent(const json &params, Response &response);
-    bool GetPrices(const json &params, Response &response);
-    bool TestAlarm(const json &params, Response &response);
-    bool GetAlarms(const json &params, Response &response);
-    bool GetPermissions(const json &params, Response &response);
-    bool AddPermission(const json &params, Response &response);
-    bool SetPermission(const json &params, Response &response);
-    bool DelPermission(const json &params, Response &response);
+    json   GetJSONDescriptor();
+    string Serial() const;
   public :
     virtual ~Device();
-    virtual void GetDevice(const json &params, Response &response) = 0;
-    virtual void SetDevice(const json &params, Response &response) = 0;
-    virtual void GetRemote(const json &params, Response &response);
-    virtual void SetRemote(const json &params, Response &response);
-
+    virtual void GetDevice(HTTPRequest &req) = 0;
+    virtual void SetDevice(HTTPRequest &req) = 0;
 };
+//----------------------------------------------------------------------------------------------------------------------

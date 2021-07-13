@@ -15,6 +15,7 @@
 // ---------------------------------------------------------------------------------------------------------------------
 #pragma once
 #include <vector>
+#include <map>
 #include "Device.h"
 #include "HTTPServer.h"
 #include "Tools.h"
@@ -23,38 +24,19 @@ using namespace std;
 //----------------------------------------------------------------------------------------------------------------------
 class DeviceManager final {
   private :
-    static vector<vector<Device*> (*)()> pDrivers;
-    static vector<Device*>               pDevices;         //Initiated by devices, cleared on destroy
-    static RWLocks                       pDevicesLock;     //Control access to critical sections
+    static vector<void (*)()>   pDrivers;
+    static map<string, Device*> pDevices;         //Initiated by devices, cleared on destroy
+    static pthread_rwlock_t     pDevicesLock;     //Control access to critical sections
   private :
-    static void CallAnalyzerFunction(const json &params, Response &response, bool (Device::*method)(const json &params, Response &response));
-    static void CallDeviceFunction(const json &params, Response &response, void (Device::*method)(const json &params, Response &response));
-    static void GetDevicesCallback(const json &params, Response &response);
-    static void SetDevicesCallback(const json &params, Response &response);
-    static void GetDeviceCallback(const json &params, Response &response);
-    static void SetDeviceCallback(const json &params, Response &response);
-    static void GetRemoteCallback(const json &params, Response &response);
-    static void SetRemoteCallback(const json &params, Response &response);
-    static void GetAnalyzersCallback(const json &params, Response &response);
-    static void GetAnalyzerCallback(const json &params, Response &response);
-    static void SetAnalyzerCallback(const json &params, Response &response);
-    static void GetSeriesCallback(const json &params, Response &response);
-    static void GetSeriesNowCallback(const json &params, Response &response);
-    static void GetSeriesRangeCallback(const json &params, Response &response);
-    static void GetEventsCallback(const json &params, Response &response);
-    static void GetEventCallback(const json &params, Response &response);
-    static void SetEventCallback(const json &params, Response &response);
-    static void DelEventCallback(const json &params, Response &response);
-    static void GetPricesCallback(const json &params, Response &response);
-    static void TestAlarmCallback(const json &params, Response &response);
-    static void GetAlarmsCallback(const json &params, Response &response);
-    static void GetPermissionsCallback(const json &params, Response &response);
-    static void AddPermissionCallback(const json &params, Response &response);
-    static void SetPermissionCallback(const json &params, Response &response);
-    static void DelPermissionCallback(const json &params, Response &response);
+    static void CallDeviceFunction(HTTPRequest &req, void (Device::*method)(HTTPRequest &req));
+    static void GetDevicesCallback(HTTPRequest &req);
+    static void GetDeviceCallback(HTTPRequest &req);
+    static void SetDeviceCallback(HTTPRequest &req);
   public :
-    static void AddDriver(vector<Device*> (*func)());
+    static void AddDriver(void (*func)());
+    static void AddDevice(Device *dev);
   public :
     DeviceManager();
     ~DeviceManager();
 };
+//----------------------------------------------------------------------------------------------------------------------

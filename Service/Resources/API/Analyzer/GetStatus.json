@@ -1,0 +1,111 @@
+{
+  "components": {
+    "schemas": {
+      "LastReadVarTemplate" : {
+        "type": "object",
+        "required": [ "Count", "LastRead" ],
+        "properties": {
+          "Count": { "type": "number" },
+          "LastRead": { "type": "number" }
+        },
+        "example": {
+          "Count": 0,
+          "LastRead": 1600000000000
+        }
+      }
+    }
+  },
+  "paths": {
+    "/getStatus": {
+      "post": {
+        "summary": "Get analyzer status",
+        "tags": [ "Analyzers" ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "example": {
+                  "Analyzer": "VIRTUAL_3PN",
+                  "Series": [ "Version", "System", "SystemLog", "Log", "Events", "Alarms", "Storage" ]
+                },
+                "properties": {
+                  "Analyzer": { "type": "string" },
+                  "Series": { "type": "array", "items": { "type": "string", "enum": [ "Version", "System", "SystemLog", "Log", "Events", "Alarms", "Storage" ] } }
+                },
+                "required": [ "Analyzer", "Series" ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "On success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "Log": { "$ref": "#/components/schemas/LogTemplate" },
+                    "System": { "$ref": "#/components/schemas/StatusTemplate" },
+                    "Version": {
+                      "type": "object",
+                      "properties": {
+                        "Branch": { "type": "string" },
+                        "Arch": { "type": "string" },
+                        "Build": { "type": "string" }
+                      },
+                      "required": ["Branch", "Build", "Arch"],
+                      "example": {
+                        "Arch": "x86_64",
+                        "Branch": "devel",
+                        "Build": 2020020.21255
+                      }
+                    },
+                    "Storage": {
+                      "type": "object",
+                      "properties": {
+                        "Aggreg_10M": { "type": "number" },
+                        "Aggreg_15M": { "type": "number" },
+                        "Aggreg_1H": { "type": "number" },
+                        "Aggreg_1M": { "type": "number" },
+                        "Aggreg_200MS": { "type": "number" },
+                        "Aggreg_3S": { "type": "number" },
+                        "Alarms": { "type": "number" },
+                        "Events": { "type": "number" }
+                      },
+                      "example": {
+                        "Aggreg_10M": 8192,
+                        "Aggreg_15M": 8192,
+                        "Aggreg_1H": 8192,
+                        "Aggreg_1M": 8192,
+                        "Aggreg_200MS": 8192,
+                        "Aggreg_3S": 8192,
+                        "Alarms": 8192,
+                        "Events": 8192
+                      },
+                      "required": [ "Aggreg_10M", "Aggreg_15M", "Aggreg_1H", "Aggreg_1M", "Aggreg_200MS", "Aggreg_3S", "Alarms", "Events" ]
+                    },
+                    "Alarms": { "$ref": "#/components/schemas/LastReadVarTemplate" },
+                    "Events": { "$ref": "#/components/schemas/LastReadVarTemplate" },
+                    "State": { "type": "string", "enum": [ "UNCONFIGURED", "OFFLINE", "SYNCING", "ONLINE" ] },
+                    "Time": { "type": "number" },
+                    "SystemLog": { "type": "string" }
+                  },
+                  "example": {
+                    "State": "ONLINE",
+                    "Time": 1600000000000
+                  },
+                  "required": [
+                    "Online",
+                    "OnlineTime",
+                    "Time"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -13,22 +13,26 @@
         </template>
       </vuetable>
     </div>
-    <component v-if="SettingsVisible==true" :is="Driver" :settings="Settings" @close="LoadTable"></component>
+    <device-virtual v-if="Driver=='DeviceVirtual'" :settings="Settings" @close="LoadTable"></device-virtual>
+    <device-v1 v-if="Driver=='DeviceV1'" :settings="Settings" @close="LoadTable"></device-v1>
+    <device-v2 v-if="Driver=='DeviceV2'" :settings="Settings" @close="LoadTable"></device-v2>
+    <device-v3 v-if="Driver=='DeviceV3'" :settings="Settings" @close="LoadTable"></device-v3>
+    <device-remote v-if="Driver=='DeviceRemote'" :settings="Settings" @close="LoadTable"></device-remote>
   </div>
 </template>
 
 <script>
   import Vuetable from 'vuetable-2';
-  import Spinner from 'Components/Spinner.vue';
   import DeviceVirtual from './Devices/Virtual.vue';
   import DeviceV1 from './Devices/V1.vue';
   import DeviceV2 from './Devices/V2.vue';
+  import DeviceV3 from './Devices/V3.vue';
   import DeviceRemote from './Devices/Remote.vue';
   import 'CSS/table-responsive.css';
   import * as oZm from 'JS/openZmeter.js';
   export default {
     data() {
-      return { Devices: [], ShowSpinner: true, Driver: null, SettingsVisible: false, Settings: null, Enabled: false,
+      return { Devices: [], ShowSpinner: true, Driver: null, Settings: null, Enabled: false,
         Columns: [
           {name: 'Driver', title: 'Driver'},
           {name: 'Name', title: 'Name'},
@@ -42,13 +46,13 @@
     methods: {
       EnabledStatus: function(value) { return (value === true) ? '&#9635;' : '&#9633;'; },
       LoadTable: function (update) {
-        this.SettingsVisible = false;
+        this.Driver = null;
         if(update == false) return;
         this.ShowSpinner = true;
-        this.$http.post('getDevices', {}).then(
+        this.Post('getDevices', {}).then(
           (result) => {
             this.Enabled = true;
-            this.Devices = result.data;
+            this.Devices = result;
             this.ShowSpinner = false;
           },
           (fail) => {}
@@ -56,15 +60,15 @@
       },
       Configure: function (id) {
         this.ShowSpinner = true;
-        if(id.Driver === 'Virtual') this.Driver = 'DeviceVirtual';
-        if(id.Driver === 'V1') this.Driver = 'DeviceV1';
-        if(id.Driver === 'V2') this.Driver = 'DeviceV2';
-        if(id.Driver === 'Remote') this.Driver = 'DeviceRemote';
-        this.$http.post('getDevice', { Serial: id.Serial } ).then(
+        this.Post('getDevice', { Serial: id.Serial }).then(
           (result) => {
-            this.Settings = result.data;
+            this.Settings = result;
             this.Settings.Serial = id.Serial;
-            this.SettingsVisible = true;
+            if(id.Driver === 'Virtual') this.Driver = 'DeviceVirtual';
+            if(id.Driver === 'V1') this.Driver = 'DeviceV1';
+            if(id.Driver === 'V2') this.Driver = 'DeviceV2';
+            if(id.Driver === 'V3') this.Driver = 'DeviceV3';
+            if(id.Driver === 'Remote') this.Driver = 'DeviceRemote';
             this.ShowSpinner = false;
           },
           (fail) => {
@@ -79,7 +83,7 @@
     updated: function () {
       oZm.createCaptionsForResponsiveTable(this.$refs.table);
     },
-    components: {Vuetable, DeviceVirtual, DeviceV1, DeviceV2, DeviceRemote}
+    components: {Vuetable, DeviceVirtual, DeviceV1, DeviceV2, DeviceV3, DeviceRemote}
   }
 </script>
 
@@ -122,7 +126,7 @@
   }
   textarea {
     resize: none;
-    font-family: monospace;
+    font-family: 'Fira Code';
     font-size: 12px;
   }
 </style>

@@ -13,24 +13,24 @@
             </div>
           </div>
           <div class="panel-body">
-            <spinner v-if="Data==null"></spinner>
-            <curve :data="Data" :analyzer="analyzer"></curve>
+            <spinner v-if="TransferEvents.Data==null"></spinner>
+            <curve :data="TransferEvents.Data" :analyzer="analyzer"></curve>
           </div>
         </div>
       </div>
     </div>
     <div class="row">
       <div class="col-xs-12 col-md-6">
-        <by-date :data="Data" :analyzer="analyzer"></by-date>
+        <by-date :data="TransferEvents.Data" :analyzer="analyzer"></by-date>
       </div>
       <div class="col-xs-12 col-md-6">
-        <by-type :data="Data" :analyzer="analyzer"></by-type>
+        <by-type :data="TransferEvents.Data" :analyzer="analyzer"></by-type>
       </div>
       <div class="col-xs-12 col-md-6">
-        <by-rms :data="Data" :analyzer="analyzer"></by-rms>
+        <by-rms :data="TransferEvents.Data" :analyzer="analyzer"></by-rms>
       </div>
       <div class="col-xs-12 col-md-6">
-        <by-duration :data="Data" :analyzer="analyzer"></by-duration>
+        <by-duration :data="TransferEvents.Data" :analyzer="analyzer"></by-duration>
       </div>
     </div>
   </div>
@@ -42,31 +42,29 @@
   import ByType from './ByType.vue';
   import ByRms from './ByRMS.vue';
   import ByDuration from './ByDuration.vue';
-  import Graph from 'Components/Graph.vue';
   import moment from 'moment';
   export default {
     props: { analyzer: Object },
     data: function() {
-      return { Year: null, Data: null };
+      return { Year: null, TransferEvents: this.EventsTransfer() };
     },
     watch: {
-      Year: function(val) {
-        this.Data = null;
-        var To   = moment().tz(this.analyzer.TimeZone).year(val).endOf('year').valueOf();
-        var From = moment().tz(this.analyzer.TimeZone).year(val).startOf('year').valueOf();
-        this.$http.post('getEvents', { From: From, To: To, Analyzer: this.analyzer.Analyzer }).then(
-          (result) => {
-            this.Data = Object.seal(result.data);
-          },
-          (fail) => { }
-        );
-      }
+      analyzer: function() { if(this.Year == null) return; this.TransferEvents.Update(this.analyzer, [moment().tz(this.analyzer.TimeZone).year(this.Year).startOf('year').valueOf(), moment().tz(this.analyzer.TimeZone).year(this.Year).endOf('year').valueOf()]); },
+      Year: function(val) { if(this.analyzer == null) return ; this.TransferEvents.Update(this.analyzer, [moment().tz(this.analyzer.TimeZone).year(val).startOf('year').valueOf(), moment().tz(this.analyzer.TimeZone).year(val).endOf('year').valueOf()]); }
+    },
+    beforeDestroy: function() {
+      this.TransferEvents.Destroy();
     },
     methods: {
       Export: function() {
-        if(this.Data == null) return [];
+        if(this.TransferEvents.Data == null) return [];
         var Data =  [['Start', 'Type', 'Duration', 'Notes']];
-        for(var i in this.Data.StartTime) Data.push([this.Data.StartTime[i], this.Data.Type[i], this.Round(this.Data.Duration[i] / this.Data.SampleRate[i], 3), this.Data.Notes[i]]);
+        var StartCol = this.TransferEvents.Data.Headers.indexOf('StartTime');
+        var TypeCol  = this.TransferEvents.Data.Headers.indexOf('Type');
+        var DurationCol = this.TransferEvents.Data.Headers.indexOf('Duration');
+        var SamplerateCol = this.TransferEvents.Data.Headers.indexOf('SampleRate');
+        var NotesCol = this.TransferEvents.Data.Headers.indexOf('Notes');
+        for(var i = 0; i < this.TransferEvents.Data.Rows.length; i++) Data.push([this.analyzer.FormatDateTime(this.TransferEvents.Data.Rows[i][StartCol]), this.TransferEvents.Data.Rows[i][TypeCol], this.Round(this.TransferEvents.Data.Rows[i][DurationCol] / this.TransferEvents.Data.Rows[i][SamplerateCol], 3), this.TransferEvents.Data.Rows[i][NotesCol]]);
         return Object.seal(Data);
       }
     },

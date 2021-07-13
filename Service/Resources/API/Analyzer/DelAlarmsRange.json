@@ -1,0 +1,36 @@
+{
+  "paths": {
+    "/delSeriesRange": {
+      "post": {
+        "summary": "Delete alarms in a range of dates",
+        "tags": [ "Analyzers" ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "example": {
+                  "Analyzer": "VIRTUAL_3PN",
+                  "From": 1590000000000,
+                  "To": 1600000000000
+                },
+                "properties": {
+                  "Analyzer": { "type": "string" },
+                  "From": { "type": "number" },
+                  "To": { "type": "number" }
+                },
+                "required": [ "Analyzer", "From", "To" ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "$ref": "#/components/responses/200Response" },
+          "400": { "$ref": "#/components/responses/400Response" },
+          "401": { "$ref": "#/components/responses/401Response" },
+          "500": { "$ref": "#/components/responses/500Response" }
+        }
+      }
+    }
+  }
+}

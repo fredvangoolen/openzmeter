@@ -1,0 +1,38 @@
+{
+  "paths": {
+    "/delSeriesRange": {
+      "post": {
+        "summary": "Delete analyzer series in a range of dates",
+        "tags": [ "Analyzers" ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "example": {
+                  "Analyzer": "VIRTUAL_3PN",
+                  "Aggreg": "3S",
+                  "From": 1590000000000,
+                  "To": 1600000000000
+                },
+                "properties": {
+                  "Analyzer": { "type": "string" },
+                  "Aggreg": { "type": "string", "enum": [ "200MS", "3S", "1M", "10M", "15M", "1H" ] },
+                  "From": { "type": "number" },
+                  "To": { "type": "number" }
+                },
+                "required": [ "Analyzer", "Aggreg", "From", "To" ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "$ref": "#/components/responses/200Response" },
+          "400": { "$ref": "#/components/responses/400Response" },
+          "401": { "$ref": "#/components/responses/401Response" },
+          "500": { "$ref": "#/components/responses/500Response" }
+        }
+      }
+    }
+  }
+}

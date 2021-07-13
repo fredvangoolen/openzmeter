@@ -1,0 +1,348 @@
+EESchema-DOCLIB  Version 2.0
+#
+$CMP 4016
+D Quad Analog Switches
+K CMOS SWITCH
+$ENDCMP
+#
+$CMP 4066
+D Quad Ananlog Switches
+K CMOS SWITCH
+$ENDCMP
+#
+$CMP 4P4C
+D RJ connector, 4P4C (4 positions 4 connected), RJ9/RJ10/RJ22
+K 4P4C RJ female connector
+F ~
+$ENDCMP
+#
+$CMP 74LVC2G17
+D Dual Buffer Schmitt Triggered, Low-Voltage CMOS
+K Dual Buffer Schmitt LVC CMOS
+F http://www.ti.com/lit/sg/scyt129e/scyt129e.pdf
+$ENDCMP
+#
+$CMP AC-DC
+D Compact AC/DC board mount power module 3W 5V
+K AC/DC module power supply
+F http://www.hlktech.net/product_detail.php?ProId=54
+$ENDCMP
+#
+$CMP ACPL-C79A
+D Precision Isolation Amplifer, ±1% Gain Tolerance, Bandwidth 200kHz, SSO-8
+K Isolation Amplifer
+F http://docs.avagotech.com/docs/AV02-2460EN
+$ENDCMP
+#
+$CMP ACPL-C79A_copy
+D Precision Isolation Amplifer, ±1% Gain Tolerance, Bandwidth 200kHz, SSO-8
+K Isolation Amplifer
+F http://docs.avagotech.com/docs/AV02-2460EN
+$ENDCMP
+#
+$CMP ACPL-C79B
+D Precision Isolation Amplifer, ±0.5% Gain Tolerance, Bandwidth 200kHz, SSO-8
+K Isolation Amplifer
+F http://docs.avagotech.com/docs/AV02-2460EN
+$ENDCMP
+#
+$CMP ACPL-C79B_copy
+D Precision Isolation Amplifer, ±0.5% Gain Tolerance, Bandwidth 200kHz, SSO-8
+K Isolation Amplifer
+F http://docs.avagotech.com/docs/AV02-2460EN
+$ENDCMP
+#
+$CMP AD-DC
+D 5V to 5V 200mA, Isolated 2W Single-Output DC-DC Converter Modules with 3kV isolation, SIP-4
+K Murata isolated isolation dc-dc converter transformer
+F http://power.murata.com/datasheet?/data/power/ncl/kdc_cre1.pdf
+$ENDCMP
+#
+$CMP AP64350
+D 1.5A, step-up/down/inverting switching regulator, 3-40V Vin, 100kHz, SO-8
+K smps buck boost inverting
+F http://www.onsemi.com/pub_link/Collateral/MC34063A-D.PDF
+$ENDCMP
+#
+$CMP B0505D-1W
+D 5V to 5V 200mA, Isolated 2W Single-Output DC-DC Converter Modules with 3kV isolation, SIP-4
+K Murata isolated isolation dc-dc converter transformer
+F http://power.murata.com/datasheet?/data/power/ncl/kdc_cre1.pdf
+$ENDCMP
+#
+$CMP BQ21040
+D Constant-current/constant-voltage linear charger for single cell lithium-ion batteries with 2.9V Trickle Charge, 4.5V to 6.5V VDD, -40 to +85 degree Celcius, TSOT-23-5
+K Constant-current constant-voltage linear charger single cell lithium-ion battery
+F https://www.analog.com/media/en/technical-documentation/data-sheets/405442xf.pdf
+$ENDCMP
+#
+$CMP Battery_Cell
+D Single-cell battery
+K battery cell
+F ~
+$ENDCMP
+#
+$CMP CRE1S0305S3C
+D 3.3V to 5V 200mA, Isolated 2W Single-Output DC-DC Converter Modules with 3kV isolation, SIP-4
+K Murata isolated isolation dc-dc converter transformer
+F http://power.murata.com/datasheet?/data/power/ncl/kdc_cre1.pdf
+$ENDCMP
+#
+$CMP CRE1S0305S3C_copy
+D 3.3V to 5V 200mA, Isolated 2W Single-Output DC-DC Converter Modules with 3kV isolation, SIP-4
+K Murata isolated isolation dc-dc converter transformer
+F http://power.murata.com/datasheet?/data/power/ncl/kdc_cre1.pdf
+$ENDCMP
+#
+$CMP Conn_01x02
+D Generic connector, single row, 01x03, script generated (kicad-library-utils/schlib/autogen/connector/)
+K connector
+F ~
+$ENDCMP
+#
+$CMP Conn_01x03
+D Generic connector, single row, 01x03, script generated (kicad-library-utils/schlib/autogen/connector/)
+K connector
+F ~
+$ENDCMP
+#
+$CMP Conn_02x03
+D Generic connector, double row, 02x03, odd/even pin numbering scheme (row 1 odd numbers, row 2 even numbers), script generated (kicad-library-utils/schlib/autogen/connector/)
+K connector
+F ~
+$ENDCMP
+#
+$CMP Conn_02x04
+D Generic connector, double row, 02x04, odd/even pin numbering scheme (row 1 odd numbers, row 2 even numbers), script generated (kicad-library-utils/schlib/autogen/connector/)
+K connector
+F ~
+$ENDCMP
+#
+$CMP Conn_02x12_Counter_Clockwise
+D Generic connector, double row, 02x12, counter clockwise pin numbering scheme (similar to DIP packge numbering), script generated (kicad-library-utils/schlib/autogen/connector/)
+K connector
+F ~
+$ENDCMP
+#
+$CMP HLK-PM03
+D Compact AC/DC board mount power module 3W 3V3
+K AC/DC module power supply
+F http://www.hlktech.net/product_detail.php?ProId=59
+$ENDCMP
+#
+$CMP HLK-PM12
+D Compact AC/DC board mount power module 3W 12V
+K AC/DC module power supply
+F http://www.hlktech.net/product_detail.php?ProId=56
+$ENDCMP
+#
+$CMP HLK-PM24
+D Compact AC/DC board mount power module 3W 24V
+K AC/DC module power supply
+F http://www.hlktech.net/product_detail.php?ProId=81
+$ENDCMP
+#
+$CMP INA129
+D Precision, Low Power Instrumentation Amplifier G = 1 + 49.4kOhm/Rg, DIP-8/SOIC-8
+K instrumentation opamp
+F http://www.ti.com/lit/ds/symlink/ina128.pdf
+$ENDCMP
+#
+$CMP INA826
+D Precision, Low Power Instrumentation Amplifier G = 1 + 50kOhm/Rg, DIP-8/SOIC-8
+K instrumentation opamp
+F http://www.ti.com/lit/ds/symlink/ina128.pdf
+$ENDCMP
+#
+$CMP LED_Dual_ACA
+D LED dual, common cathode
+K led diode bicolor dual
+$ENDCMP
+#
+$CMP LM27313XMF
+D 1A, 28Vout Boost Voltage Regulator, 1.6MHz Frequency, SOT-23-5
+K Miniature Step-Up Boost Voltage Regulator
+F http://www.ti.com/lit/ds/symlink/lm27313.pdf
+$ENDCMP
+#
+$CMP LM2731XMF
+D LM27313, 1.8A, 22Vout Boost Voltage Regulator, 1.6MHz Frequency, SOT-23-5
+K Miniature Step-Up Boost Voltage Regulator
+F http://www.ti.com/lit/ds/symlink/lm2731.pdf
+$ENDCMP
+#
+$CMP LM2731YMF
+D LM27313, 1.8A, 22Vout Boost Voltage Regulator, 600KHz Frequency,
+K Miniature Step-Up Boost Voltage Regulator
+F http://www.ti.com/lit/ds/symlink/lm2731.pdf
+$ENDCMP
+#
+$CMP LM2733XMF
+D LM27313, 1A, 40Vout Boost Voltage Regulator, 1.6MHz Frequency, SOT-23-5
+K Miniature Step-Up Boost Voltage Regulator
+F http://www.ti.com/lit/ds/symlink/lm2733.pdf
+$ENDCMP
+#
+$CMP LM2733YMF
+D LM27313, 1A, 40Vout Boost Voltage Regulator, 600KHz Frequency,
+K Miniature Step-Up Boost Voltage Regulator
+F http://www.ti.com/lit/ds/symlink/lm2733.pdf
+$ENDCMP
+#
+$CMP LM2735XMF
+D LM27313, 2.1A, 24Vout Boost/FlybacK/SEPIC Voltage Regulator, 520kHz/1.6MHz Frequency,
+K Miniature Step-Up Boost Flyback SEPIC Voltage Regulator
+F http://www.ti.com/lit/ds/symlink/lm2735.pdf
+$ENDCMP
+#
+$CMP LMR10510YMF
+D 1A, 5.5V Step-Down Voltage Regulator, 3MHz Frequency, SOT-23-5
+K Miniature Step-Down Buck Voltage Regulator
+F http://www.ti.com/lit/ds/symlink/lmr10510.pdf
+$ENDCMP
+#
+$CMP LMR62014XMF
+D 1.4A, 20Vout Step-Up Voltage Regulator, 1.6MHz Frequency, SOT-23-5
+K Miniature Step-Up Boost Voltage Regulator
+F http://www.ti.com/lit/ds/symlink/lmr62014.pdf
+$ENDCMP
+#
+$CMP LMR62421XMF
+D 2.1A, 24Vout Boost/SEPIC Voltage Regulator, 1.6MHz Frequency, SOT-23-5
+K Miniature Step-Up Boost SEPIC Voltage Regulator
+F http://www.ti.com/lit/ds/symlink/lmr62421.pdf
+$ENDCMP
+#
+$CMP LMR64010XMF
+D 1A, 40Vout Step-Up Voltage Regulator, 1.6MHz Frequency, SOT-23-5
+K Miniature Step-Up Boost Voltage Regulator
+F http://www.ti.com/lit/ds/symlink/lmr64010.pdf
+$ENDCMP
+#
+$CMP MC34063AD
+D 1.5A, step-up/down/inverting switching regulator, 3-40V Vin, 100kHz, SO-8
+K smps buck boost inverting
+F http://www.onsemi.com/pub_link/Collateral/MC34063A-D.PDF
+$ENDCMP
+#
+$CMP MCP1802x-xx02xOT
+D 150mA, Tiny CMOS LDO With Shutdown, Fixed Voltage, SOT-23-5
+K LDO Linear Voltage Regulator
+F http://ww1.microchip.com/downloads/en/DeviceDoc/22053C.pdf
+$ENDCMP
+#
+$CMP MCP1811
+D 150mA, Tiny CMOS LDO With Shutdown, SOT-23-5
+K LDO Linear Voltage Regulator
+F http://ww1.microchip.com/downloads/en/DeviceDoc/21813F.pdf
+$ENDCMP
+#
+$CMP MCP6004
+D Microchip quad general purpose rail to rail op-amp, 1MHz GBWP
+K quad op amp operational amplifier
+F http://ww1.microchip.com/downloads/en/DeviceDoc/21733j.pdf
+$ENDCMP
+#
+$CMP MIC2005A-2YM6
+D Single-channel, high side, power distribution switch, 2.7V-5.5V, Active High Output, SOIC-8
+K mosfet distribution
+F https://ww1.microchip.com/downloads/en/DeviceDoc/MIC2025-2075-Single-Channel-Power-Distribution-Switch-DS20006030A.pdf
+$ENDCMP
+#
+$CMP MIC2025-2YM
+D Single-channel, high side, power distribution switch, 2.7V-5.5V, Active Low Output, SOIC-8
+K mosfet distribution
+F https://ww1.microchip.com/downloads/en/DeviceDoc/MIC2025-2075-Single-Channel-Power-Distribution-Switch-DS20006030A.pdf
+$ENDCMP
+#
+$CMP REF2025
+D 1.25V 100μA Micropower Precision Voltage Reference, SOT-23-6
+K Micropower Precision Voltage Reference 1.25V
+F http://www.ti.com/lit/ds/symlink/ref3240-ep.pdf
+$ENDCMP
+#
+$CMP REF3220AMDBVREP_copy
+D 2.048V 100μA Micropower Precision Voltage Reference, SOT-23-6
+K Micropower Precision Voltage Reference 2.048V
+F http://www.ti.com/lit/ds/symlink/ref3240-ep.pdf
+$ENDCMP
+#
+$CMP REF3225AMDBVREP_copy
+D 2.5V 100μA Micropower Precision Voltage Reference, SOT-23-6
+K Micropower Precision Voltage Reference 2.5V
+F http://www.ti.com/lit/ds/symlink/ref3240-ep.pdf
+$ENDCMP
+#
+$CMP REF3230AMDBVREP_copy
+D 3V 100μA Micropower Precision Voltage Reference, SOT-23-6
+K Micropower Precision Voltage Reference 3V
+F http://www.ti.com/lit/ds/symlink/ref3240-ep.pdf
+$ENDCMP
+#
+$CMP REF3233AMDBVREP_copy
+D 3.3V 100μA Micropower Precision Voltage Reference, SOT-23-6
+K Micropower Precision Voltage Reference 3.3V
+F http://www.ti.com/lit/ds/symlink/ref3240-ep.pdf
+$ENDCMP
+#
+$CMP REF3240AMDBVREP_copy
+D 4.096V 100μA Micropower Precision Voltage Reference, SOT-23-6
+K Micropower Precision Voltage Reference 4.096V
+F http://www.ti.com/lit/ds/symlink/ref3240-ep.pdf
+$ENDCMP
+#
+$CMP RJ10
+D RJ connector, 4P4C (4 positions 4 connected)
+K 4P4C RJ female connector
+F ~
+$ENDCMP
+#
+$CMP RJ22
+D RJ connector, 4P4C (4 positions 4 connected)
+K 4P4C RJ female connector
+F ~
+$ENDCMP
+#
+$CMP RJ9
+D RJ connector, 4P4C (4 positions 4 connected)
+K 4P4C RJ female connector
+F ~
+$ENDCMP
+#
+$CMP SSR_MOSFET_DIP4
+D Form A, Solid State Relay (Photo MOSFET) 60V, 0.2A, 10Ohm, SO-4
+K MOSFET Output Photorelay 1-Form-A
+F https://docs.broadcom.com/docs/AV02-0173EN
+$ENDCMP
+#
+$CMP STM32F412RGTx
+D ARM Cortex-M4 MCU, 1024KB flash, 256KB RAM, 100MHz, 1.7-3.6V, 50 GPIO, LQFP-64
+K ARM Cortex-M4 STM32F4 STM32F412
+F http://www.st.com/st-web-ui/static/active/en/resource/technical/document/datasheet/DM00213872.pdf
+$ENDCMP
+#
+$CMP STM32L412R8T6
+D ARM Cortex-M4 MCU, 512KB flash, 256KB RAM, 100MHz, 1.7-3.6V, 50 GPIO, LQFP-64
+K ARM Cortex-M4 STM32F4 STM32F412
+F http://www.st.com/st-web-ui/static/active/en/resource/technical/document/datasheet/DM00213872.pdf
+$ENDCMP
+#
+$CMP SW_DIP_x04
+D 4x DIP Switch, Single Pole Single Throw (SPST) switch, small symbol
+K dip switch
+F ~
+$ENDCMP
+#
+$CMP TMP100
+D Temperature Sensor with I2C/SMBus Interface, SOT-23-6
+K temperature sensor i2c smbus
+F http://www.ti.com/lit/gpn/tmp100
+$ENDCMP
+#
+$CMP USB_A
+D USB Type A connector
+K connector USB
+F  ~
+$ENDCMP
+#
+#End Doc Library

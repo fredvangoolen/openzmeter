@@ -1,10 +1,9 @@
-image: registry.gitlab.com/zredalmeria/openzmeter/openwrt_nanopi_air
-
 stages:
   - build
 
-build:
+build_nanopi_air:
   stage: build
+  image: registry.gitlab.com/zredalmeria/openzmeter/openwrt_nanopi_air
   tags:
     - devel
   cache:
@@ -12,13 +11,14 @@ build:
       - Service/WEB/node_modules
   artifacts:
     paths:
-      - Service/Tmp/openZmeter*.ipk
+      - Service/Tmp/openWRT_nanopi_air/openZmeter*.ipk
   script:
     - export BUILD_DATE=$(date -d @$(git show -s --format=%ct $CI_COMMIT_SHA) +%Y%m%d.%H%M)
-    - export BUILD_NAME=$CI_COMMIT_REF_NAME
+    - export BUILD_BRANCH=$CI_COMMIT_REF_NAME
+    - export BUILD_ARCH=arm_cortex-a7_neon-vfpv4
     - cd Service
-    - make CONFIG=Configs/openWRT_nanoPI-AIR -j8
-    - cd Tmp   
+    - make CONFIG=Configs/openWRT_nanopi_air -j8
+    - cd Tmp/openWRT_nanopi_air
     - mkdir -p Package
     - mkdir -p Package/usr/sbin
     - mv openZmeter Package/usr/sbin/
@@ -30,7 +30,7 @@ build:
       Section: base
       Priority: optional
       Architecture: arm_cortex-a7_neon-vfpv4
-      Depends: fftw3f (>= 3.3.7), libusb-1.0 (>= 1.0.22), libpq (>= 9.6.6), libopenssl (>= 1.0), bluez-daemon (>= 5.49)
+      Depends: fftw3f (>= 3.3.7), libusb-1.0 (>= 1.0.22), libpq (>= 9.6.6), libopenssl (>= 1.1), bluez-daemon (>= 5.49), libuuid (>= 2.32)
       Maintainer: Eduardo Viciana <eviciana@zred.es>
       Description: Power quality/mettering and analysis tool.
       Source: https://gitlab.com/zredalmeria/openzmeter
@@ -45,7 +45,7 @@ build:
       EOF
     - chmod +x Package/CONTROL/postinst
     - mkdir -p Package/etc/init.d
-    - |  
+    - |
       cat > Package/etc/init.d/openZmeter << EOF
       #!/bin/sh /etc/rc.common
       #start after dbus (60)
@@ -60,3 +60,4 @@ build:
       EOF
     - chmod +x Package/etc/init.d/openZmeter
     - ipkg-build -o root -g root Package .
+

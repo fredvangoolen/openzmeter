@@ -1,0 +1,36 @@
+{
+  "paths": {
+    "/getESIOS": {
+      "post": {
+        "summary": "Get ESIOS price fetch module configuration",
+        "tags": [ "Price modules" ],
+        "requestBody": { "$ref": "#/components/requestBodies/EmptyObject" },
+        "responses": {
+          "200": {
+            "description": "The method executed without error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "Enabled": { "type": "boolean" },
+                    "LastDate": { "type": "number" },
+                    "Token": { "type": "string" }
+                  },
+                  "required": [ "Enabled", "LastDate", "Token" ],
+                  "example": {
+                    "Enabled": false,
+                    "LastDate": 1600000000000,
+                    "Token": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+                  }
+                }
+              }
+            }
+          },
+          "401": { "$ref": "#/components/responses/401Response" },
+          "403": { "$ref": "#/components/responses/403Response" }
+        }
+      }
+    }
+  }
+}

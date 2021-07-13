@@ -1,16 +1,20 @@
 //Main libs and style --------------------------------------------------------------------------------------------------
-import jQuery from 'jquery';
-import Bootstrap from 'bootstrap';
+import 'jquery';
+import 'bootstrap/dist/js/bootstrap.js';
 import 'bootstrap/dist/css/bootstrap.css';
 import 'CSS/openZmeter.css';
 //VUE components -------------------------------------------------------------------------------------------------------
 import Vue from 'vue';
+window.EventBus = new Vue;
 import Router from 'vue-router';
 Vue.use(Router);
 import VueResource from 'vue-resource';
 Vue.use(VueResource);
 import PortalVue from 'portal-vue';
 Vue.use(PortalVue);
+import VueToast from 'vue-toast-notification';
+import 'vue-toast-notification/dist/theme-sugar.css';
+Vue.use(VueToast);
 //Other tools ----------------------------------------------------------------------------------------------------------
 import { blur } from 'auto-blur';
 addEventListener('click', evt => blur(evt));
@@ -40,6 +44,10 @@ import DlgFs from 'Components/DialogFullscreen.vue';
 Vue.component('DlgFs', DlgFs);
 import Graph from 'Components/Graph.vue';
 Vue.component('Graph', Graph);
+import InputMath from 'Components/InputMath.vue';
+Vue.component('InputMath', InputMath);
+import InputText from 'Components/InputText.vue';
+Vue.component('InputText', InputText);
 import InputSpin from 'Components/InputSpin.vue';
 Vue.component('InputSpin', InputSpin);
 import OptionAdder from 'Components/OptionAdder.vue';
@@ -52,6 +60,10 @@ import ProgressBar from 'Components/ProgressBar.vue';
 Vue.component('ProgressBar', ProgressBar);
 import Spinner from 'Components/Spinner.vue';
 Vue.component('Spinner', Spinner);
+import YearConfig from 'Components/YearConfig.vue';
+Vue.component('YearConfig', YearConfig);
+import DayConfig from 'Components/DayConfig.vue';
+Vue.component('DayConfig', DayConfig);
 import ToolbarAggregation from 'Components/ToolbarAggregation.vue';
 Vue.component('ToolbarAggregation', ToolbarAggregation);
 import ToolbarYears from 'Components/ToolbarYears.vue';
@@ -60,12 +72,16 @@ import ToolbarPager from 'Components/ToolbarPager.vue';
 Vue.component('ToolbarPager', ToolbarPager);
 import ToolbarPeriod from 'Components/ToolbarPeriod.vue';
 Vue.component('ToolbarPeriod', ToolbarPeriod);
+import ToolbarColorItems from 'Components/ToolbarColorItems.vue';
+Vue.component('ToolbarColorItems', ToolbarColorItems);
 import ToolbarPeriodB from 'Components/ToolbarPeriodB.vue';
 Vue.component('ToolbarPeriodB', ToolbarPeriodB);
 import ToolbarPhases from 'Components/ToolbarPhases.vue';
 Vue.component('ToolbarPhases', ToolbarPhases);
 import ToolbarOptions from 'Components/ToolbarOptions.vue';
 Vue.component('ToolbarOptions', ToolbarOptions);
+import ToolbarWeeks from 'Components/ToolbarWeeks.vue';
+Vue.component('ToolbarWeeks', ToolbarWeeks);
 import DetailTabs from 'Components/Tabs.vue';
 Vue.component('DetailTabs', DetailTabs);
 import Toggle from 'Components/Toggle.vue';
@@ -89,30 +105,33 @@ import StatsDistribution from 'Views/Stats_Distribution/View.vue';
 import Settings from 'Views/Settings/View.vue';
 import About from 'Views/About/View.vue';
 import PageNotFound from 'Views/PageNotFound.vue';
-
-const AppRouter = new Router({
-  linkActiveClass: 'active',
-  mode: 'history',
-  routes: [
-    { path: '/', redirect: '/Dashboard' },
-    { path: '/Dashboard', component: Dashboard },
-    { path: '/Analysis/Voltage', component: AnalysisVoltage },
-    { path: '/Analysis/Current', component: AnalysisCurrent },
-    { path: '/Analysis/Power', component: AnalysisPower },
-    { path: '/Analysis/Energy', component: AnalysisEnergy },
-    { path: '/Analysis/Frequency', component: AnalysisFrequency },
-    { path: '/Analysis/200MS', component: Analysis200MS },
-    { path: '/Events/ITIC', component: EventsITIC },
-    { path: '/Events/Disturbances', component: EventsDisturbances },
-    { path: '/Events/EN50160', component: EventsEN50160 },
-    { path: '/Events/Alarms', component: EventsAlarms },
-    { path: '/Stats/Costs', component: StatsCosts },
-    { path: '/Stats/Heatmap', component: StatsHeatmap },
-    { path: '/Stats/Distribution', component: StatsDistribution },
-    { path: '/Settings', component: Settings },
-    { path: '/About', component: About },
-    { path: '*', component: PageNotFound }
-  ]
+new Vue({
+  //i18n: new VueI18n( { locale: 'es', fallbackLocale: 'en'} ),
+  el: '#app',
+  data: { Loading: false },
+  render: h => h(App),
+  router: new Router({
+    linkActiveClass: 'active',
+    mode: 'history',
+    routes: [
+      { path: '/', redirect: '/Dashboard' },
+      { path: '/Dashboard',           component: Dashboard },
+      { path: '/Analysis/Voltage',    component: AnalysisVoltage },
+      { path: '/Analysis/Current',    component: AnalysisCurrent },
+      { path: '/Analysis/Power',      component: AnalysisPower },
+      { path: '/Analysis/Energy',     component: AnalysisEnergy },
+      { path: '/Analysis/Frequency',  component: AnalysisFrequency },
+      { path: '/Analysis/200MS',      component: Analysis200MS },
+      { path: '/Events/ITIC',         component: EventsITIC },
+      { path: '/Events/Disturbances', component: EventsDisturbances },
+      { path: '/Events/EN50160',      component: EventsEN50160 },
+      { path: '/Events/Alarms',       component: EventsAlarms },
+      { path: '/Stats/Costs',         component: StatsCosts },
+      { path: '/Stats/Heatmap',       component: StatsHeatmap },
+      { path: '/Stats/Distribution',  component: StatsDistribution },
+      { path: '/Settings',            component: Settings },
+      { path: '/About',               component: About },
+      { path: '*',                    component: PageNotFound }
+    ]
+  })
 });
-
-new Vue( { el: '#app', render: h => h(App), router: AppRouter } );

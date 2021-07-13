@@ -3,7 +3,7 @@
     <div class="panel-heading">
       <div class="header-text">{{ PanelTitle }} {{ paused ? '(Paused)' : '' }}</div>
       <portal to="fs-toolbar" :disabled="!Expanded" class="header-buttons">
-        <toolbar-phases :analyzer="analyzer" v-model="Phases" v-if="serie != 'FREQUENCY'" :storage="'Dashboard_' + serie" :current="serie=='CURRENT'" :multi="true"></toolbar-phases>
+        <toolbar-phases :analyzer="analyzer" v-model="Phases" v-if="serie != 'Frequency'" :storage="'Dashboard_' + serie" :current="serie=='Current'" :multi="true"></toolbar-phases>
         <div class="btn-group">
           <button-export :rows="Export" :file="PanelTitle"></button-export>
           <button-expand v-model="Expanded"></button-expand>
@@ -30,11 +30,10 @@
     props: { serie: String, analyzer: Object, paused: Boolean, range: [String, Array] },
     data() {
       return { ShowSpinner: true, Phases: null, Expanded: false, DialogHeight: 300,
-               TransferGraph: this.CreateSeriesTransfer(this, [this.serie])
+               TransferGraph: this.SeriesTransfer([this.serie])
       };
     },
     created: function() {
-      this.SerieProps = oZm.Series[this.serie];
       this.TransferGraph.Update(this.analyzer, '200MS', this.range);
     },
     beforeDestroy: function() {
@@ -46,21 +45,20 @@
       },
       range: function(val, prev) {
         this.TransferGraph.Update(this.analyzer, '200MS', this.range);
-      },
-
+      }
     },
     computed: {
       PanelClass: function() {
-        if(this.serie == 'VOLTAGE') return 'panel-voltage';
-        if(this.serie == 'CURRENT') return 'panel-current';
-        if(this.serie == 'ACTIVE_POWER') return 'panel-active-power';
-        if(this.serie == 'FREQUENCY') return 'panel-frequency';
+        if(this.serie == 'Voltage') return 'panel-voltage';
+        if(this.serie == 'Current') return 'panel-current';
+        if(this.serie == 'Active_Power') return 'panel-active-power';
+        if(this.serie == 'Frequency') return 'panel-frequency';
       },
       PanelTitle: function() {
-        if(this.serie == 'VOLTAGE') return 'Voltage';
-        if(this.serie == 'CURRENT') return 'Current';
-        if(this.serie == 'ACTIVE_POWER') return 'Active Power';
-        if(this.serie == 'FREQUENCY') return 'Frequency';
+        if(this.serie == 'Voltage') return 'Voltage';
+        if(this.serie == 'Current') return 'Current';
+        if(this.serie == 'Active_Power') return 'Active Power';
+        if(this.serie == 'Frequency') return 'Frequency';
       },
       GraphOptions: function() {
         var Opt = { file: [], axes: { x: {}, y: {} }};
@@ -77,8 +75,8 @@
         Opt.connectSeparatedPoints = false;
         Opt.fillGraph = false;
         Opt.legend = 'follow';
-        Opt.labels = ['Time'].concat(this.SerieProps.Names(this.analyzer));
-        Opt.colors = oZm.SerieStyle(this.SerieProps, this.analyzer, 0).Colors;
+        Opt.labels = ['Time'].concat(this.analyzer.SerieNames(this.serie));
+        Opt.colors = this.analyzer.SerieColors(this.serie);
         Opt.selectMode = 'euclidian';
         Opt.xAxisHeight = 12;
         Opt.axes.x.valueFormatter = (x) => { return this.analyzer.FormatTime(x); };
@@ -90,48 +88,43 @@
         Opt.dateWindow = [this.TransferGraph.Data.From, this.TransferGraph.Data.To];
         for(var n in this.TransferGraph.Data.Sampletime) {
           var Row = [this.TransferGraph.Data.Sampletime[n]];
-          if(this.serie == 'VOLTAGE') {
+          if(this.serie == 'Voltage') {
             for(var i in this.TransferGraph.Data.Voltage[n]) Row.push(this.TransferGraph.Data.Voltage[n][i]);
-          } else if(this.serie == 'CURRENT') {
+          } else if(this.serie == 'Current') {
             for(var i in this.TransferGraph.Data.Current[n]) Row.push(this.TransferGraph.Data.Current[n][i]);
-          } else if(this.serie == 'ACTIVE_POWER') {
+          } else if(this.serie == 'Active_Power') {
             for(var i in this.TransferGraph.Data.Active_Power[n]) Row.push(this.TransferGraph.Data.Active_Power[n][i]);
-          } else if(this.serie == 'FREQUENCY') {
+          } else if(this.serie == 'Frequency') {
             Row.push(this.TransferGraph.Data.Frequency[n]);
           }
           Opt.file.push(Row);
         }
-        if((this.serie == 'VOLTAGE') || (this.serie == 'CURRENT')) {
+        if((this.serie == 'Voltage') || (this.serie == 'Current')) {
           Opt.axes.y.valueRange = this.MatrixColsRange(Opt.file, [false].concat(this.Phases), { rmsRange: 1.0 });
-        } else if(this.serie == 'ACTIVE_POWER') {
+        } else if(this.serie == 'Active_Power') {
           Opt.axes.y.valueRange = this.MatrixColsRange(Opt.file, [false].concat(this.Phases), { incZero: 1.0 });
-        } else if(this.serie == 'FREQUENCY') {
+        } else if(this.serie == 'Frequency') {
           Opt.axes.y.valueRange = this.MatrixColsRange(Opt.file, [false, true], { rmsRange: 0.1 });
         }
         var Units = this.BestUnits(Math.max(Math.abs(Opt.axes.y.valueRange[0]), Math.abs(Opt.axes.y.valueRange[1])));
-        Opt.axes.y.valueFormatter = (x) => {
-          var Result = oZm.FormatSerieValue(x, this.SerieProps);
-          return Result.ValuePlain + ' ' + Result.Units;
-        };
-        Opt.axes.y.axisLabelFormatter = (x) => {
-          return oZm.FormatSerieValue(x, this.SerieProps, Units).ValuePlain;
-        };
+        Opt.axes.y.valueFormatter = (x) => { return Graph.Formatters.Y_UnitScale(x, this.analyzer.SerieUnits(this.serie), 2, true); };
+        Opt.axes.y.axisLabelFormatter = (x, gran, opts, g) => { return Graph.Formatters.Y_UnitScaleFull(x, gran, opts, g, '', 2, true); };
         return Object.seal(Opt);
       }
     },
     methods: {
       Export: function() {
         if(this.data == null) return [];
-        var Header = [['Time'].concat(this.SerieProps.Names(this.analyzer))];
+        var Header = [['Time'].concat(this.analyzer.SerieNames(this.serie))];
         for(var n in this.data.Sampletime) {
           var Row = [this.data.Sampletime[n]];
-          if(this.serie == 'VOLTAGE') {
+          if(this.serie == 'Voltage') {
             for(var i in this.data.Voltage[n]) Row.push(this.Round(this.data.Voltage[n][i], 3));
-          } else if(this.serie == 'CURRENT') {
+          } else if(this.serie == 'Current') {
             for(var i in this.data.Current[n]) Row.push(this.Round(this.data.Current[n][i], 3));
-          } else if(this.serie == 'ACTIVE_POWER') {
+          } else if(this.serie == 'Active_Power') {
             for(var i in this.data.Active_Power[n]) Row.push(this.Round(this.data.Active_Power[n][i], 3));
-          } else if(this.serie == 'FREQUENCY') {
+          } else if(this.serie == 'Frequency') {
             Row.push(this.Round(this.data.Frequency[n], 3));
           }
           Header.push(Row);

@@ -61,20 +61,21 @@
       return { };
     },
     updated: function() {
-      this.$emit('update:height', this.$el.clientHeight);
+      this.$emit('update:height', this.$el.clientHeight - 14);
     },
     computed: {
       Min: function() {
         var Val = +Infinity;
         var Min = { Value: [], Time: 0, Count: 0 };
-        if(this.dataGraph == null) return Min;
-        for(var x in this.dataGraph.Sampletime) {
-          for(var p in this.dataGraph.Voltage[x]) {
-            if(this.dataGraph.Voltage[x][p] == null) continue;
-            if(this.dataGraph.Voltage[x][p] < Val) {
-              Val = this.dataGraph.Voltage[x][p];
-              Min = { Value: this.dataGraph.Voltage[x], Time: this.dataGraph.Sampletime[x], Count: 0 };
-            } else if(this.dataGraph.Voltage[x][p] == Val) {
+        if((this.dataGraph == null) || (this.dataGraph.Rows.length == 0)) return Min;
+        var TimeCol = this.dataGraph.Headers.indexOf('Time');
+        var ValueCol = this.dataGraph.Headers.indexOf('Voltage');
+        for(var x = 0; x < this.dataGraph.Rows.length; x++) {
+          for(var p = 0; p < this.dataGraph.Rows[x][ValueCol].length; p++) {
+            if(this.dataGraph.Rows[x][ValueCol][p] < Val) {
+              Val = this.dataGraph.Rows[x][ValueCol][p];
+              Min = { Value: this.dataGraph.Rows[x][ValueCol], Time: this.dataGraph.Rows[x][TimeCol], Count: 0 };
+            } else if(this.dataGraph.Rows[x][ValueCol][p] == Val) {
               Min.Count++;
             }
           }
@@ -84,14 +85,15 @@
       Max: function() {
         var Val = -Infinity;
         var Max = { Value: [], Time: 0, Count: 0 };
-        if(this.dataGraph == null) return Max;
-        for(var x in this.dataGraph.Sampletime) {
-          for(var p in this.dataGraph.Voltage[x]) {
-            if(this.dataGraph.Voltage[x][p] == null) continue;
-            if(this.dataGraph.Voltage[x][p] > Val) {
-              Val = this.dataGraph.Voltage[x][p];
-              Max = { Value: this.dataGraph.Voltage[x], Time: this.dataGraph.Sampletime[x], Count: 0 };
-            } else if(this.dataGraph.Voltage[x][p] == Val) {
+        if((this.dataGraph == null) || (this.dataGraph.Rows.length == 0)) return Max;
+        var TimeCol = this.dataGraph.Headers.indexOf('Time');
+        var ValueCol = this.dataGraph.Headers.indexOf('Voltage');
+        for(var x = 0; x < this.dataGraph.Rows.length; x++) {
+          for(var p = 0; p < this.dataGraph.Rows[x][ValueCol].length; p++) {
+            if(this.dataGraph.Rows[x][ValueCol][p] > Val) {
+              Val = this.dataGraph.Rows[x][ValueCol][p];
+              Max = { Value: this.dataGraph.Rows[x][ValueCol], Time: this.dataGraph.Rows[x][TimeCol], Count: 0 };
+            } else if(this.dataGraph.Rows[x][ValueCol][p] == Val) {
               Max.Count++;
             }
           }
@@ -100,39 +102,42 @@
       },
       Avg: function() {
         var Avg = { Value: [], Count: 0 };
+        if((this.dataGraph == null) || (this.dataGraph.Rows.length == 0)) return Avg;
+        var ValueCol = this.dataGraph.Headers.indexOf('Voltage');
         if(this.dataGraph == null) return Avg;
-        for(var x in this.dataGraph.Sampletime) {
-          if(Avg.Value.length == 0) Avg.Value = Array(this.dataGraph.Voltage[x].length).fill(0);
-          for(var p in this.dataGraph.Voltage[x]) Avg.Value[p] = Avg.Value[p] + this.dataGraph.Voltage[x][p];
+        for(var x = 0; x < this.dataGraph.Rows.length; x++) {
+          if(Avg.Value.length == 0) Avg.Value = new Array(this.dataGraph.Rows[x][ValueCol].length).fill(0);
+          for(var p = 0; p < this.dataGraph.Rows[x][ValueCol].length; p++) Avg.Value[p] = Avg.Value[p] + this.dataGraph.Rows[x][ValueCol][p];
           Avg.Count++;
         }
-        for(var p in this.dataGraph.Voltage[x]) Avg.Value[p] = Avg.Value[p] / Avg.Count;
+        for(var p = 0; p < Avg.Value.length; p++) Avg.Value[p] = Avg.Value[p] / Avg.Count;
         return Avg;
       },
       Std: function() {
         var Std = { Value: [], Percent: 0 };
         var Avg = [], Count = 0;
-        if(this.dataGraph == null) return Std;
-        for(var x in this.dataGraph.Sampletime) {
+        if((this.dataGraph == null) || (this.dataGraph.Rows.length == 0)) return Std;
+        var ValueCol = this.dataGraph.Headers.indexOf('Voltage');
+        for(var x = 0; x < this.dataGraph.Rows.length; x++) {
           if(Std.Value.length == 0) {
-            Avg = Array(this.dataGraph.Voltage[x].length).fill(0);
-            Std.Value = Array(this.dataGraph.Voltage[x].length).fill(0);
+            Avg = new Array(this.dataGraph.Rows[x][ValueCol].length).fill(0);
+            Std.Value = new Array(this.dataGraph.Rows[x][ValueCol].length).fill(0);
           }
-          for(var p in this.dataGraph.Voltage[x]) {
-            if((this.dataGraph.Voltage[x][p] > this.analyzer.NominalVoltage * 0.9) && (this.dataGraph.Voltage[x][p] < this.analyzer.NominalVoltage * 1.1)) Std.Percent++;
-            Std.Value[p] += Math.pow(this.dataGraph.Voltage[x][p], 2.0);
-            Avg[p] += this.dataGraph.Voltage[x][p];
+          for(var p = 0; p < this.dataGraph.Rows[x][ValueCol].length; p++) {
+            if((this.dataGraph.Rows[x][ValueCol][p] > this.analyzer.NominalVoltage * 0.9) && (this.dataGraph.Rows[x][ValueCol][p] < this.analyzer.NominalVoltage * 1.1)) Std.Percent++;
+            Std.Value[p] += Math.pow(this.dataGraph.Rows[x][ValueCol][p], 2.0);
+            Avg[p] += this.dataGraph.Rows[x][ValueCol][p];
           }
           Count++;
         }
-        for(var p in this.dataGraph.Voltage[x]) Std.Value[p] = Math.sqrt((Std.Value[p] / Count) - Math.pow(Avg[p] / Count, 2));
+        for(var p = 0; p < Std.Value.length; p++) Std.Value[p] = Math.sqrt((Std.Value[p] / Count) - Math.pow(Avg[p] / Count, 2));
         Std.Percent = (Std.Percent * 100) / (Count * Std.Value.length);
         return Std;
       }
     },
     methods: {
       FormatHTML: function(val) {
-        var Units = oZm.GetBestUnits(val);
+        var Units = this.BestUnits(val);
         return this.Round(oZm.ScaleToUnits(val, Units), 2, true) + ' ' + Units + 'V';
       },
       FormatRMS: function(val) {
@@ -142,7 +147,7 @@
       },
       FormatPhases: function(val) {
         var Return = [];
-        for(var n in val.Voltage.length) Return.push(this.FormatHTML(val.Voltage[n]));
+        for(var n in val.Voltage) Return.push(this.FormatHTML(val.Voltage[n]));
         return Return;
       }
     }

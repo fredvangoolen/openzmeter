@@ -44,7 +44,7 @@
           };
         };
         reader.onerror = (error) => {
-          console.log(error);
+          console.error(error);
         };
       },
       ClearImage: function() {

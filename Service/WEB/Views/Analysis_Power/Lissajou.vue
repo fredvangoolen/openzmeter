@@ -46,7 +46,7 @@
         Opt.showRangeSelector = false;
         Opt.strokeWidth = 0.5;
         Opt.labels = ['Voltage', 'Current'];
-        Opt.colors = [this.analyzer.Color.Voltage, this.analyzer.Color.Current, this.analyzer.Color.Active_Power].concat(this.analyzer.VoltageChannels > 1 ? [this.analyzer.Color.Active_Power] : []);
+        Opt.colors = [this.analyzer.SerieColor('Voltage')];
         Opt.axes.y.pixelsPerLabel = 15;
         Opt.axes.y.axisLabelWidth = 34;
         if((this.Phase != null) && (this.data != null)) {
@@ -66,14 +66,14 @@
     },
     methods: {
       Resize: function() {
-        this.Height = Math.min(600, this.$refs.Container.clientWidth - 30);
+        if(this.$refs.Container != null) this.Height = Math.min(600, this.$refs.Container.clientWidth - 30);
       },
       Export: function() {
         if((this.data == null) || (this.analyzer == null)) return [];
         var Header = ['Sample']
-          .concat(this.analyzer.GetSeriesNames('Voltage', this.analyzer.VoltageChannels))
-          .concat(this.analyzer.GetSeriesNames('Current', this.analyzer.VoltageChannels))
-          .concat(this.analyzer.GetSeriesNames('Power', this.analyzer.VoltageChannels));
+          .concat(this.analyzer.SerieNames('Voltage'))
+          .concat(this.analyzer.SerieNames('Current'))
+          .concat(this.analyzer.SerieNames('Power'));
         var Data = [Header];
         for(var i = 0; i < this.data.Voltage_Samples[0].length; i++) {
           var Row = [i];
@@ -91,12 +91,5 @@
 <style scoped>
   .header-text {
     font-size: 14px;
-  }
-  .title-warning {
-    line-height: 20px;
-    font-size: 14px;
-  }
-  .title-warning img {
-    margin: -4px 4px 0px 0px;
   }
 </style>

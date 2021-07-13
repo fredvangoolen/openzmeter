@@ -1,0 +1,36 @@
+{
+  "components": {
+    "schemas": {
+      "AnalyzerListTemplate": {
+        "type": "array", "items": { "type": "array" },
+        "example": [
+          ["Analyzer", "User", "Name", "State", "Read", "Write", "Config"],
+          ["VIRTUAL_3PN", "admin", "Unnamed analyzer", "ONLINE", true, true, true]
+        ]
+      }
+    }
+  },
+  "paths": {
+    "/getAnalyzers": {
+      "post": {
+        "summary": "Get list of avaliable analyzers",
+        "tags": [ "Analyzers" ],
+        "requestBody": { "$ref": "#/components/requestBodies/EmptyObject" },
+        "responses": {
+          "200": {
+            "description": "The method executed without error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items" : { "$ref": "#/components/schemas/AnalyzerListTemplate" }
+                }
+              }
+            }
+          },
+          "401": { "$ref": "#/components/responses/401Response" }
+        }
+      }
+    }
+  }
+}

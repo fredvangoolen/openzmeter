@@ -18,184 +18,64 @@
 #include "DeviceManager.h"
 #include "HTTPServer.h"
 #include "Tariff.h"
+#include "LogFile.h"
 //----------------------------------------------------------------------------------------------------------------------
-vector<vector<Device*> (*)()> __attribute__((init_priority(200))) DeviceManager::pDrivers;
-vector<Device*>  DeviceManager::pDevices;
-RWLocks          DeviceManager::pDevicesLock;
+vector<void (*)()> __attribute__((init_priority(200))) DeviceManager::pDrivers;
+map<string, Device*>                                   DeviceManager::pDevices;
+pthread_rwlock_t                                       DeviceManager::pDevicesLock = PTHREAD_RWLOCK_INITIALIZER;
 //----------------------------------------------------------------------------------------------------------------------
 DeviceManager::DeviceManager() {
-  pDevicesLock.WriteLock();
-  for(auto Func : pDrivers) {
-    for(auto Dev : Func()) pDevices.push_back(Dev);
-  }
-  pDevicesLock.Unlock();
-  HTTPServer::RegisterCallback("getDevices",          GetDevicesCallback);
-  HTTPServer::RegisterCallback("getDevice",           GetDeviceCallback);
-  HTTPServer::RegisterCallback("setDevice",           SetDeviceCallback);
-  HTTPServer::RegisterCallback("setRemote",           SetRemoteCallback);
-  HTTPServer::RegisterCallback("getRemote",           GetRemoteCallback);
-  HTTPServer::RegisterCallback("getAnalyzers",        GetAnalyzersCallback);
-  HTTPServer::RegisterCallback("getAnalyzer",         GetAnalyzerCallback);
-  HTTPServer::RegisterCallback("setAnalyzer",         SetAnalyzerCallback);
-  HTTPServer::RegisterCallback("getSeries",           GetSeriesCallback);
-  HTTPServer::RegisterCallback("getSeriesNow",        GetSeriesNowCallback);
-  HTTPServer::RegisterCallback("getSeriesRange",      GetSeriesRangeCallback);
-  HTTPServer::RegisterCallback("getEvents",           GetEventsCallback);
-  HTTPServer::RegisterCallback("getEvent",            GetEventCallback);
-  HTTPServer::RegisterCallback("setEvent",            SetEventCallback);
-  HTTPServer::RegisterCallback("delEvent",            DelEventCallback);
-//  HTTPServer::RegisterCallback("getRates",            GetRatesCallback);
-//  HTTPServer::RegisterCallback("getRate",             GetRateCallback);
-//  HTTPServer::RegisterCallback("setRate",             SetRateCallback);
-//  HTTPServer::RegisterCallback("delRate",             DelRateCallback);
-//  HTTPServer::RegisterCallback("addRate",             AddRateCallback);
-  HTTPServer::RegisterCallback("getPrices",           GetPricesCallback);
-  HTTPServer::RegisterCallback("testAlarm",           TestAlarmCallback);
-  HTTPServer::RegisterCallback("getAlarms",           GetAlarmsCallback);
-  HTTPServer::RegisterCallback("getPermissions",      GetPermissionsCallback);
-  HTTPServer::RegisterCallback("addPermission",       AddPermissionCallback);
-  HTTPServer::RegisterCallback("setPermission",       SetPermissionCallback);
-  HTTPServer::RegisterCallback("delPermission",       DelPermissionCallback);
+  LogFile::Debug("Starting DeviceManager...");
+  for(auto Func : pDrivers) Func();
+  HTTPServer::RegisterCallback("getDevices",     GetDevicesCallback);
+  HTTPServer::RegisterCallback("getDevice",      GetDeviceCallback);
+  HTTPServer::RegisterCallback("setDevice",      SetDeviceCallback);
+  LogFile::Debug("DeviceManager started");
 }
 DeviceManager::~DeviceManager() {
-  LOGFile::Debug("Stopping DeviceManager\n");
+  LogFile::Debug("Stopping DeviceManager...");
   HTTPServer::UnregisterCallback("getDevices");
   HTTPServer::UnregisterCallback("getDevice");
   HTTPServer::UnregisterCallback("setDevice");
-  HTTPServer::UnregisterCallback("setRemote");
-  HTTPServer::UnregisterCallback("getRemote");
-  HTTPServer::UnregisterCallback("getAnalyzers");
-  HTTPServer::UnregisterCallback("getAnalyzer");
-  HTTPServer::UnregisterCallback("setAnalyzer");
-  HTTPServer::UnregisterCallback("getSeries");
-  HTTPServer::UnregisterCallback("getSeriesNow");
-  HTTPServer::UnregisterCallback("getSeriesRange");
-  HTTPServer::UnregisterCallback("getEvents");
-  HTTPServer::UnregisterCallback("getEvent");
-  HTTPServer::UnregisterCallback("setEvent");
-  HTTPServer::UnregisterCallback("delEvent");
-  HTTPServer::UnregisterCallback("getPrices");
-  HTTPServer::UnregisterCallback("testAlarm");
-  HTTPServer::UnregisterCallback("getAlarms");
-  HTTPServer::UnregisterCallback("getPermissions");
-  HTTPServer::UnregisterCallback("addPermission");
-  HTTPServer::UnregisterCallback("setPermission");
-  HTTPServer::UnregisterCallback("delPermission");
-  LOGFile::Info("Stopping devices...\n");
-  pDevicesLock.WriteLock();
-  while(pDevices.size() > 0) {
-    Device *Dev = pDevices.back();
-    pDevices.pop_back();
-    delete Dev;
-  }
-  pDevicesLock.Unlock();
-  LOGFile::Debug("DeviceManager stopped\n");
+  LogFile::Info("Stopping devices...");
+  if(pthread_rwlock_wrlock(&pDevicesLock) != 0) LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
+  for(auto &Device : pDevices) delete Device.second;
+  pDevices.clear();
+  if(pthread_rwlock_unlock(&pDevicesLock) != 0) LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
+  LogFile::Debug("DeviceManager stopped");
 }
-void DeviceManager::AddDriver(vector<Device*> (*func)()) {
+void DeviceManager::AddDevice(Device *dev) {
+  if(pthread_rwlock_wrlock(&pDevicesLock) != 0) LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
+  pDevices.insert({ dev->Serial(), dev });
+  if(pthread_rwlock_unlock(&pDevicesLock) != 0) LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
+}
+void DeviceManager::AddDriver(void (*func)()) {
   pDrivers.push_back(func);
 }
-void DeviceManager::CallAnalyzerFunction(const json &params, Response &response, bool (Device::*method)(const json &params, Response &response)) {
-  if((params.contains("Analyzer") == false) || (params["Analyzer"].is_string() == false)) return HTTPServer::FillResponse(response, "'Analyzer' param is requiered", "text/plain", HTTP_BAD_REQUEST);
-  pDevicesLock.ReadLock();
-  for(Device *Dev : pDevices) {
-    if((Dev->*method)(params, response) == false) continue;
-    pDevicesLock.Unlock();
-    return;
+void DeviceManager::CallDeviceFunction(HTTPRequest &req, void (Device::*method)(HTTPRequest &req)) {
+  if(!req.CheckParamString("Serial")) return;
+  string Serial = req.Param("Serial");
+  if(pthread_rwlock_rdlock(&pDevicesLock) != 0) LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
+  auto Device = pDevices.find(Serial);
+  if(Device == pDevices.end()) {
+    req.Error("Device not found", HTTP_BAD_REQUEST);
+  } else {
+    (Device->second->*method)(req);
   }
-  pDevicesLock.Unlock();
-  HTTPServer::FillResponse(response, "Analyzer not found", "text/plain", HTTP_BAD_REQUEST);
+  if(pthread_rwlock_unlock(&pDevicesLock) != 0) LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
 }
-void DeviceManager::CallDeviceFunction(const json &params, Response &response, void (Device::*method)(const json &params, Response &response)) {
-  if((params.contains("Serial") == false) || (params["Serial"].is_string() == false)) return HTTPServer::FillResponse(response, "'Serial' param is requiered", "text/plain", HTTP_BAD_REQUEST);
-  string Serial = params["Serial"];
-  pDevicesLock.ReadLock();
-  for(Device *Dev : pDevices) {
-    if(Dev->Serial != Serial) continue;
-    (Dev->*method)(params, response);
-    pDevicesLock.Unlock();
-    return;
-  }
-  pDevicesLock.Unlock();
-  HTTPServer::FillResponse(response, "Device not found", "text/plain", HTTP_BAD_REQUEST);
-}
-void DeviceManager::GetDevicesCallback(const json &params, Response &response) {
-  //only 'admin' user can get this information
-  string UserName = params["UserName"];
-  if(UserName != "admin") return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
+void DeviceManager::GetDevicesCallback(HTTPRequest &req) {
+  if(req.UserName() != "admin") return req.Error("", HTTP_FORBIDDEN);
   json Response = json::array();
-  pDevicesLock.ReadLock();
-  for(Device *Dev : pDevices) Response.push_back(Dev->GetJSONDescriptor());
-  pDevicesLock.Unlock();
-  HTTPServer::FillResponse(response, Response.dump(), "application/json", HTTP_OK);
+  if(pthread_rwlock_rdlock(&pDevicesLock) != 0) LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
+  for(auto &Device : pDevices) Response.push_back(Device.second->GetJSONDescriptor());
+  if(pthread_rwlock_unlock(&pDevicesLock) != 0) LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
+  req.Success(Response);
 }
-void DeviceManager::GetDeviceCallback(const json &params, Response &response) {
-  CallDeviceFunction(params, response, &Device::GetDevice);
+void DeviceManager::GetDeviceCallback(HTTPRequest &req) {
+  CallDeviceFunction(req, &Device::GetDevice);
 }
-void DeviceManager::SetDeviceCallback(const json &params, Response &response) {
-  CallDeviceFunction(params, response, &Device::SetDevice);
+void DeviceManager::SetDeviceCallback(HTTPRequest &req) {
+  CallDeviceFunction(req, &Device::SetDevice);
 }
-void DeviceManager::GetRemoteCallback(const json &params, Response &response) {
-  CallDeviceFunction(params, response, &Device::GetRemote);
-}
-void DeviceManager::SetRemoteCallback(const json &params, Response &response) {
-  CallDeviceFunction(params, response, &Device::SetRemote);
-}
-void DeviceManager::GetAnalyzersCallback(const json &params, Response &response) {
-  json Response = json::array();
-  string UserName = params["UserName"];
-  pDevicesLock.ReadLock();
-  for(Device *Dev : pDevices) {
-    json Analyzers = Dev->GetJSONAnalyzers(UserName);
-    Response.insert(Response.end(), Analyzers.begin(), Analyzers.end());
-  }
-  pDevicesLock.Unlock();
-  HTTPServer::FillResponse(response, Response.dump(), "application/json", HTTP_OK);
-}
-void DeviceManager::GetAnalyzerCallback(const json &params, Response &response) {
-  CallAnalyzerFunction(params, response, &Device::GetAnalyzer);
-}
-void DeviceManager::SetAnalyzerCallback(const json &params, Response &response) {
-  CallAnalyzerFunction(params, response, &Device::SetAnalyzer);
-}
-void DeviceManager::GetSeriesCallback(const json &params, Response &response) {
-  CallAnalyzerFunction(params, response, &Device::GetSeries);
-}
-void DeviceManager::GetSeriesNowCallback(const json &params, Response &response) {
-  CallAnalyzerFunction(params, response, &Device::GetSeriesNow);
-}
-void DeviceManager::GetSeriesRangeCallback(const json &params, Response &response) {
-  CallAnalyzerFunction(params, response, &Device::GetSeriesRange);
-}
-void DeviceManager::GetEventsCallback(const json &params, Response &response) {
-  CallAnalyzerFunction(params, response, &Device::GetEvents);
-}
-void DeviceManager::GetEventCallback(const json &params, Response &response) {
-  CallAnalyzerFunction(params, response, &Device::GetEvent);
-}
-void DeviceManager::SetEventCallback(const json &params, Response &response) {
-  CallAnalyzerFunction(params, response, &Device::SetEvent);
-}
-void DeviceManager::DelEventCallback(const json &params, Response &response) {
-  CallAnalyzerFunction(params, response, &Device::DelEvent);
-}
-void DeviceManager::GetPricesCallback(const json &params, Response &response) {
-  CallAnalyzerFunction(params, response, &Device::GetPrices);
-}
-void DeviceManager::TestAlarmCallback(const json &params, Response &response) {
-  CallAnalyzerFunction(params, response, &Device::TestAlarm);
-}
-void DeviceManager::GetAlarmsCallback(const json &params, Response &response) {
-  CallAnalyzerFunction(params, response, &Device::GetAlarms);
-}
-void DeviceManager::GetPermissionsCallback(const json &params, Response &response) {
-  CallAnalyzerFunction(params, response, &Device::GetPermissions);
-}
-void DeviceManager::AddPermissionCallback(const json &params, Response &response) {
-  CallAnalyzerFunction(params, response, &Device::AddPermission);
-}
-void DeviceManager::SetPermissionCallback(const json &params, Response &response) {
-  CallAnalyzerFunction(params, response, &Device::SetPermission);
-}
-void DeviceManager::DelPermissionCallback(const json &params, Response &response) {
-  CallAnalyzerFunction(params, response, &Device::DelPermission);
-}
+//----------------------------------------------------------------------------------------------------------------------

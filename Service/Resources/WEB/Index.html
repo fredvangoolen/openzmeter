@@ -10,7 +10,7 @@
       * {
         box-sizing: border-box;
         font-family: sans-serif;
-      }      
+      }
       body, html {
         display: table;
         position: absolute;
@@ -20,13 +20,13 @@
         background-image: none;
         overflow: hidden;
         margin: 0px;
-      }   
+      }
       .card {
         max-width: 350px;
         background-color: #F7F7F7;
         padding: 40px 40px 10px 40px;
         margin: auto;
-      }  
+      }
       .container {
         display: table-cell;
         vertical-align: middle;
@@ -60,7 +60,7 @@
         border: 1px solid #ccc;
       }
       .progress-bar {
-        width: 100%;
+        width: 0%;
         background-color: #e8701c;
         height: 100%;
         box-shadow: inset 0 -1px 0 rgba(0,0,0,.15);
@@ -82,21 +82,33 @@
         </div>
         <div class="panel-footer">
           <div class="progress">
-            <div class="progress-bar"></div>
+            <div class="progress-bar" id="Progress"></div>
           </div>
           <img src="zRed.png" class="trademark">
         </div>
       </div>
     </div>
-    <script>
-      function ReplacePage() {
-        var Loader = document.getElementById("Preloader");
-        Loader.parentNode.removeChild(Loader);
-        var Style = document.getElementById("PreloadStyle");
-        Style.parentNode.removeChild(Style);
-      }
-    </script>
     <div id="app"></div>
-    <script src="openZmeter.js?v={{ VERSION }}" onload="ReplacePage()"></script>
+    <script>
+      var req  = new XMLHttpRequest();
+      var path = 'openZmeter.js?v={{ VERSION }}';
+      req.onprogress= function(evt) {
+        var content_length = req.getResponseHeader("X-Uncompressed-Length");
+        document.getElementById('Progress').setAttribute("style","width:" + Math.round((evt.loaded / content_length) * 100.0) + '%');
+      };
+      req.open('GET', path, true);
+      req.onload = function() {
+          var Script = document.createElement('script');
+          Script.setAttribute('src', path);
+          Script.onload = function() {
+            var Loader = document.getElementById("Preloader");
+            Loader.parentNode.removeChild(Loader);
+            var Style = document.getElementById("PreloadStyle");
+            Style.parentNode.removeChild(Style);
+          };
+          document.head.appendChild(Script);
+      };
+      req.send();
+    </script>
   </body>
 </html>

@@ -4,8 +4,8 @@
       <div class="pull-left"><h4 class="modal-title">Bluetooth connection</h4></div>
       <div class="pull-right btn-group">
         <div class="pull-right btn-group">
-          <button type="button" class="btn btn-default btn-xs" data-toggle="tooltip" title="Save" @click="Save"><img :src="require('Imgs/diskette.png')"></button>
-          <button type="button" class="btn btn-default btn-xs" data-toggle="tooltip" title="Back" @click="$emit('close')"><img :src="require('Imgs/arrow_undo.png')"></button>
+          <button type="button" class="btn btn-default btn-xs" title="Save" @click="Save"><img :src="require('Imgs/diskette.png')"></button>
+          <button type="button" class="btn btn-default btn-xs" title="Back" @click="$emit('close')"><img :src="require('Imgs/arrow_undo.png')"></button>
         </div>
       </div>
     </template>
@@ -38,11 +38,8 @@
     methods: {
       Save: function() {
         this.ShowSpinner = true;
-        this.$http.post('setBluetooth', { Enabled: this.Config.Enabled }).then(
-          (result) => {
-            this.$emit('update:settings', this.Config);
-            this.$emit('close');
-          },
+        this.Post('setBluetooth', { Enabled: this.Config.Enabled }).then(
+          (result) => { this.$emit('close'); },
           (fail) => { this.ShowSpinner = false; }
         );
       }
@@ -53,7 +50,7 @@
 <style scoped>
   textarea {
     resize: none;
-    font-family: monospace;
+    font-family: 'Fira Code';
     font-size: 12px;
   }
 </style>

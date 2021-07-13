@@ -1,0 +1,39 @@
+{
+  "paths": {
+    "/getBluetooth": {
+      "post": {
+        "summary": "Get bluetooth configuration",
+        "tags": [ "Bluetooth" ],
+        "requestBody": { "$ref": "#/components/requestBodies/EmptyObject" },
+        "responses": {
+          "200": {
+            "description": "The method executed without error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [ "Enabled", "Running", "Interface", "Name" ],
+                  "properties": {
+                    "Enabled": { "type": "boolean" },
+                    "Running": { "type": "boolean" },
+                    "Interface": { "type": "string" },
+                    "Name": { "type": "string"}
+                  },
+                  "example": {
+                    "Enabled": true,
+                    "Running": true,
+                    "Interface": "br-bt",
+                    "Name": "openZmeter_xxxx"
+                  }
+                }
+              }
+            }
+          },
+          "401": { "$ref": "#/components/responses/401Response" },
+          "403": { "$ref": "#/components/responses/403Response" },
+          "405": { "$ref": "#/components/responses/403Response" }
+        }
+      }
+    }
+  }
+}

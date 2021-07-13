@@ -22,9 +22,7 @@
 
 <script>
   import * as oZm from 'JS/openZmeter.js';
-  import moment from 'moment';
   import Dygraph from 'JS/dygraph.js';
-  import 'JS/dygraph-synchronizer.js';
   export default {
     props: { analyzer: Object, data: Object, dataNow: Object },
     data: function() {
@@ -32,20 +30,7 @@
     },
     computed: {
       Data: function() {
-        if((this.data == null) || (this.analyzer == null) || (this.Phase == null)) return null;
-        var Series = { 'Active Power': [], 'Reactive Power': [], 'Apparent Power': [], 'Power Factor': [], 'Phi': [] };
-        Series.Sampletime = this.data.Sampletime;
-        Series.From = this.data.From;
-        Series.To = this.data.To;
-        Series.TimeZone = this.analyzer.TimeZone;
-        for(var i in this.data.Sampletime) {
-          Series['Active Power'].push(this.data.Active_Power[i][this.Phase]);
-          Series['Reactive Power'].push(this.data.Reactive_Power[i][this.Phase]);
-          Series['Apparent Power'].push(this.data.Voltage[i][this.Phase] * this.data.Current[i][this.Phase]);
-          Series['Power Factor'].push(this.data.Power_Factor[i][this.Phase]);
-          Series['Phi'].push(this.data.Phi[i][this.Phase]);
-        }
-        return Object.seal(Series);
+        return Object.seal({ TimeZone: (this.analyzer == null) ? null : this.analyzer.TimeZone, 'Active Power': this.FillSerie('Active_Power'), 'Reactive Power': this.FillSerie('Reactive_Power'), 'Apparent Power': this.FillSerie('Apparent_Power'), 'Power Factor': this.FillSerie('Power_Factor'), 'Phi': this.FillSerie('Phi') });
       },
       DataNow: function() {
         if((this.dataNow == null) || (this.analyzer == null) || (this.Phase == null)) return null;
@@ -64,25 +49,40 @@
       Formatter_Apparent_Power: function(val) { var Units = this.BestUnits(val); return this.Round(this.ScaleUnits(val, Units), 2, true) + ' ' + Units + 'va'; },
       Formatter_Power_Factor: function(val) { return this.Round(val, 2, true); },
       Formatter_Phi: function(val) { return this.Round(val, 2, true) + ((val < 0) ? '° IND' : (val > 0) ? '° CAP' : '°'); },
+      FillSerie: function(name) {
+        var Data = [];
+        if(this.data == null) return { From: null, To: null, TimeZone: null, Rows: Data };
+        var TimeCol = this.data.Headers.indexOf('Time');
+        var DataCol = this.data.Headers.indexOf(name);
+        for(var i = 0; i < this.data.Rows.length; i++) Data.push([this.data.Rows[i][TimeCol], this.data.Rows[i][DataCol][this.Phase]]);
+        return { From: this.data.From, To: this.data.To, TimeZone: this.analyzer.TimeZone, Rows: Data };
+      },
       Export: function() {
-        if((this.data == null) || (this.analyzer == null)) return [];
-        var Header = ['Sample']
-          .concat(this.analyzer.GetSeriesNames('Active Power', this.analyzer.VoltageChannels))
-          .concat(this.analyzer.GetSeriesNames('Reactive Power', this.analyzer.VoltageChannels))
-          .concat(this.analyzer.GetSeriesNames('Apparent Power', this.analyzer.VoltageChannels))
-          .concat(this.analyzer.GetSeriesNames('Power Factor', this.analyzer.VoltageChannels))
-          .concat(this.analyzer.GetSeriesNames('Phi', this.analyzer.VoltageChannels));
-        var Data = [Header];
-        for(var n in this.data.Sampletime) {
-          var Row = [this.data.Sampletime[n]];
-          for(var i in this.data.Active_Power[n]) Row.push(this.Round(this.data.Active_Power[n][i], 3));
-          for(var i in this.data.Reactive_Power[n]) Row.push(this.Round(this.data.Reactive_Power[n][i], 3));
-          for(var i in this.data.Voltage[n]) Row.push(this.Round(this.data.Voltage[n][i] * this.data.Current[n][i], 3));
-          for(var i in this.data.Power_Factor[n]) Row.push(this.Round(this.data.Power_Factor[n][i], 3));
-          for(var i in this.data.Phi[n]) Row.push(this.Round(this.data.Phi[n][i], 3));
-          Data.push(Row);
+        if(this.data == null) return [];
+        var Header = [['Sample']
+          .concat(this.analyzer.SerieNames('Active Power'))
+          .concat(this.analyzer.SerieNames('Reactive Power'))
+          .concat(this.analyzer.SerieNames('Apparent Power'))
+          .concat(this.analyzer.SerieNames('Power Factor'))
+          .concat(this.analyzer.SerieNames('Phi'))
+        ];
+        var TimeCol = this.data.Headers.indexOf('Time');
+        var ActiveCol = this.data.Headers.indexOf('Active_Power');
+        var ReactiveCol = this.data.Headers.indexOf('Reactive_Power');
+        var PowerFactorCol = this.data.Headers.indexOf('Power_Factor');
+        var VoltageCol = this.data.Headers.indexOf('Voltage');
+        var CurrentCol = this.data.Headers.indexOf('Current');
+        var PhiCol = this.data.Headers.indexOf('Phi');
+        for(var n = 0; n < this.data.Rows.length; n++) {
+          var Row = [this.analyzer.FormatDateTime(this.data.Rows[n][TimeCol])];
+          for(var i in this.data.Rows[n][ActiveCol]) Row.push(this.Round(this.data.Rows[n][ActiveCol][i], 3));
+          for(var i in this.data.Rows[n][ReactiveCol]) Row.push(this.Round(this.data.Rows[n][ReactiveCol][i], 3));
+          for(var i in this.data.Rows[n][VoltageCol]) Row.push(this.Round(this.data.Rows[n][VoltageCol][i] * this.data.Rows[n][CurrentCol][i], 3));
+          for(var i in this.data.Rows[n][PowerFactorCol]) Row.push(this.Round(this.data.Rows[n][PowerFactorCol][i], 3));
+          for(var i in this.data.Rows[n][PhiCol]) Row.push(this.Round(this.data.Rows[n][PhiCol][i], 3));
+          Header.push(Row);
         }
-        return Object.seal(Data);
+        return Object.seal(Header);
       }
     },
     mounted: function() {

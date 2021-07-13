@@ -4,8 +4,8 @@
       <div class="pull-left"><h4 class="modal-title">NTP synchronization</h4></div>
       <div class="pull-right btn-group">
         <div class="pull-right btn-group">
-          <button type="button" class="btn btn-default btn-xs" data-toggle="tooltip" title="Save" @click="Save"><img :src="require('Imgs/diskette.png')"></button>
-          <button type="button" class="btn btn-default btn-xs" data-toggle="tooltip" title="Back" @click="$emit('close')"><img :src="require('Imgs/arrow_undo.png')"></button>
+          <button type="button" class="btn btn-default btn-xs" title="Save" @click="Save"><img :src="require('Imgs/diskette.png')"></button>
+          <button type="button" class="btn btn-default btn-xs" title="Back" @click="$emit('close')"><img :src="require('Imgs/arrow_undo.png')"></button>
         </div>
       </div>
     </template>
@@ -47,10 +47,10 @@
     methods: {
       Refresh: function() {
         clearTimeout(this.Timer);
-        this.$http.post('getNTP', { }).then(
+        this.Post('getNTP', { Full: true }).then(
           (result) => {
             if(this.Timer == null) return;
-            this.Details = 'Local timezone : ' + moment.tz.zone(moment.tz.guess()).name + '\nTime           : ' + moment(result.body.Time).format('DD/MM/YYYY HH:mm:ss');
+            this.Details = 'Local timezone : ' + moment.tz.zone(moment.tz.guess()).name + '\nTime           : ' + moment(result.Time).format('DD/MM/YYYY HH:mm:ss');
             this.Timer = setTimeout(this.Refresh, 500);
           },
           (fail) => {
@@ -62,7 +62,7 @@
       },
       Save: function(value) {
         this.ShowSpinner = true;
-        this.$http.post('setNTP', { Enabled: this.Config.Enabled, Server: this.Config.Server, Time: moment().valueOf() }).then(
+        this.Post('setNTP', { Enabled: this.Config.Enabled, Server: this.Config.Server, Time: moment().valueOf() }).then(
           (result) => {
             this.$emit('update:settings', this.Config);
             this.$emit('close');
@@ -77,7 +77,7 @@
 <style scoped>
   textarea {
     resize: none;
-    font-family: monospace;
+    font-family: 'Fira Code';
     font-size: 12px;
   }
   .help {

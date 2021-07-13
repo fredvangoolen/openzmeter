@@ -16,7 +16,7 @@
       return { };
     },
     created: function() {
-      this.RMSs = [-100, -80, -50, -20, -15, -10, -5, 0, 5, 10, 15, 20, 50, 100];
+      this.RMSs = [0, 20, 50, 80, 85, 90, 95, 100, 105, 110, 115, 120, 150, 200];
     },
     computed: {
       GraphOptions: function() {
@@ -39,13 +39,14 @@
         Opt.axes.y.valueFormatter = (x) => { return x; };
         Opt.axes.y.axisLabelFormatter = (x) => { return ((x % 1) != 0) ? "" : x; };
         Opt.axes.x.pixelsPerLabel = 26;
-        Opt.axes.x.valueFormatter = (x) => { return ((x < 0) || (x >= this.RMSs.length)) ? "" : (this.RMSs[x] == 0) ? 'Low' : (this.RMSs[x] < 0) ? '<' + (100 + this.RMSs[x]) + '%' : '>' + (100 + this.RMSs[x]) + '%'; };
-        Opt.axes.x.axisLabelFormatter = (x) => { return (((x % 1 == 0)) && (x >= 0) && (x < this.RMSs.length)) ? (this.RMSs[x] == 0) ? 'Low' : (this.RMSs[x] < 0) ? (100 + this.RMSs[x]) : (100 + this.RMSs[x]) : ''; };
+        Opt.axes.x.valueFormatter = (x) => { return ((x < 0) || (x >= this.RMSs.length)) ? "" : (this.RMSs[x] == 100) ? 'Low' : (this.RMSs[x] < 0) ? '<' + this.RMSs[x] + '%' : '>' + this.RMSs[x] + '%'; };
+        Opt.axes.x.axisLabelFormatter = (x) => { return (((x % 1 == 0)) && (x >= 0) && (x < this.RMSs.length)) ? (this.RMSs[x] == 100) ? 'Low' : (this.RMSs[x] < 0) ? this.RMSs[x] : this.RMSs[x] : ''; };
         for(var i = 0; i < this.RMSs.length; i++) Opt.file.push([i, 0]);
         if(this.data != null) {
-          for(var i in this.data.StartTime) {
-            var Diff = this.MaxDiff(this.data.Peak[i]);
-            for(var j in this.RMSs) {
+          var PeakCol  = this.data.Headers.indexOf('Peak');
+          for(var i = 0; i < this.data.Rows.length; i++) {
+            var Diff = this.MaxDiff(this.data.Rows[i][PeakCol]) + 100;
+            for(var j = 0; j < this.RMSs.length - 1; j++) {
               if((Diff >= this.RMSs[j]) && (Diff < this.RMSs[j + 1])) {
                 Opt.file[j][1] = Opt.file[j][1] + 1;
                 break;
@@ -60,7 +61,7 @@
       MaxDiff: function(a) {
         var Max = a[0] - this.analyzer.NominalVoltage;
         for(var n = 1; n < a.length; n++) {
-          if(Math.abs(a[n] - this.analyzer.NominalVoltage) > Math.abs(Max)) Max = a[n] - this.nalyzer.NominalVoltage;
+          if(Math.abs(a[n] - this.analyzer.NominalVoltage) > Math.abs(Max)) Max = a[n] - this.analyzer.NominalVoltage;
         }
         return (Max * 100.0) / this.analyzer.NominalVoltage;
       }

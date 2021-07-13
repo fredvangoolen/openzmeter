@@ -1,6 +1,5 @@
 EESchema Schematic File Version 4
-LIBS:3Phase-cache
-EELAYER 26 0
+EELAYER 30 0
 EELAYER END
 $Descr A4 8268 11693 portrait
 encoding utf-8
@@ -15,7 +14,7 @@ Comment3 ""
 Comment4 ""
 $EndDescr
 $Comp
-L Components:MCP6004 U1
+L 3Phase:MCP6004-Components U1
 U 3 1 5BD043B1
 P 5975 4175
 F 0 "U1" H 6025 4325 50  0000 L CNN
@@ -26,7 +25,7 @@ F 3 "https://lcsc.com/product-detail/74-Series_NXP_74HC4066PW_74HC4066PW_C5650.h
 	-1   0    0    -1  
 $EndComp
 $Comp
-L Components:MCP6004 U1
+L 3Phase:MCP6004-Components U1
 U 2 1 5BD0441A
 P 4975 4075
 F 0 "U1" H 4975 4275 50  0000 L CNN
@@ -37,7 +36,7 @@ F 3 "https://lcsc.com/product-detail/74-Series_NXP_74HC4066PW_74HC4066PW_C5650.h
 	-1   0    0    -1  
 $EndComp
 $Comp
-L Components:MCP6004 U1
+L 3Phase:MCP6004-Components U1
 U 4 1 5BD04495
 P 5975 5425
 F 0 "U1" H 5975 5625 50  0000 L CNN
@@ -48,7 +47,7 @@ F 3 "https://lcsc.com/product-detail/74-Series_NXP_74HC4066PW_74HC4066PW_C5650.h
 	-1   0    0    -1  
 $EndComp
 $Comp
-L 3Phase-rescue:R-3Phase-rescue R8
+L 3Phase:R-3Phase-rescue-3Phase-rescue R8
 U 1 1 5BD04895
 P 4475 4075
 F 0 "R8" V 4555 4075 50  0000 C CNN
@@ -59,7 +58,7 @@ F 3 "https://lcsc.com/product-detail/Chip-Resistor-Surface-Mount_100R-100R-1_C12
 	0    -1   1    0   
 $EndComp
 $Comp
-L 3Phase-rescue:R-3Phase-rescue R11
+L 3Phase:R-3Phase-rescue-3Phase-rescue R11
 U 1 1 5BD0490E
 P 6125 6875
 F 0 "R11" V 6205 6875 50  0000 C CNN
@@ -70,7 +69,7 @@ F 3 "https://lcsc.com/product-detail/Others_YAGEO-AC0603FR-071K02L_C227642.html"
 	0    -1   1    0   
 $EndComp
 $Comp
-L 3Phase-rescue:R-3Phase-rescue R14
+L 3Phase:R-3Phase-rescue-3Phase-rescue R14
 U 1 1 5BD04949
 P 4450 7750
 F 0 "R14" V 4530 7750 50  0000 C CNN
@@ -81,7 +80,7 @@ F 3 "https://lcsc.com/product-detail/Chip-Resistor-Surface-Mount_100R-100R-1_C12
 	0    -1   1    0   
 $EndComp
 $Comp
-L 3Phase-rescue:R-3Phase-rescue R15
+L 3Phase:R-3Phase-rescue-3Phase-rescue R15
 U 1 1 5BD04974
 P 5125 8300
 F 0 "R15" V 5050 8300 50  0000 C CNN
@@ -92,7 +91,7 @@ F 3 "https://lcsc.com/product-detail/Others_YAGEO-AC0603FR-071K69L_C227658.html"
 	0    -1   1    0   
 $EndComp
 $Comp
-L 3Phase-rescue:R-3Phase-rescue R10
+L 3Phase:R-3Phase-rescue-3Phase-rescue R10
 U 1 1 5BD049A1
 P 5150 7025
 F 0 "R10" V 5230 7025 50  0000 C CNN
@@ -103,7 +102,7 @@ F 3 "https://lcsc.com/product-detail/Others_YAGEO-AC0603FR-071K69L_C227658.html"
 	0    1    -1   0   
 $EndComp
 $Comp
-L 3Phase-rescue:R-3Phase-rescue R7
+L 3Phase:R-3Phase-rescue-3Phase-rescue R7
 U 1 1 5BD049D0
 P 4475 6475
 F 0 "R7" V 4555 6475 50  0000 C CNN
@@ -114,7 +113,7 @@ F 3 "https://lcsc.com/product-detail/Chip-Resistor-Surface-Mount_100R-100R-1_C12
 	0    1    -1   0   
 $EndComp
 $Comp
-L 3Phase-rescue:R-3Phase-rescue R13
+L 3Phase:R-3Phase-rescue-3Phase-rescue R13
 U 1 1 5BD04A47
 P 5500 6575
 F 0 "R13" V 5580 6575 50  0000 C CNN
@@ -125,7 +124,7 @@ F 3 "https://lcsc.com/product-detail/Others_YAGEO-AC0603FR-071K02L_C227642.html"
 	0    1    -1   0   
 $EndComp
 $Comp
-L 3Phase-rescue:R-3Phase-rescue R17
+L 3Phase:R-3Phase-rescue-3Phase-rescue R17
 U 1 1 5BD04A80
 P 6475 7025
 F 0 "R17" V 6400 7025 50  0000 C CNN
@@ -136,7 +135,7 @@ F 3 "https://lcsc.com/product-detail/Others_YAGEO-AC0603FR-071K69L_C227658.html"
 	0    -1   1    0   
 $EndComp
 $Comp
-L 3Phase-rescue:R-3Phase-rescue R16
+L 3Phase:R-3Phase-rescue-3Phase-rescue R16
 U 1 1 5BD04AB5
 P 6475 5875
 F 0 "R16" V 6555 5875 50  0000 C CNN
@@ -147,7 +146,7 @@ F 3 "https://lcsc.com/product-detail/Others_YAGEO-AC0603FR-071K69L_C227658.html"
 	0    -1   1    0   
 $EndComp
 $Comp
-L 3Phase-rescue:R-3Phase-rescue R12
+L 3Phase:R-3Phase-rescue-3Phase-rescue R12
 U 1 1 5BD04AEC
 P 4975 5875
 F 0 "R12" V 5055 5875 50  0000 C CNN
@@ -158,7 +157,7 @@ F 3 "https://lcsc.com/product-detail/Others_YAGEO-AC0603FR-071K69L_C227658.html"
 	0    -1   1    0   
 $EndComp
 $Comp
-L 3Phase-rescue:R-3Phase-rescue R9
+L 3Phase:R-3Phase-rescue-3Phase-rescue R9
 U 1 1 5BD04B25
 P 5475 5425
 F 0 "R9" V 5555 5425 50  0000 C CNN
@@ -169,7 +168,7 @@ F 3 "https://lcsc.com/product-detail/Others_YAGEO-AC0603FR-071K02L_C227642.html"
 	0    1    -1   0   
 $EndComp
 $Comp
-L 3Phase-rescue:R-3Phase-rescue R6
+L 3Phase:R-3Phase-rescue-3Phase-rescue R6
 U 1 1 5BD04B60
 P 6125 5725
 F 0 "R6" V 6205 5725 50  0000 C CNN
@@ -180,7 +179,7 @@ F 3 "https://lcsc.com/product-detail/Others_YAGEO-AC0603FR-071K02L_C227642.html"
 	0    -1   1    0   
 $EndComp
 $Comp
-L 3Phase-rescue:R-3Phase-rescue R3
+L 3Phase:R-3Phase-rescue-3Phase-rescue R3
 U 1 1 5BD04C05
 P 4475 5325
 F 0 "R3" V 4555 5325 50  0000 C CNN
@@ -191,7 +190,7 @@ F 3 "https://lcsc.com/product-detail/Chip-Resistor-Surface-Mount_100R-100R-1_C12
 	0    -1   1    0   
 $EndComp
 $Comp
-L 3Phase-rescue:R-3Phase-rescue R5
+L 3Phase:R-3Phase-rescue-3Phase-rescue R5
 U 1 1 5BD04C4A
 P 6475 4625
 F 0 "R5" V 6555 4625 50  0000 C CNN
@@ -202,7 +201,7 @@ F 3 "https://lcsc.com/product-detail/Others_YAGEO-AC0603FR-071K69L_C227658.html"
 	0    -1   1    0   
 $EndComp
 $Comp
-L 3Phase-rescue:R-3Phase-rescue R4
+L 3Phase:R-3Phase-rescue-3Phase-rescue R4
 U 1 1 5BD04C8B
 P 5125 4625
 F 0 "R4" V 5205 4625 50  0000 C CNN
@@ -213,7 +212,7 @@ F 3 "https://lcsc.com/product-detail/Others_YAGEO-AC0603FR-071K69L_C227658.html"
 	0    -1   1    0   
 $EndComp
 $Comp
-L 3Phase-rescue:R-3Phase-rescue R1
+L 3Phase:R-3Phase-rescue-3Phase-rescue R1
 U 1 1 5BD04CCE
 P 5475 4175
 F 0 "R1" V 5555 4175 50  0000 C CNN
@@ -224,7 +223,7 @@ F 3 "https://lcsc.com/product-detail/Others_YAGEO-AC0603FR-071K02L_C227642.html"
 	0    1    -1   0   
 $EndComp
 $Comp
-L 3Phase-rescue:R-3Phase-rescue R2
+L 3Phase:R-3Phase-rescue-3Phase-rescue R2
 U 1 1 5BD04D27
 P 6125 4475
 F 0 "R2" V 6205 4475 50  0000 C CNN
@@ -235,7 +234,7 @@ F 3 "https://lcsc.com/product-detail/Others_YAGEO-AC0603FR-071K02L_C227642.html"
 	0    -1   1    0   
 $EndComp
 $Comp
-L 3Phase-rescue:R-3Phase-rescue R19
+L 3Phase:R-3Phase-rescue-3Phase-rescue R19
 U 1 1 5BD04D6E
 P 6125 8150
 F 0 "R19" V 6205 8150 50  0000 C CNN
@@ -246,7 +245,7 @@ F 3 "https://lcsc.com/product-detail/Others_YAGEO-AC0603FR-071K02L_C227642.html"
 	0    -1   1    0   
 $EndComp
 $Comp
-L 3Phase-rescue:R-3Phase-rescue R22
+L 3Phase:R-3Phase-rescue-3Phase-rescue R22
 U 1 1 5BD04DB7
 P 6475 8300
 F 0 "R22" V 6555 8300 50  0000 C CNN
@@ -257,7 +256,7 @@ F 3 "https://lcsc.com/product-detail/Others_YAGEO-AC0603FR-071K69L_C227658.html"
 	0    -1   1    0   
 $EndComp
 $Comp
-L 3Phase-rescue:R-3Phase-rescue R24
+L 3Phase:R-3Phase-rescue-3Phase-rescue R24
 U 1 1 5BD04E02
 P 1025 9350
 F 0 "R24" V 1105 9350 50  0000 C CNN
@@ -268,7 +267,7 @@ F 3 "https://lcsc.com/product-detail/_AC1206FR-07200KL_C144506.html" H 1025 9350
 	0    1    1    0   
 $EndComp
 $Comp
-L 3Phase-rescue:R-3Phase-rescue R29
+L 3Phase:R-3Phase-rescue-3Phase-rescue R29
 U 1 1 5BD04E4F
 P 1725 9350
 F 0 "R29" V 1805 9350 50  0000 C CNN
@@ -279,7 +278,7 @@ F 3 "https://lcsc.com/product-detail/_AC1206FR-07200KL_C144506.html" H 1725 9350
 	0    1    1    0   
 $EndComp
 $Comp
-L 3Phase-rescue:R-3Phase-rescue R18
+L 3Phase:R-3Phase-rescue-3Phase-rescue R18
 U 1 1 5BD04E9E
 P 1025 10000
 F 0 "R18" V 1105 10000 50  0000 C CNN
@@ -290,7 +289,7 @@ F 3 "https://lcsc.com/product-detail/_AC1206FR-07200KL_C144506.html" H 1025 1000
 	0    1    1    0   
 $EndComp
 $Comp
-L 3Phase-rescue:R-3Phase-rescue R21
+L 3Phase:R-3Phase-rescue-3Phase-rescue R21
 U 1 1 5BD04EEF
 P 1025 10650
 F 0 "R21" V 1105 10650 50  0000 C CNN
@@ -301,7 +300,7 @@ F 3 "https://lcsc.com/product-detail/_AC1206FR-07200KL_C144506.html" H 1025 1065
 	0    1    1    0   
 $EndComp
 $Comp
-L 3Phase-rescue:R-3Phase-rescue R25
+L 3Phase:R-3Phase-rescue-3Phase-rescue R25
 U 1 1 5BD04F42
 P 1375 9350
 F 0 "R25" V 1455 9350 50  0000 C CNN
@@ -312,7 +311,7 @@ F 3 "https://lcsc.com/product-detail/_AC1206FR-07200KL_C144506.html" H 1375 9350
 	0    -1   -1   0   
 $EndComp
 $Comp
-L 3Phase-rescue:R-3Phase-rescue R27
+L 3Phase:R-3Phase-rescue-3Phase-rescue R27
 U 1 1 5BD04F97
 P 1375 10000
 F 0 "R27" V 1455 10000 50  0000 C CNN
@@ -323,7 +322,7 @@ F 3 "https://lcsc.com/product-detail/_AC1206FR-07200KL_C144506.html" H 1375 1000
 	0    1    1    0   
 $EndComp
 $Comp
-L 3Phase-rescue:R-3Phase-rescue R20
+L 3Phase:R-3Phase-rescue-3Phase-rescue R20
 U 1 1 5BD04FEE
 P 5475 7850
 F 0 "R20" V 5555 7850 50  0000 C CNN
@@ -334,7 +333,7 @@ F 3 "https://lcsc.com/product-detail/Others_YAGEO-AC0603FR-071K02L_C227642.html"
 	0    1    -1   0   
 $EndComp
 $Comp
-L 3Phase-rescue:R-3Phase-rescue R23
+L 3Phase:R-3Phase-rescue-3Phase-rescue R23
 U 1 1 5BD05047
 P 6425 1450
 F 0 "R23" V 6505 1450 50  0000 C CNN
@@ -345,7 +344,7 @@ F 3 "https://lcsc.com/product-detail/Chip-Resistor-Surface-Mount_4-7KR-472-1_C99
 	1    0    0    -1  
 $EndComp
 $Comp
-L 3Phase-rescue:R-3Phase-rescue R26
+L 3Phase:R-3Phase-rescue-3Phase-rescue R26
 U 1 1 5BD050A2
 P 1725 10650
 F 0 "R26" V 1805 10650 50  0000 C CNN
@@ -356,7 +355,7 @@ F 3 "https://lcsc.com/product-detail/_AC1206FR-07200KL_C144506.html" H 1725 1065
 	0    1    1    0   
 $EndComp
 $Comp
-L 3Phase-rescue:R-3Phase-rescue R28
+L 3Phase:R-3Phase-rescue-3Phase-rescue R28
 U 1 1 5BD050FF
 P 1375 10650
 F 0 "R28" V 1455 10650 50  0000 C CNN
@@ -367,7 +366,7 @@ F 3 "https://lcsc.com/product-detail/_AC1206FR-07200KL_C144506.html" H 1375 1065
 	0    1    1    0   
 $EndComp
 $Comp
-L 3Phase-rescue:R-3Phase-rescue R30
+L 3Phase:R-3Phase-rescue-3Phase-rescue R30
 U 1 1 5BD0515E
 P 1725 10000
 F 0 "R30" V 1805 10000 50  0000 C CNN
@@ -378,7 +377,7 @@ F 3 "https://lcsc.com/product-detail/_AC1206FR-07200KL_C144506.html" H 1725 1000
 	0    1    1    0   
 $EndComp
 $Comp
-L 3Phase-rescue:R-3Phase-rescue R31
+L 3Phase:R-3Phase-rescue-3Phase-rescue R31
 U 1 1 5BD051BF
 P 1725 9175
 F 0 "R31" V 1805 9175 50  0000 C CNN
@@ -389,7 +388,7 @@ F 3 "https://lcsc.com/product-detail/Chip-Resistor-Surface-Mount_2-2KR-2201-1_C1
 	0    1    1    0   
 $EndComp
 $Comp
-L 3Phase-rescue:R-3Phase-rescue R32
+L 3Phase:R-3Phase-rescue-3Phase-rescue R32
 U 1 1 5BD05222
 P 1725 9825
 F 0 "R32" V 1805 9825 50  0000 C CNN
@@ -400,7 +399,7 @@ F 3 "https://lcsc.com/product-detail/Chip-Resistor-Surface-Mount_2-2KR-2201-1_C1
 	0    1    1    0   
 $EndComp
 $Comp
-L 3Phase-rescue:R-3Phase-rescue R34
+L 3Phase:R-3Phase-rescue-3Phase-rescue R34
 U 1 1 5BD05287
 P 1725 10475
 F 0 "R34" V 1805 10475 50  0000 C CNN
@@ -411,7 +410,7 @@ F 3 "https://lcsc.com/product-detail/Chip-Resistor-Surface-Mount_2-2KR-2201-1_C1
 	0    1    1    0   
 $EndComp
 $Comp
-L 3Phase-rescue:R-3Phase-rescue R35
+L 3Phase:R-3Phase-rescue-3Phase-rescue R35
 U 1 1 5BD052EE
 P 1900 8050
 F 0 "R35" V 1980 8050 50  0000 C CNN
@@ -422,7 +421,7 @@ F 3 "https://lcsc.com/product-detail/Chip-Resistor-Surface-Mount_4-7KR-472-1_C99
 	0    -1   1    0   
 $EndComp
 $Comp
-L 3Phase-rescue:R-3Phase-rescue R33
+L 3Phase:R-3Phase-rescue-3Phase-rescue R33
 U 1 1 5BD0542F
 P 4850 1450
 F 0 "R33" V 4930 1450 50  0000 C CNN
@@ -433,7 +432,7 @@ F 3 "https://lcsc.com/product-detail/Others_YAGEO-AC0603FR-0736K5L_C227840.html"
 	-1   0    0    1   
 $EndComp
 $Comp
-L 3Phase-rescue:R-3Phase-rescue R36
+L 3Phase:R-3Phase-rescue-3Phase-rescue R36
 U 1 1 5BD0550F
 P 5300 1425
 F 0 "R36" V 5380 1425 50  0000 C CNN
@@ -444,7 +443,7 @@ F 3 "https://lcsc.com/product-detail/_RC0603JR-07270KL_C137642.html" H 5300 1425
 	-1   0    0    1   
 $EndComp
 $Comp
-L 3Phase-rescue:C_Small-3Phase-rescue C6
+L 3Phase:C_Small-3Phase-rescue-3Phase-rescue C6
 U 1 1 5BD060D2
 P 4300 4275
 F 0 "C6" H 4310 4345 50  0000 L CNN
@@ -455,7 +454,7 @@ F 3 "https://lcsc.com/product-detail/Multilayer-Ceramic-Capacitors-MLCC-SMD-SMT_
 	-1   0    0    -1  
 $EndComp
 $Comp
-L 3Phase-rescue:C_Small-3Phase-rescue C4
+L 3Phase:C_Small-3Phase-rescue-3Phase-rescue C4
 U 1 1 5BD0621D
 P 4300 5550
 F 0 "C4" H 4310 5620 50  0000 L CNN
@@ -466,7 +465,7 @@ F 3 "https://lcsc.com/product-detail/Multilayer-Ceramic-Capacitors-MLCC-SMD-SMT_
 	-1   0    0    -1  
 $EndComp
 $Comp
-L 3Phase-rescue:C_Small-3Phase-rescue C2
+L 3Phase:C_Small-3Phase-rescue-3Phase-rescue C2
 U 1 1 5BD06296
 P 4300 6650
 F 0 "C2" H 4310 6720 50  0000 L CNN
@@ -477,7 +476,7 @@ F 3 "https://lcsc.com/product-detail/Multilayer-Ceramic-Capacitors-MLCC-SMD-SMT_
 	-1   0    0    -1  
 $EndComp
 $Comp
-L 3Phase-rescue:C_Small-3Phase-rescue C3
+L 3Phase:C_Small-3Phase-rescue-3Phase-rescue C3
 U 1 1 5BD06311
 P 5625 1500
 F 0 "C3" H 5635 1570 50  0000 L CNN
@@ -488,7 +487,7 @@ F 3 "https://lcsc.com/product-detail/Multilayer-Ceramic-Capacitors-MLCC-SMD-SMT_
 	1    0    0    -1  
 $EndComp
 $Comp
-L 3Phase-rescue:C_Small-3Phase-rescue C5
+L 3Phase:C_Small-3Phase-rescue-3Phase-rescue C5
 U 1 1 5BD0638E
 P 4625 950
 F 0 "C5" H 4635 1020 50  0000 L CNN
@@ -499,7 +498,7 @@ F 3 "https://lcsc.com/product-detail/Multilayer-Ceramic-Capacitors-MLCC-SMD-SMT_
 	0    1    1    0   
 $EndComp
 $Comp
-L 3Phase-rescue:C_Small-3Phase-rescue C7
+L 3Phase:C_Small-3Phase-rescue-3Phase-rescue C7
 U 1 1 5BD06419
 P 4275 7925
 F 0 "C7" H 4285 7995 50  0000 L CNN
@@ -510,7 +509,7 @@ F 3 "https://lcsc.com/product-detail/Multilayer-Ceramic-Capacitors-MLCC-SMD-SMT_
 	-1   0    0    -1  
 $EndComp
 $Comp
-L 3Phase-rescue:CONN_01X04-3Phase-rescue J1
+L 3Phase:CONN_01X04-3Phase-rescue-3Phase-rescue J1
 U 1 1 5BD094EB
 P 7175 4025
 F 0 "J1" H 7325 4375 50  0000 C CNN
@@ -522,7 +521,7 @@ F 4 "L1" H 7175 3750 50  0000 C CNN "Name"
 	1    0    0    1   
 $EndComp
 $Comp
-L 3Phase-rescue:CONN_01X04-3Phase-rescue J3
+L 3Phase:CONN_01X04-3Phase-rescue-3Phase-rescue J3
 U 1 1 5BD09649
 P 7225 6425
 F 0 "J3" H 7375 6775 50  0000 C CNN
@@ -534,7 +533,7 @@ F 4 "L3" H 7225 6675 50  0000 C CNN "Name"
 	1    0    0    1   
 $EndComp
 $Comp
-L 3Phase-rescue:CONN_01X04-3Phase-rescue J4
+L 3Phase:CONN_01X04-3Phase-rescue-3Phase-rescue J4
 U 1 1 5BD096FE
 P 7225 7700
 F 0 "J4" H 7325 7875 50  0000 C CNN
@@ -546,7 +545,7 @@ F 4 "N" H 7225 7400 50  0000 C CNN "Name"
 	1    0    0    1   
 $EndComp
 $Comp
-L 3Phase-rescue:CONN_01X04-3Phase-rescue J2
+L 3Phase:CONN_01X04-3Phase-rescue-3Phase-rescue J2
 U 1 1 5BD095C2
 P 7225 5275
 F 0 "J2" H 7375 5625 50  0000 C CNN
@@ -580,7 +579,7 @@ F 3 "" H 6925 4175 50  0000 C CNN
 	0    1    -1   0   
 $EndComp
 $Comp
-L Components:+1V65 #PWR021
+L 3Phase:+1V65-Components #PWR021
 U 1 1 5BD1DAD6
 P 7200 4625
 F 0 "#PWR021" H 7200 4475 50  0001 C CNN
@@ -602,7 +601,7 @@ F 3 "" H 5075 5650 50  0000 C CNN
 	-1   0    0    -1  
 $EndComp
 $Comp
-L Components:+1V65 #PWR024
+L 3Phase:+1V65-Components #PWR024
 U 1 1 5BD26ECB
 P 7200 5875
 F 0 "#PWR024" H 7200 5725 50  0001 C CNN
@@ -635,7 +634,7 @@ F 3 "" H 7050 5425 50  0000 C CNN
 	0    1    -1   0   
 $EndComp
 $Comp
-L Components:MCP6004 U3
+L 3Phase:MCP6004-Components U3
 U 2 1 5BD2D4E2
 P 5000 6475
 F 0 "U3" H 5000 6675 50  0000 L CNN
@@ -646,7 +645,7 @@ F 3 "https://lcsc.com/product-detail/74-Series_NXP_74HC4066PW_74HC4066PW_C5650.h
 	-1   0    0    -1  
 $EndComp
 $Comp
-L Components:MCP6004 U3
+L 3Phase:MCP6004-Components U3
 U 4 1 5BD2D609
 P 5975 7850
 F 0 "U3" H 5600 8075 50  0000 L CNN
@@ -657,7 +656,7 @@ F 3 "https://lcsc.com/product-detail/74-Series_NXP_74HC4066PW_74HC4066PW_C5650.h
 	-1   0    0    -1  
 $EndComp
 $Comp
-L Components:MCP6004 U3
+L 3Phase:MCP6004-Components U3
 U 1 1 5BD2D6F4
 P 4950 7750
 F 0 "U3" H 4950 7950 50  0000 L CNN
@@ -668,7 +667,7 @@ F 3 "https://lcsc.com/product-detail/74-Series_NXP_74HC4066PW_74HC4066PW_C5650.h
 	-1   0    0    -1  
 $EndComp
 $Comp
-L Components:MCP6004 U3
+L 3Phase:MCP6004-Components U3
 U 3 1 5BD2D7EF
 P 5975 6575
 F 0 "U3" H 6075 6675 50  0000 L CNN
@@ -679,7 +678,7 @@ F 3 "https://lcsc.com/product-detail/74-Series_NXP_74HC4066PW_74HC4066PW_C5650.h
 	-1   0    0    -1  
 $EndComp
 $Comp
-L Components:+1V65 #PWR022
+L 3Phase:+1V65-Components #PWR022
 U 1 1 5BD3C362
 P 7200 7025
 F 0 "#PWR022" H 7200 6875 50  0001 C CNN
@@ -723,7 +722,7 @@ F 3 "" H 4275 8050 50  0000 C CNN
 	-1   0    0    -1  
 $EndComp
 $Comp
-L Components:+1V65 #PWR023
+L 3Phase:+1V65-Components #PWR023
 U 1 1 5BD41EEF
 P 7200 8300
 F 0 "#PWR023" H 7200 8150 50  0001 C CNN
@@ -756,7 +755,7 @@ F 3 "" H 6975 7850 50  0000 C CNN
 	0    1    -1   0   
 $EndComp
 $Comp
-L 3Phase-rescue:R-3Phase-rescue R46
+L 3Phase:R-3Phase-rescue-3Phase-rescue R46
 U 1 1 5BD9FCD3
 P 6650 6650
 F 0 "R46" V 6730 6650 50  0000 C CNN
@@ -767,7 +766,7 @@ F 3 "https://lcsc.com/product-detail/_RC0603JR-07270KL_C137642.html" H 6650 6650
 	-1   0    0    -1  
 $EndComp
 $Comp
-L 3Phase-rescue:R-3Phase-rescue R45
+L 3Phase:R-3Phase-rescue-3Phase-rescue R45
 U 1 1 5BD9FD98
 P 6800 6650
 F 0 "R45" V 6880 6650 50  0000 C CNN
@@ -778,7 +777,7 @@ F 3 "https://lcsc.com/product-detail/_RC0603JR-07270KL_C137642.html" H 6800 6650
 	-1   0    0    -1  
 $EndComp
 $Comp
-L 3Phase-rescue:R-3Phase-rescue R48
+L 3Phase:R-3Phase-rescue-3Phase-rescue R48
 U 1 1 5BDAF4B1
 P 6650 7925
 F 0 "R48" V 6730 7925 50  0000 C CNN
@@ -789,7 +788,7 @@ F 3 "https://lcsc.com/product-detail/_RC0603JR-07270KL_C137642.html" H 6650 7925
 	-1   0    0    -1  
 $EndComp
 $Comp
-L 3Phase-rescue:R-3Phase-rescue R47
+L 3Phase:R-3Phase-rescue-3Phase-rescue R47
 U 1 1 5BDAF58A
 P 6800 7925
 F 0 "R47" V 6880 7925 50  0000 C CNN
@@ -800,7 +799,7 @@ F 3 "https://lcsc.com/product-detail/_RC0603JR-07270KL_C137642.html" H 6800 7925
 	-1   0    0    -1  
 $EndComp
 $Comp
-L 3Phase-rescue:CP-3Phase-rescue C9
+L 3Phase:CP-3Phase-rescue-3Phase-rescue C9
 U 1 1 5BDB6F21
 P 2375 1350
 F 0 "C9" H 2400 1450 50  0000 L CNN
@@ -811,7 +810,7 @@ F 3 "https://lcsc.com/product-detail/Aluminum-Electrolytic-Capacitors-Leaded_4-7
 	1    0    0    -1  
 $EndComp
 $Comp
-L 3Phase-rescue:CP-3Phase-rescue C8
+L 3Phase:CP-3Phase-rescue-3Phase-rescue C8
 U 1 1 5BDB7050
 P 1975 1350
 F 0 "C8" H 2000 1450 50  0000 L CNN
@@ -822,7 +821,7 @@ F 3 "https://lcsc.com/product-detail/Aluminum-Electrolytic-Capacitors-Leaded_4-7
 	1    0    0    -1  
 $EndComp
 $Comp
-L 3Phase-rescue:VIPer22-3Phase-rescue U6
+L 3Phase:VIPer22-3Phase-rescue-3Phase-rescue U6
 U 1 1 5BDB6955
 P 2925 1250
 F 0 "U6" H 2775 1475 50  0000 R CNN
@@ -833,7 +832,7 @@ F 3 "https://lcsc.com/product-detail/PMIC-AC-DC-Converters_STMicroelectronics_VI
 	-1   0    0    1   
 $EndComp
 $Comp
-L 3Phase-rescue:L-3Phase-rescue L1
+L 3Phase:L-3Phase-rescue-3Phase-rescue L1
 U 1 1 5BDB7C0C
 P 2175 1100
 F 0 "L1" V 2125 1100 50  0000 C CNN
@@ -844,7 +843,7 @@ F 3 "https://lcsc.com/product-detail/_CENKER-CKL0514-470uH-J-CCA-T_C354673.html"
 	0    -1   -1   0   
 $EndComp
 $Comp
-L 3Phase-rescue:Thermistor_NTC-3Phase-rescue TH1
+L 3Phase:Thermistor_NTC-3Phase-rescue-3Phase-rescue TH1
 U 1 1 5BDB864F
 P 1775 950
 F 0 "TH1" V 1600 950 50  0000 C CNN
@@ -855,7 +854,7 @@ F 3 "https://lcsc.com/product-detail/NTC-Thermistors_Power-typeNTC-10R-20_C72681
 	0    1    1    0   
 $EndComp
 $Comp
-L 3Phase-rescue:Varistor-3Phase-rescue RV1
+L 3Phase:Varistor-3Phase-rescue-3Phase-rescue RV1
 U 1 1 5BDB8784
 P 1725 1350
 F 0 "RV1" V 1850 1350 50  0000 C CNN
@@ -877,7 +876,7 @@ F 3 "" H 3275 1700 50  0000 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L 3Phase-rescue:L-3Phase-rescue L2
+L 3Phase:L-3Phase-rescue-3Phase-rescue L2
 U 1 1 5BDBAA07
 P 3725 1350
 F 0 "L2" V 3675 1350 50  0000 C CNN
@@ -888,7 +887,7 @@ F 3 "https://lcsc.com/product-detail/Power-Inductors_COILMX-MSA75-102M_C396431.h
 	0    -1   -1   0   
 $EndComp
 $Comp
-L 3Phase-rescue:C_Small-3Phase-rescue C10
+L 3Phase:C_Small-3Phase-rescue-3Phase-rescue C10
 U 1 1 5BDBB3A5
 P 3525 1200
 F 0 "C10" H 3535 1270 50  0000 L CNN
@@ -899,7 +898,7 @@ F 3 "https://lcsc.com/product-detail/Multilayer-Ceramic-Capacitors-MLCC-SMD-SMT_
 	1    0    0    -1  
 $EndComp
 $Comp
-L 3Phase-rescue:C_Small-3Phase-rescue C11
+L 3Phase:C_Small-3Phase-rescue-3Phase-rescue C11
 U 1 1 5BDBB5F6
 P 3375 1250
 F 0 "C11" H 3385 1320 50  0000 L CNN
@@ -910,7 +909,7 @@ F 3 "https://lcsc.com/product-detail/Multilayer-Ceramic-Capacitors-MLCC-SMD-SMT_
 	1    0    0    -1  
 $EndComp
 $Comp
-L 3Phase-rescue:D_Zener_Small_ALT-3Phase-rescue D2
+L 3Phase:D_Zener_Small_ALT-3Phase-rescue-3Phase-rescue D2
 U 1 1 5BDBB72B
 P 3675 1050
 F 0 "D2" H 3600 1150 50  0000 C CNN
@@ -921,7 +920,7 @@ F 3 "https://lcsc.com/product-detail/Zener-Diodes_Shandong-Jingdao-Microelectron
 	-1   0    0    1   
 $EndComp
 $Comp
-L 3Phase-rescue:D_Small_ALT-3Phase-rescue D1
+L 3Phase:D_Small_ALT-3Phase-rescue-3Phase-rescue D1
 U 1 1 5BDBDB31
 P 3275 1500
 F 0 "D1" H 3225 1580 50  0000 L CNN
@@ -932,7 +931,7 @@ F 3 "https://lcsc.com/product-detail/Diodes-General-Purpose_Bourne-Semicon-Shenz
 	0    1    1    0   
 $EndComp
 $Comp
-L 3Phase-rescue:CP_Small-3Phase-rescue C12
+L 3Phase:CP_Small-3Phase-rescue-3Phase-rescue C12
 U 1 1 5BDBE803
 P 3925 1500
 F 0 "C12" H 3935 1570 50  0000 L CNN
@@ -945,7 +944,7 @@ $EndComp
 Text GLabel 4075 1100 1    60   Input ~ 0
 20v
 $Comp
-L 3Phase-rescue:D_Small_ALT-3Phase-rescue D3
+L 3Phase:D_Small_ALT-3Phase-rescue-3Phase-rescue D3
 U 1 1 5BDBD504
 P 3925 1200
 F 0 "D3" H 3875 1280 50  0000 L CNN
@@ -956,7 +955,7 @@ F 3 "https://lcsc.com/product-detail/Diodes-General-Purpose_Bourne-Semicon-Shenz
 	0    1    1    0   
 $EndComp
 $Comp
-L 3Phase-rescue:C_Small-3Phase-rescue C17
+L 3Phase:C_Small-3Phase-rescue-3Phase-rescue C17
 U 1 1 5BDCF00F
 P 4075 1500
 F 0 "C17" H 4085 1570 50  0000 L CNN
@@ -967,7 +966,7 @@ F 3 "https://lcsc.com/product-detail/Multilayer-Ceramic-Capacitors-MLCC-SMD-SMT_
 	1    0    0    -1  
 $EndComp
 $Comp
-L 3Phase-rescue:L-3Phase-rescue L4
+L 3Phase:L-3Phase-rescue-3Phase-rescue L4
 U 1 1 5BDD2082
 P 5025 1150
 F 0 "L4" V 4975 1150 50  0000 C CNN
@@ -980,7 +979,7 @@ $EndComp
 Text GLabel 825  10650 0    60   Input ~ 0
 IN_L3
 $Comp
-L 3Phase-rescue:D_ALT-3Phase-rescue D6
+L 3Phase:D_ALT-3Phase-rescue-3Phase-rescue D6
 U 1 1 5BDDF7B6
 P 1375 1550
 F 0 "D6" H 1475 1600 50  0000 C CNN
@@ -991,7 +990,7 @@ F 3 "https://lcsc.com/product-detail/Diodes-General-Purpose_Shikues-1N4007G_C111
 	-1   0    0    1   
 $EndComp
 $Comp
-L 3Phase-rescue:D_ALT-3Phase-rescue D4
+L 3Phase:D_ALT-3Phase-rescue-3Phase-rescue D4
 U 1 1 5BDDF9F7
 P 1375 950
 F 0 "D4" H 1475 1000 50  0000 C CNN
@@ -1002,7 +1001,7 @@ F 3 "https://lcsc.com/product-detail/Diodes-General-Purpose_Shikues-1N4007G_C111
 	-1   0    0    1   
 $EndComp
 $Comp
-L 3Phase-rescue:D_ALT-3Phase-rescue D5
+L 3Phase:D_ALT-3Phase-rescue-3Phase-rescue D5
 U 1 1 5BDDFAD0
 P 1375 1250
 F 0 "D5" H 1475 1300 50  0000 C CNN
@@ -1019,7 +1018,7 @@ IN_L2
 Text GLabel 1225 1400 2    60   Input ~ 0
 IN_L1
 $Comp
-L 3Phase-rescue:CP_Small-3Phase-rescue C18
+L 3Phase:CP_Small-3Phase-rescue-3Phase-rescue C18
 U 1 1 5BDECD27
 P 5450 1500
 F 0 "C18" H 5460 1570 50  0000 L CNN
@@ -1030,7 +1029,7 @@ F 3 "https://lcsc.com/product-detail/Aluminum-Electrolytic-Capacitors-Leaded_Ymi
 	1    0    0    -1  
 $EndComp
 $Comp
-L 3Phase-rescue:LTC4054-3Phase-rescue U12
+L 3Phase:LTC4054-3Phase-rescue-3Phase-rescue U12
 U 1 1 5BDEE248
 P 5975 1250
 F 0 "U12" H 5825 1475 50  0000 R CNN
@@ -1041,7 +1040,7 @@ F 3 "https://lcsc.com/product-detail/PMIC-Battery-Management_TPOWER-TP4054ST25P_
 	1    0    0    -1  
 $EndComp
 $Comp
-L 3Phase-rescue:Battery_Cell-3Phase-rescue BT1
+L 3Phase:Battery_Cell-3Phase-rescue-3Phase-rescue BT1
 U 1 1 5BDEE828
 P 6625 1500
 F 0 "BT1" H 6725 1600 50  0000 L CNN
@@ -1052,7 +1051,7 @@ F 3 "https://lcsc.com/product-detail/Wire-To-Board-Wire-To-Wire-Connector_Boom-P
 	1    0    0    -1  
 $EndComp
 $Comp
-L 3Phase-rescue:Q_PMOS_GSD-3Phase-rescue Q1
+L 3Phase:Q_PMOS_GSD-3Phase-rescue-3Phase-rescue Q1
 U 1 1 5BDF3EC9
 P 6525 900
 F 0 "Q1" H 6725 950 50  0000 L CNN
@@ -1063,7 +1062,7 @@ F 3 "https://lcsc.com/product-detail/MOSFET_ShenZhen-Quan-Li-Semiconductor-AP230
 	1    0    0    1   
 $EndComp
 $Comp
-L 3Phase-rescue:D_Schottky_Small_ALT-3Phase-rescue D8
+L 3Phase:D_Schottky_Small_ALT-3Phase-rescue-3Phase-rescue D8
 U 1 1 5BDF4375
 P 6450 650
 F 0 "D8" H 6400 730 50  0000 L CNN
@@ -1076,7 +1075,7 @@ $EndComp
 Text GLabel 5825 1775 0    60   Input ~ 0
 CHRG
 $Comp
-L 3Phase-rescue:PS7516-3Phase-rescue U7
+L 3Phase:PS7516-3Phase-rescue-3Phase-rescue U7
 U 1 1 5BE18D52
 P 4625 9000
 F 0 "U7" H 4825 8750 50  0000 C CNN
@@ -1087,7 +1086,7 @@ F 3 "https://lcsc.com/product-detail/DC-DC-Converters_FP6715S6CTR_C128048.html" 
 	1    0    0    -1  
 $EndComp
 $Comp
-L 3Phase-rescue:CONN_01X04-3Phase-rescue P1
+L 3Phase:CONN_01X04-3Phase-rescue-3Phase-rescue P1
 U 1 1 5BE1F723
 P 775 1500
 F 0 "P1" H 775 1750 50  0000 C CNN
@@ -1098,7 +1097,7 @@ F 3 "https://lcsc.com/product-detail/Pluggable-System-Terminal-Block_Ningbo-Kang
 	-1   0    0    -1  
 $EndComp
 $Comp
-L 3Phase-rescue:R-3Phase-rescue R57
+L 3Phase:R-3Phase-rescue-3Phase-rescue R57
 U 1 1 5BEA6C0B
 P 7025 1400
 F 0 "R57" V 7105 1400 50  0000 C CNN
@@ -1109,7 +1108,7 @@ F 3 "https://lcsc.com/product-detail/_RC0603JR-07270KL_C137642.html" H 7025 1400
 	1    0    0    -1  
 $EndComp
 $Comp
-L 3Phase-rescue:R-3Phase-rescue R56
+L 3Phase:R-3Phase-rescue-3Phase-rescue R56
 U 1 1 5BEA6F94
 P 6825 1150
 F 0 "R56" V 6905 1150 50  0000 C CNN
@@ -1128,7 +1127,7 @@ POWER
 Text GLabel 4125 9450 0    60   Input ~ 0
 POWER
 $Comp
-L 3Phase-rescue:C_Small-3Phase-rescue C13
+L 3Phase:C_Small-3Phase-rescue-3Phase-rescue C13
 U 1 1 5BEB8358
 P 4175 9650
 F 0 "C13" H 4185 9720 50  0000 L CNN
@@ -1152,7 +1151,7 @@ $EndComp
 Text GLabel 4150 9000 0    60   Input ~ 0
 POWER_EN
 $Comp
-L 3Phase-rescue:L-3Phase-rescue L3
+L 3Phase:L-3Phase-rescue-3Phase-rescue L3
 U 1 1 5BEC97FD
 P 4525 8650
 F 0 "L3" V 4475 8650 50  0000 C CNN
@@ -1163,7 +1162,7 @@ F 3 "https://lcsc.com/product-detail/Power-Inductors_Sunltech-Tech-SLF0403-100MT
 	0    -1   -1   0   
 $EndComp
 $Comp
-L 3Phase-rescue:R-3Phase-rescue R50
+L 3Phase:R-3Phase-rescue-3Phase-rescue R50
 U 1 1 5BEC99BD
 P 5200 9275
 F 0 "R50" V 5280 9275 50  0000 C CNN
@@ -1174,7 +1173,7 @@ F 3 "https://lcsc.com/product-detail/Chip-Resistor-Surface-Mount_51KR-5102-1_C10
 	1    0    0    -1  
 $EndComp
 $Comp
-L 3Phase-rescue:R-3Phase-rescue R49
+L 3Phase:R-3Phase-rescue-3Phase-rescue R49
 U 1 1 5BEC9B5A
 P 5200 8850
 F 0 "R49" V 5280 8850 50  0000 C CNN
@@ -1185,7 +1184,7 @@ F 3 "https://lcsc.com/product-detail/_RC0603JR-07270KL_C137642.html" H 5200 8850
 	-1   0    0    1   
 $EndComp
 $Comp
-L 3Phase-rescue:C_Small-3Phase-rescue C14
+L 3Phase:C_Small-3Phase-rescue-3Phase-rescue C14
 U 1 1 5BEC9CD0
 P 5425 9575
 F 0 "C14" H 5435 9645 50  0000 L CNN
@@ -1196,7 +1195,7 @@ F 3 "https://lcsc.com/product-detail/Multilayer-Ceramic-Capacitors-MLCC-SMD-SMT_
 	1    0    0    -1  
 $EndComp
 $Comp
-L 3Phase-rescue:CP_Small-3Phase-rescue C15
+L 3Phase:CP_Small-3Phase-rescue-3Phase-rescue C15
 U 1 1 5BEC9E75
 P 5325 9025
 F 0 "C15" H 5335 9095 50  0000 L CNN
@@ -1207,7 +1206,7 @@ F 3 "https://lcsc.com/product-detail/Aluminum-Electrolytic-Capacitors-Leaded_Ymi
 	1    0    0    -1  
 $EndComp
 $Comp
-L Components:MCP6004 U11
+L 3Phase:MCP6004-Components U11
 U 1 1 5BEDF329
 P 2225 9450
 F 0 "U11" H 2225 9650 50  0000 L CNN
@@ -1218,7 +1217,7 @@ F 3 "https://lcsc.com/product-detail/74-Series_NXP_74HC4066PW_74HC4066PW_C5650.h
 	1    0    0    -1  
 $EndComp
 $Comp
-L 3Phase-rescue:R-3Phase-rescue R51
+L 3Phase:R-3Phase-rescue-3Phase-rescue R51
 U 1 1 5BEE0E5D
 P 6725 9050
 F 0 "R51" V 6805 9050 50  0000 C CNN
@@ -1229,7 +1228,7 @@ F 3 "https://lcsc.com/product-detail/Chip-Resistor-Surface-Mount_4-7KR-472-1_C99
 	-1   0    0    1   
 $EndComp
 $Comp
-L 3Phase-rescue:R-3Phase-rescue R52
+L 3Phase:R-3Phase-rescue-3Phase-rescue R52
 U 1 1 5BEE103D
 P 6600 9600
 F 0 "R52" V 6680 9600 50  0000 C CNN
@@ -1240,7 +1239,7 @@ F 3 "https://lcsc.com/product-detail/Chip-Resistor-Surface-Mount_4-7KR-472-1_C99
 	1    0    0    -1  
 $EndComp
 $Comp
-L 3Phase-rescue:C_Small-3Phase-rescue C16
+L 3Phase:C_Small-3Phase-rescue-3Phase-rescue C16
 U 1 1 5BEE335C
 P 6725 9400
 F 0 "C16" H 6735 9470 50  0000 L CNN
@@ -1251,7 +1250,7 @@ F 3 "https://lcsc.com/product-detail/Multilayer-Ceramic-Capacitors-MLCC-SMD-SMT_
 	1    0    0    -1  
 $EndComp
 $Comp
-L Components:+1V65 #PWR047
+L 3Phase:+1V65-Components #PWR047
 U 1 1 5BEEB00A
 P 7600 9350
 F 0 "#PWR047" H 7600 9200 50  0001 C CNN
@@ -1296,7 +1295,7 @@ L3I_ADC
 Text GLabel 4250 7750 0    60   Input ~ 0
 NI_ADC
 $Comp
-L Components:LED_Dual_ACA D12
+L 3Phase:LED_Dual_ACA-Components D12
 U 1 1 5BFAD7FE
 P 2250 5050
 F 0 "D12" H 1975 5000 50  0000 C CNN
@@ -1307,7 +1306,7 @@ F 3 "https://es.aliexpress.com/store/product/100pcs-LED-3mm-Round-Diffused-Red-G
 	-1   0    0    1   
 $EndComp
 $Comp
-L Components:LED_Dual_ACA D10
+L 3Phase:LED_Dual_ACA-Components D10
 U 1 1 5BFADB33
 P 2250 5500
 F 0 "D10" H 2025 5375 50  0000 C CNN
@@ -1318,7 +1317,7 @@ F 3 "https://es.aliexpress.com/store/product/100pcs-LED-3mm-Round-Diffused-Red-G
 	-1   0    0    1   
 $EndComp
 $Comp
-L Components:LED_Dual_ACA D9
+L 3Phase:LED_Dual_ACA-Components D9
 U 1 1 5BFADE7C
 P 2250 5950
 F 0 "D9" H 2025 5875 50  0000 C CNN
@@ -1329,7 +1328,7 @@ F 3 "https://es.aliexpress.com/store/product/100pcs-LED-3mm-Round-Diffused-Red-G
 	-1   0    0    1   
 $EndComp
 $Comp
-L 3Phase-rescue:LED_ALT-3Phase-rescue D11
+L 3Phase:LED_ALT-3Phase-rescue-3Phase-rescue D11
 U 1 1 5BFADFE9
 P 2325 6250
 F 0 "D11" H 2325 6350 50  0000 C CNN
@@ -1340,7 +1339,7 @@ F 3 "https://es.aliexpress.com/store/product/100PCS-x-Long-Leg-3mm-5mm-White-Dif
 	-1   0    0    1   
 $EndComp
 $Comp
-L 3Phase-rescue:Buzzer-3Phase-rescue BZ1
+L 3Phase:Buzzer-3Phase-rescue-3Phase-rescue BZ1
 U 1 1 5BFAE180
 P 2125 2875
 F 0 "BZ1" V 2000 2800 50  0000 L CNN
@@ -1351,7 +1350,7 @@ F 3 "https://lcsc.com/product-detail/Buzzers_Jiangsu-Huaneng-Elec-QMB-09B-05_C16
 	0    -1   -1   0   
 $EndComp
 $Comp
-L Components:NanoPi P2
+L 3Phase:NanoPi-Components P2
 U 1 1 5BFAFAB2
 P 1975 7500
 F 0 "P2" H 2075 7150 50  0000 C CNN
@@ -1368,7 +1367,7 @@ L2I_ADC
 Text GLabel 3050 6800 2    60   Input ~ 0
 L3I_ADC
 $Comp
-L Components:MCP6004 U11
+L 3Phase:MCP6004-Components U11
 U 2 1 5BFE63CA
 P 2225 10100
 F 0 "U11" H 2225 10300 50  0000 L CNN
@@ -1379,7 +1378,7 @@ F 3 "https://lcsc.com/product-detail/74-Series_NXP_74HC4066PW_74HC4066PW_C5650.h
 	1    0    0    -1  
 $EndComp
 $Comp
-L Components:MCP6004 U11
+L 3Phase:MCP6004-Components U11
 U 3 1 5BFEB564
 P 2225 10750
 F 0 "U11" H 2225 10950 50  0000 L CNN
@@ -1390,7 +1389,7 @@ F 3 "https://lcsc.com/product-detail/74-Series_NXP_74HC4066PW_74HC4066PW_C5650.h
 	1    0    0    -1  
 $EndComp
 $Comp
-L Components:MCP6004 U11
+L 3Phase:MCP6004-Components U11
 U 4 1 5BFEBAD0
 P 7100 9350
 F 0 "U11" H 7100 9550 50  0000 L CNN
@@ -1401,7 +1400,7 @@ F 3 "https://lcsc.com/product-detail/74-Series_NXP_74HC4066PW_74HC4066PW_C5650.h
 	1    0    0    -1  
 $EndComp
 $Comp
-L 3Phase-rescue:R-3Phase-rescue R62
+L 3Phase:R-3Phase-rescue-3Phase-rescue R62
 U 1 1 5BFFA9B0
 P 2725 9450
 F 0 "R62" V 2805 9450 50  0000 C CNN
@@ -1412,7 +1411,7 @@ F 3 "https://lcsc.com/product-detail/Chip-Resistor-Surface-Mount_100R-100R-1_C12
 	0    1    1    0   
 $EndComp
 $Comp
-L 3Phase-rescue:C_Small-3Phase-rescue C19
+L 3Phase:C_Small-3Phase-rescue-3Phase-rescue C19
 U 1 1 5BFFE182
 P 2900 9575
 F 0 "C19" H 2910 9645 50  0000 L CNN
@@ -1436,7 +1435,7 @@ F 3 "" H 2900 9700 50  0000 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L Components:+1V65 #PWR01
+L 3Phase:+1V65-Components #PWR01
 U 1 1 5C00E7F5
 P 1550 9175
 F 0 "#PWR01" H 1550 9025 50  0001 C CNN
@@ -1447,7 +1446,7 @@ F 3 "" H 1550 9175 50  0000 C CNN
 	0    -1   -1   0   
 $EndComp
 $Comp
-L Components:+1V65 #PWR02
+L 3Phase:+1V65-Components #PWR02
 U 1 1 5C015D32
 P 1550 9825
 F 0 "#PWR02" H 1550 9675 50  0001 C CNN
@@ -1458,7 +1457,7 @@ F 3 "" H 1550 9825 50  0000 C CNN
 	0    -1   -1   0   
 $EndComp
 $Comp
-L 3Phase-rescue:R-3Phase-rescue R63
+L 3Phase:R-3Phase-rescue-3Phase-rescue R63
 U 1 1 5C018829
 P 2725 10100
 F 0 "R63" V 2805 10100 50  0000 C CNN
@@ -1471,7 +1470,7 @@ $EndComp
 Text GLabel 3000 10100 2    60   Input ~ 0
 L2V_ADC
 $Comp
-L 3Phase-rescue:C_Small-3Phase-rescue C20
+L 3Phase:C_Small-3Phase-rescue-3Phase-rescue C20
 U 1 1 5C018F55
 P 2900 10225
 F 0 "C20" H 2910 10295 50  0000 L CNN
@@ -1493,7 +1492,7 @@ F 3 "" H 2900 10350 50  0000 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L Components:+1V65 #PWR03
+L 3Phase:+1V65-Components #PWR03
 U 1 1 5C01CBFF
 P 1550 10475
 F 0 "#PWR03" H 1550 10325 50  0001 C CNN
@@ -1504,7 +1503,7 @@ F 3 "" H 1550 10475 50  0000 C CNN
 	0    -1   -1   0   
 $EndComp
 $Comp
-L 3Phase-rescue:R-3Phase-rescue R64
+L 3Phase:R-3Phase-rescue-3Phase-rescue R64
 U 1 1 5C01E49B
 P 2725 10750
 F 0 "R64" V 2805 10750 50  0000 C CNN
@@ -1515,7 +1514,7 @@ F 3 "https://lcsc.com/product-detail/Chip-Resistor-Surface-Mount_100R-100R-1_C12
 	0    1    1    0   
 $EndComp
 $Comp
-L 3Phase-rescue:C_Small-3Phase-rescue C21
+L 3Phase:C_Small-3Phase-rescue-3Phase-rescue C21
 U 1 1 5C01E678
 P 2900 10875
 F 0 "C21" H 2910 10945 50  0000 L CNN
@@ -1539,7 +1538,7 @@ F 3 "" H 2900 11000 50  0000 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L Components:STM32F042 U13
+L 3Phase:STM32F042-Components U13
 U 1 1 5C0F1416
 P 1250 8150
 F 0 "U13" H 1250 7750 60  0000 C CNN
@@ -1572,7 +1571,7 @@ F 3 "" H 2275 8350 50  0000 C CNN
 	0    1    1    0   
 $EndComp
 $Comp
-L 3Phase-rescue:C_Small-3Phase-rescue C22
+L 3Phase:C_Small-3Phase-rescue-3Phase-rescue C22
 U 1 1 5C10FD29
 P 1750 8500
 F 0 "C22" H 1760 8570 50  0000 L CNN
@@ -1583,7 +1582,7 @@ F 3 "https://lcsc.com/product-detail/Multilayer-Ceramic-Capacitors-MLCC-SMD-SMT_
 	1    0    0    -1  
 $EndComp
 $Comp
-L 3Phase-rescue:C_Small-3Phase-rescue C23
+L 3Phase:C_Small-3Phase-rescue-3Phase-rescue C23
 U 1 1 5C10FF28
 P 1950 8500
 F 0 "C23" H 1960 8570 50  0000 L CNN
@@ -1594,7 +1593,7 @@ F 3 "https://lcsc.com/product-detail/Multilayer-Ceramic-Capacitors-MLCC-SMD-SMT_
 	1    0    0    -1  
 $EndComp
 $Comp
-L 3Phase-rescue:C_Small-3Phase-rescue C24
+L 3Phase:C_Small-3Phase-rescue-3Phase-rescue C24
 U 1 1 5C110430
 P 2150 8500
 F 0 "C24" H 2160 8570 50  0000 L CNN
@@ -2050,7 +2049,7 @@ Wire Wire Line
 Wire Wire Line
 	1600 7650 1925 7650
 $Comp
-L 3Phase-rescue:SW_Push-3Phase-rescue SW2
+L 3Phase:SW_Push-3Phase-rescue-3Phase-rescue SW2
 U 1 1 5C13FA35
 P 2175 4575
 F 0 "SW2" H 2225 4675 50  0000 L CNN
@@ -2296,7 +2295,7 @@ Connection ~ 4175 8900
 Wire Wire Line
 	4175 8900 4175 9450
 $Comp
-L 3Phase-rescue:C_Small-3Phase-rescue C1
+L 3Phase:C_Small-3Phase-rescue-3Phase-rescue C1
 U 1 1 5C21A3EA
 P 6525 9025
 F 0 "C1" H 6535 9095 50  0000 L CNN
@@ -2314,7 +2313,7 @@ Wire Wire Line
 Wire Wire Line
 	5075 5025 5075 5000
 $Comp
-L Components:MCP6004 U1
+L 3Phase:MCP6004-Components U1
 U 1 1 5BD04329
 P 4975 5325
 F 0 "U1" H 4975 5525 50  0000 L CNN
@@ -2327,7 +2326,7 @@ $EndComp
 Wire Wire Line
 	5075 5650 5075 5625
 $Comp
-L 3Phase-rescue:R-3Phase-rescue R38
+L 3Phase:R-3Phase-rescue-3Phase-rescue R38
 U 1 1 5C1EE790
 P 1875 4850
 F 0 "R38" V 1955 4850 50  0000 C CNN
@@ -2338,7 +2337,7 @@ F 3 "https://lcsc.com/product-detail/_RC0603JR-0739RL_C137630.html" H 1875 4850 
 	0    -1   1    0   
 $EndComp
 $Comp
-L 3Phase-rescue:R-3Phase-rescue R55
+L 3Phase:R-3Phase-rescue-3Phase-rescue R55
 U 1 1 5C1EFC16
 P 1775 6250
 F 0 "R55" V 1855 6250 50  0000 C CNN
@@ -2351,7 +2350,7 @@ $EndComp
 Wire Wire Line
 	1925 6250 2175 6250
 $Comp
-L 3Phase-rescue:R-3Phase-rescue R65
+L 3Phase:R-3Phase-rescue-3Phase-rescue R65
 U 1 1 5C207DDF
 P 6800 4325
 F 0 "R65" V 6880 4325 50  0000 C CNN
@@ -2362,7 +2361,7 @@ F 3 "https://lcsc.com/product-detail/_RC0603JR-07270KL_C137642.html" H 6800 4325
 	1    0    0    1   
 $EndComp
 $Comp
-L 3Phase-rescue:R-3Phase-rescue R66
+L 3Phase:R-3Phase-rescue-3Phase-rescue R66
 U 1 1 5C207F21
 P 6650 4325
 F 0 "R66" V 6730 4325 50  0000 C CNN
@@ -2383,7 +2382,7 @@ Wire Wire Line
 Wire Wire Line
 	7025 5125 7000 5125
 $Comp
-L 3Phase-rescue:R-3Phase-rescue R41
+L 3Phase:R-3Phase-rescue-3Phase-rescue R41
 U 1 1 5C1A194C
 P 6650 5525
 F 0 "R41" V 6575 5525 50  0000 C CNN
@@ -2394,7 +2393,7 @@ F 3 "https://lcsc.com/product-detail/_RC0603JR-07270KL_C137642.html" H 6650 5525
 	1    0    0    1   
 $EndComp
 $Comp
-L 3Phase-rescue:R-3Phase-rescue R42
+L 3Phase:R-3Phase-rescue-3Phase-rescue R42
 U 1 1 5C1A1A90
 P 6800 5525
 F 0 "R42" V 6725 5525 50  0000 C CNN
@@ -2435,7 +2434,7 @@ Connection ~ 6800 8300
 Wire Wire Line
 	6800 8300 7000 8300
 $Comp
-L 3Phase-rescue:C_Small-3Phase-rescue C26
+L 3Phase:C_Small-3Phase-rescue-3Phase-rescue C26
 U 1 1 5BF092ED
 P 5175 7425
 F 0 "C26" H 5185 7495 50  0000 L CNN
@@ -2462,7 +2461,7 @@ F 3 "" H 5625 7425 50  0000 C CNN
 	0    -1   1    0   
 $EndComp
 $Comp
-L 3Phase-rescue:C_Small-3Phase-rescue C25
+L 3Phase:C_Small-3Phase-rescue-3Phase-rescue C25
 U 1 1 5BFF8F92
 P 5200 5000
 F 0 "C25" H 5210 5070 50  0000 L CNN
@@ -2557,7 +2556,7 @@ Wire Wire Line
 Wire Wire Line
 	1625 6250 1600 6250
 $Comp
-L 3Phase-rescue:C_Small-3Phase-rescue C28
+L 3Phase:C_Small-3Phase-rescue-3Phase-rescue C28
 U 1 1 5C17FA70
 P 2100 4700
 F 0 "C28" H 2110 4770 50  0000 L CNN
@@ -2574,7 +2573,7 @@ Wire Wire Line
 Wire Wire Line
 	2375 4575 2425 4575
 $Comp
-L 3Phase-rescue:R-3Phase-rescue R44
+L 3Phase:R-3Phase-rescue-3Phase-rescue R44
 U 1 1 5BF49798
 P 1975 3825
 F 0 "R44" V 2055 3825 50  0000 C CNN
@@ -2610,7 +2609,7 @@ POWER_EN
 Wire Wire Line
 	1700 3600 1650 3600
 $Comp
-L 3Phase-rescue:R-3Phase-rescue R37
+L 3Phase:R-3Phase-rescue-3Phase-rescue R37
 U 1 1 5C1A62AF
 P 1950 3425
 F 0 "R37" V 2030 3425 50  0000 C CNN
@@ -2721,7 +2720,7 @@ $EndComp
 Wire Wire Line
 	6225 9450 6200 9450
 $Comp
-L 3Phase-rescue:D_Small_ALT-3Phase-rescue D13
+L 3Phase:D_Small_ALT-3Phase-rescue-3Phase-rescue D13
 U 1 1 5DFFCEE7
 P 5550 8725
 F 0 "D13" H 5500 8805 50  0000 L CNN
@@ -2753,7 +2752,7 @@ Wire Wire Line
 Wire Wire Line
 	2225 2975 2225 3000
 $Comp
-L Components:Conn_01x03 J5
+L 3Phase:Conn_01x03-Components J5
 U 1 1 5E457107
 P 2450 2600
 F 0 "J5" H 2530 2642 50  0000 L CNN
@@ -2777,7 +2776,7 @@ $EndComp
 Wire Wire Line
 	2250 2700 1950 2700
 $Comp
-L 3Phase-rescue:R-3Phase-rescue R39
+L 3Phase:R-3Phase-rescue-3Phase-rescue R39
 U 1 1 5E8C6875
 P 1800 4575
 F 0 "R39" V 1880 4575 50  0000 C CNN
@@ -2796,7 +2795,7 @@ Wire Wire Line
 Wire Wire Line
 	2150 8050 2150 8150
 $Comp
-L 3Phase-rescue:XC6206-3Phase-rescue U4
+L 3Phase:XC6206-3Phase-rescue-3Phase-rescue U4
 U 1 1 5D1E085F
 P 5875 9550
 F 0 "U4" H 5975 9350 50  0000 C CNN
@@ -2809,7 +2808,7 @@ $EndComp
 Wire Wire Line
 	4275 9800 5050 9800
 $Comp
-L 3Phase-rescue:D_Small_ALT-3Phase-rescue D14
+L 3Phase:D_Small_ALT-3Phase-rescue-3Phase-rescue D14
 U 1 1 5C0D8D38
 P 4475 9450
 F 0 "D14" H 4425 9530 50  0000 L CNN
@@ -2830,7 +2829,7 @@ Wire Wire Line
 	5550 9450 5575 9450
 Connection ~ 2150 8150
 $Comp
-L 3Phase-rescue:C_Small-3Phase-rescue C29
+L 3Phase:C_Small-3Phase-rescue-3Phase-rescue C29
 U 1 1 5C6260A8
 P 5050 9625
 F 0 "C29" H 5060 9695 50  0000 L CNN
@@ -2887,7 +2886,7 @@ $EndComp
 Wire Wire Line
 	6725 8850 7300 8850
 $Comp
-L 3Phase-rescue:C_Small-3Phase-rescue C30
+L 3Phase:C_Small-3Phase-rescue-3Phase-rescue C30
 U 1 1 5D19FBA6
 P 2300 9125
 F 0 "C30" H 2310 9195 50  0000 L CNN
@@ -2964,7 +2963,7 @@ Wire Wire Line
 Wire Wire Line
 	3375 950  3925 950 
 $Comp
-L 3Phase-rescue:C_Small-3Phase-rescue C27
+L 3Phase:C_Small-3Phase-rescue-3Phase-rescue C27
 U 1 1 5D4A1360
 P 7525 9525
 F 0 "C27" H 7535 9595 50  0000 L CNN
@@ -2988,7 +2987,7 @@ Wire Wire Line
 Wire Wire Line
 	1600 8050 1750 8050
 $Comp
-L 3Phase-rescue:CP_Small-3Phase-rescue C31
+L 3Phase:CP_Small-3Phase-rescue-3Phase-rescue C31
 U 1 1 5DA3AF22
 P 6200 9650
 F 0 "C31" H 6210 9720 50  0000 L CNN
@@ -3051,7 +3050,7 @@ Wire Wire Line
 	1650 4050 1650 4000
 Connection ~ 1650 4000
 $Comp
-L Components:Conn_01x02 J6
+L 3Phase:Conn_01x02-Components J6
 U 1 1 5DB54C15
 P 2525 4250
 F 0 "J6" H 2605 4292 50  0000 L CNN
@@ -3077,7 +3076,7 @@ $EndComp
 Wire Wire Line
 	2325 4350 2300 4350
 $Comp
-L 3Phase-rescue:XC6206-3Phase-rescue U2
+L 3Phase:XC6206-3Phase-rescue-3Phase-rescue U2
 U 1 1 5DDDB6A8
 P 5875 8950
 F 0 "U2" H 5975 8750 50  0000 C CNN
@@ -3108,7 +3107,7 @@ $EndComp
 Wire Wire Line
 	5875 9150 5875 9175
 $Comp
-L 3Phase-rescue:CP_Small-3Phase-rescue C32
+L 3Phase:CP_Small-3Phase-rescue-3Phase-rescue C32
 U 1 1 5E5D681A
 P 6400 9225
 F 0 "C32" H 6410 9295 50  0000 L CNN
@@ -3178,7 +3177,7 @@ Wire Wire Line
 Wire Wire Line
 	4675 6475 4675 7025
 $Comp
-L 3Phase-rescue:C_Small-3Phase-rescue C33
+L 3Phase:C_Small-3Phase-rescue-3Phase-rescue C33
 U 1 1 5F640827
 P 7000 8150
 F 0 "C33" H 7010 8220 50  0000 L CNN
@@ -3217,7 +3216,7 @@ Connection ~ 6650 5325
 Wire Wire Line
 	5125 5875 5300 5875
 $Comp
-L 3Phase-rescue:C_Small-3Phase-rescue C34
+L 3Phase:C_Small-3Phase-rescue-3Phase-rescue C34
 U 1 1 5FB7F377
 P 6950 4425
 F 0 "C34" H 6960 4495 50  0000 L CNN
@@ -3272,7 +3271,7 @@ Wire Wire Line
 	2525 10100 2550 10100
 Connection ~ 2125 9125
 $Comp
-L 3Phase-rescue:XC6206-3Phase-rescue U5
+L 3Phase:XC6206-3Phase-rescue-3Phase-rescue U5
 U 1 1 5D7CD025
 P 6300 3300
 F 0 "U5" H 6400 3100 50  0000 C CNN
@@ -3305,7 +3304,7 @@ F 3 "" H 5925 3200 50  0000 C CNN
 	0    -1   1    0   
 $EndComp
 $Comp
-L 3Phase-rescue:C_Small-3Phase-rescue C35
+L 3Phase:C_Small-3Phase-rescue-3Phase-rescue C35
 U 1 1 5D7CE217
 P 5950 3375
 F 0 "C35" H 5960 3445 50  0000 L CNN
@@ -3316,7 +3315,7 @@ F 3 "https://lcsc.com/product-detail/Multilayer-Ceramic-Capacitors-MLCC-SMD-SMT_
 	-1   0    0    -1  
 $EndComp
 $Comp
-L 3Phase-rescue:C_Small-3Phase-rescue C36
+L 3Phase:C_Small-3Phase-rescue-3Phase-rescue C36
 U 1 1 5D7CE3B7
 P 6625 3375
 F 0 "C36" H 6635 3445 50  0000 L CNN
@@ -3390,7 +3389,7 @@ Wire Wire Line
 Wire Wire Line
 	6950 3750 7350 3750
 $Comp
-L Components:+1V65 #PWR0122
+L 3Phase:+1V65-Components #PWR0122
 U 1 1 5D8A650F
 P 1775 4300
 F 0 "#PWR0122" H 1775 4150 50  0001 C CNN
@@ -3401,7 +3400,7 @@ F 3 "" H 1775 4300 50  0000 C CNN
 	0    1    1    0   
 $EndComp
 $Comp
-L 3Phase-rescue:C_Small-3Phase-rescue C37
+L 3Phase:C_Small-3Phase-rescue-3Phase-rescue C37
 U 1 1 5D8F9F1D
 P 7175 1525
 F 0 "C37" H 7185 1595 50  0000 L CNN
@@ -3439,7 +3438,7 @@ Wire Wire Line
 Wire Wire Line
 	1900 9700 2550 9700
 $Comp
-L Components:4066 U9
+L 3Phase:4066-Components U9
 U 2 1 5DC34F52
 P 5525 8350
 F 0 "U9" H 5644 8591 50  0000 C CNN
@@ -3450,7 +3449,7 @@ F 3 "https://lcsc.com/product-detail/74-Series_NXP_74HC4066PW_74HC4066PW_C5650.h
 	1    0    0    -1  
 $EndComp
 $Comp
-L Components:4066 U9
+L 3Phase:4066-Components U9
 U 3 1 5DC35198
 P 5500 4675
 F 0 "U9" H 5619 4916 50  0000 C CNN
@@ -3461,7 +3460,7 @@ F 3 "https://lcsc.com/product-detail/74-Series_NXP_74HC4066PW_74HC4066PW_C5650.h
 	1    0    0    -1  
 $EndComp
 $Comp
-L Components:4066 U9
+L 3Phase:4066-Components U9
 U 4 1 5DC353B5
 P 5500 5925
 F 0 "U9" H 5475 6125 50  0000 C CNN
@@ -3472,7 +3471,7 @@ F 3 "https://lcsc.com/product-detail/74-Series_NXP_74HC4066PW_74HC4066PW_C5650.h
 	-1   0    0    -1  
 $EndComp
 $Comp
-L Components:4066 U9
+L 3Phase:4066-Components U9
 U 1 1 5DC355AF
 P 5525 7075
 F 0 "U9" H 5325 7225 50  0000 L CNN
@@ -3497,7 +3496,7 @@ Wire Wire Line
 	5350 8300 5300 8300
 Connection ~ 5300 8300
 $Comp
-L 3Phase-rescue:R-3Phase-rescue R58
+L 3Phase:R-3Phase-rescue-3Phase-rescue R58
 U 1 1 5E3DE56F
 P 6125 8300
 F 0 "R58" V 6205 8300 50  0000 C CNN
@@ -3526,7 +3525,7 @@ Connection ~ 6300 6875
 Wire Wire Line
 	6300 6875 6300 7025
 $Comp
-L 3Phase-rescue:R-3Phase-rescue R54
+L 3Phase:R-3Phase-rescue-3Phase-rescue R54
 U 1 1 5E896D74
 P 6125 7025
 F 0 "R54" V 6175 7200 50  0000 C CNN
@@ -3564,7 +3563,7 @@ Connection ~ 6300 5725
 Wire Wire Line
 	6300 5725 6300 5875
 $Comp
-L 3Phase-rescue:R-3Phase-rescue R53
+L 3Phase:R-3Phase-rescue-3Phase-rescue R53
 U 1 1 5FBED156
 P 6125 5875
 F 0 "R53" V 6205 5875 50  0000 C CNN
@@ -3595,7 +3594,7 @@ Wire Wire Line
 Wire Wire Line
 	5325 5000 5300 5000
 $Comp
-L 3Phase-rescue:R-3Phase-rescue R43
+L 3Phase:R-3Phase-rescue-3Phase-rescue R43
 U 1 1 5DBCF2ED
 P 6125 4625
 F 0 "R43" V 6205 4625 50  0000 C CNN
@@ -3623,7 +3622,7 @@ Connection ~ 2325 6700
 Wire Wire Line
 	2325 6700 2675 6700
 $Comp
-L Components:SRV05-4 U8
+L 3Phase:SRV05-4-Components U8
 U 1 1 5E402EB0
 P 2725 7375
 F 0 "U8" H 2725 7058 50  0000 C CNN
@@ -3774,7 +3773,7 @@ Wire Wire Line
 	1650 4200 1600 4200
 Connection ~ 4825 1150
 $Comp
-L 3Phase-rescue:SY8113-3Phase-rescue U10
+L 3Phase:SY8113-3Phase-rescue-3Phase-rescue U10
 U 1 1 5BDCEBDA
 P 4525 1250
 F 0 "U10" H 4375 1475 50  0000 R CNN
@@ -3796,7 +3795,7 @@ Wire Wire Line
 Wire Wire Line
 	5300 1250 5450 1250
 $Comp
-L 3Phase-rescue:R-3Phase-rescue R59
+L 3Phase:R-3Phase-rescue-3Phase-rescue R59
 U 1 1 5E2C54F1
 P 5125 1425
 F 0 "R59" V 5205 1425 50  0000 C CNN

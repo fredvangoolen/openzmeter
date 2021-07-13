@@ -36,7 +36,6 @@
       GraphOptions: function() {
         var Opt = { series: {}, axes: { y: {}, y2: {}, x: {} }, file: [] };
         Opt.showRangeSelector = false;
-        var VoltageStyle = oZm.SerieStyle(oZm.Series['VOLTAGE'], this.analyzer, 0);
         Opt.legend = 'follow';
         Opt.legendFormatter = Graph.Formatters.Legend_Follow;
         Opt.underlayCallback = Graph.Callbacks.Underlay_DrawBorder;
@@ -56,10 +55,10 @@
         Opt.axes.y.axisLineColor = 'rgba(0, 0, 0, 0)';
         Opt.drawAxesAtZero = true;
         Opt.axes.x.ticker = () => { return Graph.Tickers.OddHarmonicsTicks(this.analyzer); };
-        Opt.axes.x.axisLabelFormatter = (x) => { return oZm.Series['HARMONICS'].Names[x]; };
-        Opt.axes.x.valueFormatter = (y) => { return oZm.Series['HARMONICS'].Names[y] + ' Harmonic (' + (this.analyzer.NominalFrequency * (y + 1)) + 'Hz)'; };
-        Opt.labels = ['Harmonic'].concat(this.analyzer.GetSeriesNames('Power', this.analyzer.VoltageChannels));
-        Opt.colors = VoltageStyle.Colors;
+        Opt.axes.x.axisLabelFormatter = (x) => { return this.analyzer.HarmonicsNames[x]; };
+        Opt.axes.x.valueFormatter = (y) => { return this.analyzer.HarmonicsNames[y] + ' Harmonic (' + (this.analyzer.NominalFrequency * (y + 1)) + 'Hz)'; };
+        Opt.labels = ['Harmonic'].concat(this.analyzer.SerieNames('Power'));
+        Opt.colors = this.analyzer.SerieColors('Active_Power');
         if(this.data != null) {
           for(var i = 0; i < 50; i++) {
             if((this.Options['1st Harmonic'] == false) && (i == 0)) continue;
@@ -76,7 +75,7 @@
     methods: {
       Export: function() {
         if((this.data == null) || (this.analyzer == null)) return [];
-        var Header = ['Harmonic'].concat(this.analyzer.GetSeriesNames('Power', this.analyzer.VoltageChannels));
+        var Header = ['Harmonic'].concat(this.analyzer.SerieNames('Power'));
         var Data = [Header];
         for(var i = 0; i < this.data.Power_Harmonics[0].length; i++) {
           var Row = [this.analyzer.HarmonicsNames[i]];
@@ -92,12 +91,5 @@
 <style scoped>
   .header-text {
     font-size: 14px;
-  }
-  .title-warning {
-    line-height: 20px;
-    font-size: 14px;
-  }
-  .title-warning img {
-    margin: -4px 4px 0px 0px;
   }
 </style>

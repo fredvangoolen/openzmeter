@@ -1,0 +1,149 @@
+{
+  "openapi": "3.0.1",
+  "info": {
+    "title": "openZmeter API",
+    "description": "Full API definition of openZmeter daemon. Not all functions are avaliable on all systems, not for all users or not all time.",
+    "license": {
+      "name": "GNU General Public License v3.0",
+      "url": "https://www.gnu.org/licenses/gpl-3.0.html"
+    }
+  },
+  "servers": [],
+  "components": {
+    "requestBodies": {
+      "EmptyObject": {
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "example": {}
+            }
+          }
+        }
+      }
+    },
+    "responses": {
+      "200Response" : {
+        "description": "The method executed without error",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "example": {}
+            }
+          }
+        }
+      },
+      "400Response" : {
+        "description": "The request is malformed or have missing params",
+        "content": {
+          "text/plain": {
+            "schema": { "type": "string", "example": "Malformed JSON params" }
+          }
+        }
+      },
+      "401Response": {
+        "description": "The user is not logged in",
+        "content": {
+          "text/plain": {
+            "schema": { "type": "string", "example": "Unauthorided access to API" }
+          }
+        }
+      },
+      "403Response": {
+        "description": "The user is not allowed to exec this method",
+        "content": {
+          "text/plain" : {
+            "schema": { "type": "string", "example": " " }
+          }
+        }
+      },
+      "405Response": {
+        "description": "The method is not allowed in selected object at this moment",
+        "content": {
+          "text/plain": {
+            "schema": { "type": "string", "example": " " }
+          }
+        }
+      },
+      "500Response": {
+        "description": "The method fail to execute",
+        "content": {
+          "text/plain": {
+            "schema": { "type": "string", "example": " " }
+          }
+        }
+      }
+    },
+    "schemas": {}
+  },
+  "tags": [ { "name": "System", "description": "System management functions" } ],
+  "paths": {
+    "/logIn": {
+      "post": {
+        "summary": "Authorize to access the system",
+        "tags": [ "System" ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "required": [ "UserName", "Password", "UpdateLastLogin" ],
+                "example": {
+                  "User": "admin",
+                  "Password": "admin",
+                  "UpdateLastLogin": true
+                },
+                "properties": {
+                  "UserName": { "type": "string" },
+                  "Password": { "type": "string" },
+                  "UpdateLastLogin": { "type": "boolean" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The method executed without error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "LastLogin": { "type": "number" }
+                  },
+                  "required": [ "LastLogin" ],
+                  "example": {
+                    "LastLogin": 1000000
+                  }
+                }
+              }
+            },
+            "headers": {
+              "Set-Cookie": {
+                "schema": {
+                  "type": "string",
+                  "example": "00000000-0000-0000-0000-000000000000"
+                }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/400Response" },
+          "401": { "$ref": "#/components/responses/401Response" }
+        }
+      }
+    },
+    "/logOut": {
+      "post": {
+        "summary": "Close active user session",
+        "tags": [ "System" ],
+        "requestBody": { "$ref": "#/components/requestBodies/EmptyObject" },
+        "responses": {
+          "200": { "$ref": "#/components/responses/200Response" }
+        }
+      }
+    }
+   }
+}

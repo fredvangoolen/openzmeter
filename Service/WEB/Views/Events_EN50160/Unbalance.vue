@@ -2,8 +2,8 @@
   <div class="panel panel-voltage">
     <div class="panel-heading">
       <div class="float-left">Voltage unbalance</div>
-      <div class="float-right" v-if="(((data[index].UnbalanceIN / data[index].UnbalanceSamples) * 100.0) < 100)">
-        <img :src="require('Imgs/exclamation.png')" data-toggle="tooltip" title="Limit exceded">
+      <div class="float-right" v-if="(((data.UnbalanceIN / data.UnbalanceSamples) * 100.0) < 100)">
+        <img :src="require('Imgs/exclamation.png')" title="Limit exceded">
       </div>
       <div class="clearfix"></div>
     </div>
@@ -12,10 +12,10 @@
     </div>
     <div class="panel-footer">
       <div class="text-center">100% of the year under 2%</div>
-        <progress-bar :value="(((data[index].UnbalanceIN / data[index].UnbalanceSamples) * 100.0) - 95) * 20" :text="Round(((data[index].UnbalanceIN / data[index].UnbalanceSamples) * 100.0), 2) + '% of time in range'"></progress-bar>
+        <progress-bar :value="(((data.UnbalanceIN / data.UnbalanceSamples) * 100.0) - 95) * 20" :text="Round(((data.UnbalanceIN / data.UnbalanceSamples) * 100.0), 2) + '% of time in range'"></progress-bar>
         <div style="float: left; font-size: 10px">95%</div>
         <div style="float:right; font-size: 10px">100%</div>
-        <div class="clearfix text-center">{{ Round(((data[index].UnbalanceIN / data[index].UnbalanceSamples) * 100.0), 2) + '% of time in range' }}</div>
+        <div class="clearfix text-center">{{ Round(((data.UnbalanceIN / data.UnbalanceSamples) * 100.0), 2) + '% of time in range' }}</div>
     </div>
   </div>
 </template>
@@ -23,7 +23,7 @@
 <script>
   import Graph from 'Components/Graph.vue';
   export default {
-    props: { data: Array, index: Number, analyzer: Object, ranges: Array },
+    props: { data: Array, analyzer: Object, ranges: Array },
     data: function() {
       return { };
     },
@@ -65,9 +65,9 @@
           }
         };
         if(this.data != null) {
-          for(var i = 0; i < this.data[this.index].Unbalance.length; i++) Opt.file.push([i, this.data[this.index].Unbalance[i]]);
-          Opt.axes.y.valueFormatter = (x) => { return this.Round(x * 100.0 / this.data[this.index].UnbalanceSamples, 2) + ' %'; };
-          Opt.axes.y.axisLabelFormatter = (x) => { return this.Round(x * 100 / this.data[this.index].UnbalanceSamples, 0) + '%'; };
+          for(var i = 0; i < this.data.Unbalance.length; i++) Opt.file.push([i, this.data.Unbalance[i]]);
+          Opt.axes.y.valueFormatter = (x) => { return this.Round(x * 100.0 / this.data.UnbalanceSamples, 2) + ' %'; };
+          Opt.axes.y.axisLabelFormatter = (x) => { return this.Round(x * 100 / this.data.UnbalanceSamples, 0) + '%'; };
         }
         return Object.seal(Opt);
       }

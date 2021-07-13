@@ -2,7 +2,7 @@
   <div class="panel" :class="PanelClass">
     <div class="panel-heading">
       <div class="header-text">
-        <div>{{ PanelTitle }}</div>
+        <div>{{ analyzer.SerieName(serie) }}</div>
         <div class="aggreg-row" v-if="data!=null">From {{ analyzer.FormatAggregation(data.Aggreg) }} aggregation {{ paused ? '(Paused)' : '' }}</div>
       </div>
       <div class="header-buttons">
@@ -19,16 +19,16 @@
       </div>
     </portal>
     <div class="panel-footer clearfix">
-      <router-link :to="SerieProps.Link"><span class="pull-left">View Details</span></router-link>
+      <router-link :to="Link"><span class="pull-left">View Details</span></router-link>
       <portal to="fs-toolbar" :disabled="!Expanded" class="header-buttons">
-        <toolbar-phases :analyzer="analyzer" v-model="Phases" v-if="serie != 'FREQUENCY'" :storage="'Dashboard_' + serie" :current="serie=='CURRENT'" :multi="true"></toolbar-phases>
+        <toolbar-phases :analyzer="analyzer" v-model="Phases" v-if="serie != 'Frequency'" :storage="'Dashboard_' + serie" :current="serie=='Current'" :multi="true"></toolbar-phases>
         <div class="btn-group">
-          <button-export :rows="Export" :file="PanelTitle"></button-export>
+          <button-export :rows="Export" :file="analyzer.SerieName(serie)"></button-export>
           <button-expand v-model="Expanded"></button-expand>
         </div>
       </portal>
     </div>
-    <dlg-fs v-if="Expanded" :title="PanelTitle" :height.sync="DialogHeight"></dlg-fs>
+    <dlg-fs v-if="Expanded" :title="analyzer.Title[serie]" :height.sync="DialogHeight"></dlg-fs>
   </div>
 </template>
 
@@ -36,48 +36,47 @@
   import * as oZm from 'JS/openZmeter.js';
   import Dygraph from 'JS/dygraph.js';
   import Graph from 'Components/Graph.vue';
+  import moment from 'moment';
   import 'JS/dygraph-crosshair.js';
   export default {
-    props: { serie: String, analyzer: Object, data: Object, paused: Boolean },
+    props: { serie: String, analyzer: Object, data: Object, last: Object, paused: Boolean },
     data() {
       return { ShowSpinner: true, Phases: null, Expanded: false, DialogHeight: 300 };
     },
     computed: {
-      PanelClass: function() {
-        if(this.serie == 'VOLTAGE') return 'panel-voltage';
-        if(this.serie == 'CURRENT') return 'panel-current';
-        if(this.serie == 'ACTIVE_POWER') return 'panel-active-power';
-        if(this.serie == 'FREQUENCY') return 'panel-frequency';
+      Link: function() {
+        if(this.serie == 'Voltage') return '/Analysis/Voltage';
+        if(this.serie == 'Current') return '/Analysis/Current';
+        if(this.serie == 'Active_Power') return '/Analysis/Power';
+        if(this.serie == 'Frequency') return '/Analysis/Frequency';
       },
-      PanelTitle: function() {
-        if(this.serie == 'VOLTAGE') return 'Voltage';
-        if(this.serie == 'CURRENT') return 'Current';
-        if(this.serie == 'ACTIVE_POWER') return 'Active Power';
-        if(this.serie == 'FREQUENCY') return 'Frequency';
+      PanelClass: function() {
+        if(this.serie == 'Voltage') return 'panel-voltage';
+        if(this.serie == 'Current') return 'panel-current';
+        if(this.serie == 'Active_Power') return 'panel-active-power';
+        if(this.serie == 'Frequency') return 'panel-frequency';
       },
       LastValue: function() {
         var Val = { Value: '-', Units: '', Phases: [] };
-        if(this.GraphOptions.file.length == 0) return Val;
-        var LastSample = this.GraphOptions.file.slice(-1)[0];
-        if(this.serie == 'FREQUENCY') {
-          Val.Value = this.Round(LastSample[1], 3, true);
+        if(this.last == null) return Val;
+        if(this.serie == 'Frequency') {
+          Val.Value = this.Round(this.last.Frequency, 3, true);
           Val.Units = 'Hz';
-        } else if(this.serie == 'ACTIVE_POWER') {
+        } else if(this.serie == 'Active_Power') {
           Val.Value = 0.0;
-          for(var n = 1; n < LastSample.length; n++) Val.Value += LastSample[n];
+          for(var n = 0; n < this.last.Active_Power.length; n++) Val.Value += this.last.Active_Power[n];
           Val.Units = this.BestUnits(Val.Value);
           Val.Value = this.Round(this.ScaleUnits(Val.Value, Val.Units), 2, true);
-          for(var n = 1; n < LastSample.length; n++) Val.Phases.push(this.Round(this.ScaleUnits(LastSample[n], Val.Units), 2, true) + ' ' + Val.Units + 'W');
+          for(var n = 0; n < this.last.Active_Power.length; n++) Val.Phases.push(this.Round(this.ScaleUnits(this.last.Active_Power[n], Val.Units), 2, true) + ' ' + Val.Units + 'W');
           Val.Units += 'W';
-        } else if((this.serie == 'VOLTAGE') || (this.serie == 'CURRENT')) {
+        } else if((this.serie == 'Voltage') || (this.serie == 'Current')) {
           Val.Value = 0.0;
-          var PhasesCount = oZm.Series['VOLTAGE'].Names(this.analyzer).length;
-          for(var n = 0; n < PhasesCount; n++) Val.Value += Math.pow(LastSample[n + 1], 2.0);
-          Val.Value = Math.sqrt(Val.Value / PhasesCount);
+          for(var n = 0; n < this.last.Voltage.length; n++) Val.Value += Math.pow(this.last[this.serie][n], 2.0);
+          Val.Value = Math.sqrt(Val.Value / this.last.Voltage.length);
           Val.Units = this.BestUnits(Val.Value);
           Val.Value = this.Round(this.ScaleUnits(Val.Value, Val.Units), 2, true);
-          for(var n = 1; n < LastSample.length; n++) Val.Phases.push(this.Round(this.ScaleUnits(LastSample[n], Val.Units), 2, true) + ' ' + Val.Units + this.SerieProps.Units);
-          Val.Units += this.SerieProps.Units;
+          for(var n = 0; n < this.last[this.serie].length; n++) Val.Phases.push(this.Round(this.ScaleUnits(this.last[this.serie][n], Val.Units), 2, true) + ' ' + Val.Units + this.analyzer.SerieUnits(this.serie));
+          Val.Units += this.analyzer.SerieUnits(this.serie);
         }
         return Val;
       },
@@ -96,71 +95,60 @@
         Opt.connectSeparatedPoints = false;
         Opt.fillGraph = false;
         Opt.legend = 'follow';
-        Opt.labels = ['Time'].concat(this.SerieProps.Names(this.analyzer));
-        Opt.colors = oZm.SerieStyle(this.SerieProps, this.analyzer, 0).Colors;
+        Opt.labels = ['Time'].concat(this.analyzer.SerieNames(this.serie));
+        Opt.colors = this.analyzer.SerieColors(this.serie);
         Opt.selectMode = 'euclidian';
         Opt.xAxisHeight = 12;
         Opt.axes.x.valueFormatter = (x) => { return this.analyzer.FormatTime(x); };
-        Opt.axes.x.axisLabelFormatter = (x) => { return this.analyzer.FormatTime(x); };
+        Opt.axes.x.ticker = (min, max) => {
+          var ticks = [];
+          if(this.analyzer == null) return ticks;
+          var Min = moment.tz(min, this.analyzer.TimeZone).startOf('hour');
+          var Max = moment.tz(max, this.analyzer.TimeZone).endOf('hour');
+          for(var h = Min; h.isBefore(Max); h.add(15, 'minute')) ticks.push({ v: h.valueOf(), label: h.format('HH:mm') });
+          console.log
+          return ticks;
+        };
         Opt.axes.y.pixelsPerLabel = 15;
         Opt.axes.y.axisLabelWidth = 30;
         if(this.Phases != null) Opt.visibility =  this.Phases;
         if((this.data == null)) return Opt;
         Opt.dateWindow = [this.data.From, this.data.To];
-        for(var n in this.data.Sampletime) {
-          var Row = [this.data.Sampletime[n]];
-          if(this.serie == 'VOLTAGE') {
-            for(var i in this.data.Voltage[n]) Row.push(this.data.Voltage[n][i]);
-          } else if(this.serie == 'CURRENT') {
-            for(var i in this.data.Current[n]) Row.push(this.data.Current[n][i]);
-          } else if(this.serie == 'ACTIVE_POWER') {
-            for(var i in this.data.Active_Power[n]) Row.push(this.data.Active_Power[n][i]);
-          } else if(this.serie == 'FREQUENCY') {
-            Row.push(this.data.Frequency[n]);
-          }
-          Opt.file.push(Row);
+        for(var n = 0; n < this.data.Rows.length; n++) {
+          var TimeCol = this.data.Headers.indexOf('Time');
+          var ValueCol = this.data.Headers.indexOf(this.serie);
+          Opt.file.push([this.data.Rows[n][TimeCol]].concat(this.data.Rows[n][ValueCol]));
         }
-        if((this.serie == 'VOLTAGE') || (this.serie == 'CURRENT')) {
+        if((this.serie == 'Voltage') || (this.serie == 'Current')) {
           Opt.axes.y.valueRange = this.MatrixColsRange(Opt.file, [false].concat(this.Phases), { rmsRange: 1.0 });
-        } else if(this.serie == 'ACTIVE_POWER') {
+        } else if(this.serie == 'Active_Power') {
           Opt.axes.y.valueRange = this.MatrixColsRange(Opt.file, [false].concat(this.Phases), { incZero: 1.0 });
-        } else if(this.serie == 'FREQUENCY') {
+        } else if(this.serie == 'Frequency') {
           Opt.axes.y.valueRange = this.MatrixColsRange(Opt.file, [false, true], { rmsRange: 0.1 });
         }
-        var Units = this.BestUnits(Math.max(Math.abs(Opt.axes.y.valueRange[0]), Math.abs(Opt.axes.y.valueRange[1])));
-        Opt.axes.y.valueFormatter = (x) => {
-          var Result = oZm.FormatSerieValue(x, this.SerieProps);
-          return Result.ValuePlain + ' ' + Result.Units;
-        };
-        Opt.axes.y.axisLabelFormatter = (x) => {
-          return oZm.FormatSerieValue(x, this.SerieProps, Units).ValuePlain;
-        };
+        Opt.axes.y.valueFormatter = (x) => { return Graph.Formatters.Y_UnitScale(x, this.analyzer.SerieUnits[this.serie], (this.serie == 'Frequency') ? 3 : 2, true); };
+        Opt.axes.y.axisLabelFormatter = (x, gran, opts, g) => { return Graph.Formatters.Y_UnitScaleFull(x, gran, opts, g, '', (this.serie == 'Frequency') ? 3 : 2, true); };
         return Object.seal(Opt);
       }
     },
     methods: {
       Export: function() {
-        if(this.data == null) return [];
-        var Header = [['Time'].concat(this.SerieProps.Names(this.analyzer))];
-        for(var n in this.data.Sampletime) {
-          var Row = [this.data.Sampletime[n]];
-          if(this.serie == 'VOLTAGE') {
-            for(var i in this.data.Voltage[n]) Row.push(this.Round(this.data.Voltage[n][i], 3));
-          } else if(this.serie == 'CURRENT') {
-            for(var i in this.data.Current[n]) Row.push(this.Round(this.data.Current[n][i], 3));
-          } else if(this.serie == 'ACTIVE_POWER') {
-            for(var i in this.data.Active_Power[n]) Row.push(this.Round(this.data.Active_Power[n][i], 3));
-          } else if(this.serie == 'FREQUENCY') {
-            Row.push(this.Round(this.data.Frequency[n], 3));
+        if((this.data == null) || (this.analyzer == null)) return [];
+        var Header = [['Time'].concat(this.analyzer.SerieNames(this.analyzer.SerieName(this.serie)))];
+        var TimeCol = this.data.Headers.indexOf('Time');
+        var ValueCol = this.data.Headers.indexOf(this.serie);
+        for(var n = 0; n < this.data.Rows.length; n++) {
+          var Row = [this.analyzer.FormatDateTime(this.data.Rows[n][TimeCol])];
+          if(this.serie != 'Frequency') {
+            for(var i in this.data.Rows[n][ValueCol]) Row.push(this.Round(this.data.Rows[n][ValueCol][i], 3));
+          } else {
+            Row.push(this.Round(this.data.Rows[n][ValueCol], 3));
           }
           Header.push(Row);
         }
         return Object.seal(Header);
       }
-    },
-    created: function() {
-      this.SerieProps = oZm.Series[this.serie];
-    },
+    }
   }
 </script>
 

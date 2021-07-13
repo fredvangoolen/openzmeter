@@ -2,8 +2,8 @@
 EXECUTABLE_TARGET = Tmp/Firmware
 EXECUTABLE_SOURCE = Main.c System.c USB.c
 LIBSPEC=-L /usr/lib/gcc/arm-none-eabi/5.4.1/armv6-m
-CFLAGS += -Wall -std=c99 -mcpu=cortex-m0 -mthumb -march=armv6-m -mfloat-abi=soft -mlong-calls -g -O1
-LDFLAGS += -T STM32F042K6.ld -nostdlib -lgcc -Wl,--cref -Wl,-Map=$(EXECUTABLE_TARGET:%=%.map)
+CFLAGS += -Wall -std=c99 -mcpu=cortex-m0 -mthumb -march=armv6-m -mfloat-abi=soft -mlong-calls -g -O1 -fstack-usage
+LDFLAGS += -T STM32F042K6.ld -nostdlib -Wl,--cref -Wl,-Map=$(EXECUTABLE_TARGET:%=%.map)
 
 #Add CMSIS
 #EXECUTABLE_SOURCE += $(shell find CMSIS -name "*.s" ! -type d -print) $(shell find CMSIS -name "*.c" ! -type d -print)

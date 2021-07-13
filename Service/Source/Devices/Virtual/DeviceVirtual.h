@@ -14,6 +14,7 @@
 // along with openZmeter.  If not, see <https://www.gnu.org/licenses/>
 // ---------------------------------------------------------------------------------------------------------------------
 #pragma once
+#include <pthread.h>
 #include "Device.h"
 #include "AnalyzerSoft.h"
 //----------------------------------------------------------------------------------------------------------------------
@@ -24,6 +25,7 @@ class DeviceVirtual final : public Device {
     static bool                     pRegistered;
   private :
     pthread_t                       pThread;
+    pthread_mutex_t                 pLock;
     AnalyzerSoft                   *pAnalyzer;
     volatile bool                   pTerminate;
     Analyzer::AnalyzerMode          pMode;
@@ -33,15 +35,17 @@ class DeviceVirtual final : public Device {
     float                           pCurrentPhase;
     float                           pFrequency;
   private :
-    static bool            Register();
-    static vector<Device*> GetInstances();
-    static void           *Capture_Thread(void *args);
-    static json            CheckConfig(const json &config);
+    static bool  Register();
+    static void  GetInstances();
+    static json  CheckConfig(const json &config);
   private :
     DeviceVirtual();
-    void Configure(const json &config);
-    void GetDevice(const json &params, Response &response) override;
-    void SetDevice(const json &params, Response &response) override;
+    void    *Thread();
+    uint32_t AnalyzersCount();
+    void     ClearAnalyzers();
+    void     Config(const json &config);
+    void     GetDevice(HTTPRequest &req) override;
+    void     SetDevice(HTTPRequest &req) override;
   public :
     ~DeviceVirtual();
 };

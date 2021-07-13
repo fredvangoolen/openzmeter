@@ -47,8 +47,8 @@
         labels: ['Type', 'Total', 'Fundamental', 'Pos. Harmonics', 'Neg. Harmonics'], colors: ['#f0ad4e', '#DF842A', '#3d3d8b', '#3d3d8b'], dateWindow: [-0.5, 1.5],
         axes: {
           y: { pixelsPerLabel: 15, axisLabelWidth: 34,
-               valueFormatter: function (x) { var Result = oZm.Series['ACTIVE_POWER'].FormatValue(x); return Result.Value + ' <em class="x-small">' + Result.Units + '</em>'; },
-               axisLabelFormatter: function (x) { var Result = oZm.Series['ACTIVE_POWER'].FormatValue(x); return Result.Value; }
+               valueFormatter: function (x) { var Result = oZm.Series['Active_Power'].FormatValue(x); return Result.Value + ' <em class="x-small">' + Result.Units + '</em>'; },
+               axisLabelFormatter: function (x) { var Result = oZm.Series['Active_Power'].FormatValue(x); return Result.Value; }
              },
           x: { axisLabelWidth: 80,
                axisLabelFormatter: function(x) { return (x == 0) ? 'Active power' : (x == 1) ? 'Breakdown' : '' },
@@ -168,12 +168,5 @@
   }
   .header-text {
     font-size: 14px;
-  }
-  .title-warning {
-    line-height: 20px;
-    font-size: 14px;
-  }
-  .title-warning img {
-    margin: -4px 4px 0px 0px;
   }
 </style>

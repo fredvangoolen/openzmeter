@@ -1,0 +1,62 @@
+{
+  "components": {
+    "schemas": {
+      "AlarmListTemplate": {
+        "type": "array",
+        "items": {
+          "type": "array",
+          "items": { "type": "string" },
+          "example": [
+            [ "ChangeTime", "AlarmID", "Trigger", "Release", "Notes" ],
+            [ 1600000000000, "00000000-0000-0000-0000-000000000000", 1590000000000, 1600000000000, "An alarm" ]
+          ]
+        }
+      }
+    }
+  },
+  "paths": {
+    "/getAlarms": {
+      "post": {
+        "summary": "Get stored alarms",
+        "tags": [ "Analyzers" ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "example": {
+                  "Analyzer": "VIRTUAL_3PN",
+                  "From": 1590000000000,
+                  "To": 1600000000000,
+                  "ChangeTime": 0,
+                  "Update": false
+                },
+                "properties": {
+                  "Analyzer": { "type": "string" },
+                  "From": { "type": "number" },
+                  "To": { "type": "number" },
+                  "ChangeTime": { "type": "number" },
+                  "Update": { "type": "boolean" }
+                },
+                "required": [ "Analyzer", "From", "To", "Update" ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The method executed without error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/AlarmListTemplate" }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/400Response" },
+          "401": { "$ref": "#/components/responses/401Response" },
+          "500": { "$ref": "#/components/responses/500Response" }
+        }
+      }
+    }
+  }
+}

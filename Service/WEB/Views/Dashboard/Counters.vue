@@ -39,24 +39,25 @@
       Sum: function() {
         var Sum = { Value: 0, Count: 0, Budget: 0 };
         if(this.data == null) return Sum;
-        var Divisor = (this.data.Aggreg == '15M') ? 4 : 1;
-        for(var x in this.data.Sampletime) {
-          if(this.data.Active_Power[x] == null) continue;
+        var TimeCol = this.data.Headers.indexOf('Time');
+        var EnergyCol = this.data.Headers.indexOf('Active_Energy');
+        var CostCol = this.data.Headers.indexOf('Cost');
+        for(var x in this.data.Rows) {
+          Sum.Value += this.data.Rows[x][EnergyCol];
+          if(this.data.Rows[x][CostCol] != null) Sum.Budget += this.data.Rows[x][CostCol];
           Sum.Count++;
-          Sum.Value += this.data.Active_Power[x] / Divisor;
-          if(this.data.Period_Expense[x] != null) Sum.Budget += this.data.Period_Expense[x];
         }
         return Sum;
       },
       Max: function() {
         var Max = { Value: -Infinity, Time: 0, Count: 0 };
         if(this.data == null) return Max;
-        var Divisor = (this.data.Aggreg == '15M') ? 4 : 1;
-        for(var x in this.data.Sampletime) {
-          if(this.data.Active_Power[x] == null) continue;
-          var Value = this.data.Active_Power[x] / Divisor;
+        var TimeCol = this.data.Headers.indexOf('Time');
+        var EnergyCol = this.data.Headers.indexOf('Active_Energy');
+        for(var x in this.data.Rows) {
+          var Value = this.data.Rows[x][EnergyCol];
           if(Value > Max.Value) {
-            Max = { Value: Value, Time: this.data.Sampletime[x], Count: 0 };
+            Max = { Value: Value, Time: this.data.Rows[x][TimeCol], Count: 0 };
           } else if(Value == Max.Value) {
             Max.Count++;
           }

@@ -1,0 +1,39 @@
+{
+  "paths": {
+    "/addUser": {
+      "post": {
+        "summary": "Add user to system",
+        "tags": [ "Users" ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "allOf": [
+                  { "$ref": "#/components/schemas/UserTemplate" },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "Password": { "type": "string" }
+                    },
+                    "required": [ "Password" ],
+                    "example": {
+                      "Password": "guest"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "$ref": "#/components/responses/200Response" },
+          "400": { "$ref": "#/components/responses/400Response" },
+          "401": { "$ref": "#/components/responses/401Response" },
+          "403": { "$ref": "#/components/responses/403Response" },
+          "500": { "$ref": "#/components/responses/500Response" }
+        }
+      }
+    }
+  }
+}

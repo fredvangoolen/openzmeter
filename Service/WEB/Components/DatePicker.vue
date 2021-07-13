@@ -1,5 +1,5 @@
 <template>
-  <div class='input-group' v-bind:class="{'input-group-xs': (big==false)}">
+  <div class="input-group input-group-xs">
     <input type='text' class="form-control"/>
     <span class="input-group-addon"><span class="glyphicon-calendar"></span></span>
   </div>
@@ -7,45 +7,40 @@
 
 <script>
   import moment from 'moment';
-  import datetimepicker from 'JS/bootstrap-datetimepicker.min.js';
-  import 'CSS/bootstrap-datetimepicker.min.css'
+  import datetimepicker from 'eonasdan-bootstrap-datetimepicker';
+  import 'eonasdan-bootstrap-datetimepicker/build/css/bootstrap-datetimepicker.css'
   export default {
-    props: { options: Object, big: Boolean, disabled: Boolean, value: Number },
+    props: { options: Object, disabled: Boolean, value: Number },
     data() {
-      return { };
+      return { Options: {} };
     },
     watch: {
       disabled: function(val) {
         if(this.disabled === true)
-          this.Disable();
+          $(this.$el).data("DateTimePicker").disable();
         else
-          this.Enable();
+          $(this.$el).data("DateTimePicker").enable();
       },
-      date: function(val) {
-        this.SetDate(val);
+      value: function() {
+        this.Options = Object.assign(this.Options, { date: moment(this.value) });
+        $(this.$el).data("DateTimePicker").options(this.Options);
       },
-    },
-    methods: {
-      SetTimeZone: function(val) {
-        $(this.$el).data("DateTimePicker").options({ timeZone: val });
-      },
-      SetDate(date) {
-        $(this.$el).data("DateTimePicker").options({ date: moment(date) });
-      },
-      Disable() {
-        $(this.$el).data("DateTimePicker").disable();
-      },
-      Enable() {
-        $(this.$el).data("DateTimePicker").enable();
+      options: function() {
+        this.Options = Object.assign(this.Options, this.options);
+        $(this.$el).data("DateTimePicker").options(this.Options);
       }
     },
+    beforeDestroy: function() {
+      $(this.$el).data("DateTimePicker").destroy();
+    },
     mounted: function() {
-      $(this.$el).datetimepicker(this.options);
-      if(this.disabled == true) $(this.$el).data("DateTimePicker").disable();
-      if(this.value != null) $(this.$el).data("DateTimePicker").options({ date: moment(this.value) });
+      this.Options = Object.assign({ date: moment(this.value) }, this.options);
+      $(this.$el).datetimepicker({});
+      $(this.$el).data("DateTimePicker").options(this.Options);
       $(this.$el).on('dp.change', (e) => {
-        if(this.Date != e.date.valueOf()) this.$emit('input', e.date.valueOf());
+        this.$emit('input', e.date.valueOf());
       });
+      if(this.disabled == true) $(this.$el).data("DateTimePicker").disable();
     }
   }
 </script>

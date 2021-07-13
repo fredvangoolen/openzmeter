@@ -23,26 +23,15 @@
   import Dygraph from 'JS/dygraph.js';
   export default {
     props: { analyzer: Object, data: Object, dataNow: Object },
-    data() {
+    data: function() {
       return { Phase: null, MouseOver: false };
     },
     computed: {
       Data: function() {
-        if((this.data == null) || (this.Phase == null)) return null;
-        var Series = { 'Power Factor': [], 'Current THD': [], 'Phi': [] };
-        Series.Sampletime = this.data.Sampletime;
-        Series.From = this.data.From;
-        Series.To = this.data.To;
-        Series.TimeZone = this.analyzer.TimeZone;
-        for(var i in this.data.Sampletime) {
-          Series['Power Factor'].push(this.data.Power_Factor[i][this.Phase]);
-          Series['Current THD'].push(this.data.Current_THD[i][this.Phase]);
-          Series['Phi'].push(this.data.Phi[i][this.Phase]);
-        }
-        return Object.seal(Series);
+        return Object.seal({ TimeZone: (this.analyzer == null) ? null : this.analyzer.TimeZone, 'Power Factor': this.FillSerie('Power_Factor'), 'Current THD': this.FillSerie('Current_THD'), 'Phi': this.FillSerie('Phi') });
       },
       DataNow: function() {
-        if((this.dataNow == null) || (this.Phase == null)) return null;
+        if((this.dataNow == null) || (this.analyzer == null) || (this.Phase == null)) return null;
         var Series = { 'Power Factor': null, 'Current THD': null, 'Phi': null };
         Series['Power Factor'] = this.dataNow.Power_Factor[this.Phase];
         Series['Current THD'] = this.dataNow.Current_THD[this.Phase];
@@ -53,26 +42,38 @@
     methods: {
       Formatter_Power_Factor: function(val) { return this.Round(val, 2, true); },
       Formatter_Current_THD: function(val) { return this.Round(val, 2, true) + ' %'; },
-      Formatter_Phi: function(val) { return this.Round(val, 2, true); },
+      Formatter_Phi: function(val) { return this.Round(val, 2, true) + ((val < 0) ? '° IND' : (val > 0) ? '° CAP' : '°'); },
+      FillSerie: function(name) {
+        var Data = [];
+        if(this.data == null) return { From: null, To: null, TimeZone: null, Rows: Data };
+        var TimeCol = this.data.Headers.indexOf('Time');
+        var DataCol = this.data.Headers.indexOf(name);
+        for(var i = 0; i < this.data.Rows.length; i++) Data.push([this.data.Rows[i][TimeCol], this.data.Rows[i][DataCol][this.Phase]]);
+        return { From: this.data.From, To: this.data.To, TimeZone: this.analyzer.TimeZone, Rows: Data };
+      },
       Export: function() {
         if(this.data == null) return [];
-        var Header = ['Sample']
-          .concat(this.analyzer.GetSeriesNames('Power Factor', this.analyzer.VoltageChannels))
-          .concat(this.analyzer.GetSeriesNames('Current THD', this.analyzer.VoltageChannels))
-          .concat(this.analyzer.GetSeriesNames('Phi', this.analyzer.VoltageChannels));
-        var Data = [Header];
-        for(var n in this.data.Sampletime) {
-          var Row = [this.data.Sampletime[n]];
-          for(var i in this.data.Power_Factor[n]) Row.push(this.Round(this.data.Power_Factor[n][i], 3));
-          for(var i in this.data.Current_THD[n]) Row.push(this.Round(this.data.Current_THD[n][i], 3));
-          for(var i in this.data.Phi[n]) Row.push(this.Round(this.data.Phi[n][i], 3));
-          Data.push(Row);
+        var Header = [['Sample']
+          .concat(this.analyzer.SerieNames('Power Factor'))
+          .concat(this.analyzer.SerieNames('Current_THD'))
+          .concat(this.analyzer.SerieNames('Phi'))
+        ];
+        var TimeCol = this.data.Headers.indexOf('Time');
+        var PowerFactorCol = this.data.Headers.indexOf('Power_Factor');
+        var CurrentTHDCol = this.data.Headers.indexOf('Current_THD');
+        var PhiCol = this.data.Headers.indexOf('Phi');
+        for(var n = 0; n < this.data.Rows.length; n++) {
+          var Row = [this.analyzer.FormatDateTime(this.data.Rows[n][TimeCol])];
+          for(var i in this.data.Rows[n][PowerFactorCol]) Row.push(this.Round(this.data.Rows[n][PowerFactorCol][i], 3));
+          for(var i in this.data.Rows[n][CurrentTHDCol]) Row.push(this.Round(this.data.Rows[n][CurrentTHDCol][i], 3));
+          for(var i in this.data.Rows[n][PhiCol]) Row.push(this.Round(this.data.Rows[n][PhiCol][i], 3));
+          Header.push(Row);
         }
-        return Object.seal(Data);
+        return Object.seal(Header);
       }
     },
     mounted: function() {
-      var Graphs = [this.$refs['g0'].Graph, this.$refs['g1'].Graph, this.$refs['g2'].Graph];
+      var Graphs = [this.$refs.g0.Graph, this.$refs.g1.Graph, this.$refs.g2.Graph];
       Dygraph.synchronize(Graphs, { range: false, zoom: false });
     }
   }

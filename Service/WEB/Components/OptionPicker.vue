@@ -1,7 +1,9 @@
 <template>
   <div class="btn-group">
-    <div class="input-group" :class="{ 'input-group-xs': (big != true) }">
+    <div class="input-group input-group-xs">
+      <span class="input-group-addon" v-if="prefix!=null">{{ prefix }}</span>
       <span class="form-control">{{ Selected.name }}</span>
+      <span class="input-group-addon postfix" v-if="postfix!=null">{{ postfix }}</span>
       <div class="input-group-btn" ref="button">
         <button class="btn btn-default dropdown-toggle" type="button" data-toggle="dropdown" ><span class="caret"></span></button>
         <ul class="dropdown-menu pull-right">
@@ -14,7 +16,7 @@
 
 <script>
   export default {
-    props: { options: Array, value: [Boolean, String, Number], big: Boolean },
+    props: { options: Array, value: [Boolean, String, Number], prefix: String, postfix: String },
     data() {
       return { Selected: {} };
     },
@@ -52,5 +54,8 @@
   .btn-group ul {
     max-height: 142px;
     overflow-y: auto;
+  }
+  .postfix {
+    border-left: none;
   }
 </style>

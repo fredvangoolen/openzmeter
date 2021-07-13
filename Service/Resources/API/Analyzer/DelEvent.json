@@ -1,0 +1,38 @@
+{
+  "paths": {
+    "/delEvent": {
+      "post": {
+        "summary": "Delete event, totally or samples\nIf 'Samples' is not defined,entire event is deleted, otherwise only specified samples are removed",
+        "tags": [ "Analyzers" ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "example": {
+                  "Analyzer": "VIRTUAL_3PN",
+                  "StartTime": 1600000000000,
+                  "Mode": "All"
+                },
+                "properties": {
+                  "Analyzer": { "type": "string" },
+                  "StartTime": { "type": "number" },
+                  "Mode": { "type": "string", "enum": [ "All", "Samples", "RAW", "RMS" ]
+                  }
+                },
+                "required": [ "Analyzer", "StartTime", "Mode"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "$ref": "#/components/responses/200Response" },
+          "400": { "$ref": "#/components/responses/400Response" },
+          "401": { "$ref": "#/components/responses/401Response" },
+          "403": { "$ref": "#/components/responses/401Response" },
+          "500": { "$ref": "#/components/responses/500Response" }
+        }
+      }
+    }
+  }
+}

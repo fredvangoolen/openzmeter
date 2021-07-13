@@ -56,6 +56,11 @@
         box-shadow: inset 0 1px 1px rgba(0,0,0,0.075);
         transition: border-color ease-in-out .15s, box-shadow ease-in-out .15s;
       }
+      .form-control:focus {
+        border-color: #555;
+        outline: 0;
+        box-shadow: inset 0 1px 1px rgba(0,0,0,.075), 0 0 3px rgba(102,102,102,.6);
+      }
       .btn {
         background-color: #E8701C;
         font-weight: 700;
@@ -154,30 +159,27 @@
         var Request = new XMLHttpRequest();
         Request.open("POST", 'logIn', true);
         Request.setRequestHeader("Content-Type", "application/json");
+        Request.setRequestHeader("Accept", "application/json");
         Request.onreadystatechange = function () {
           if(Request.readyState === 4) {
             if(Request.status === 200) {
               var Response = JSON.parse(Request.responseText);
-              if(Response.Result === true) {
-                localStorage.setItem('LastLogin', Response.LastLogin);
-                localStorage.setItem('UserName', document.getElementById('username').value);
-                setTimeout(function() {
-                  location.reload();
-                }, 500);
-              } else {
-                removeClass(document.getElementById('error'), 'hide');
-                addClass(document.getElementById('filler'), 'hide');
-                localStorage.removeItem('UserName');
-                setTimeout(function() {
-                  addClass(document.getElementById('error'), 'hide');
-                  removeClass(document.getElementById('filler'), 'hide');
-                  removeClass(document.getElementById('button'), 'disabled');
-                }, 2000);
-              }
+              localStorage.setItem('LastLogin', Response.LastLogin);
+              localStorage.setItem('UserName', document.getElementById('username').value);
+              setTimeout(() => { location.reload(); }, 500);
+            } else {
+              removeClass(document.getElementById('error'), 'hide');
+              addClass(document.getElementById('filler'), 'hide');
+              localStorage.removeItem('UserName');
+              setTimeout(() => {
+                addClass(document.getElementById('error'), 'hide');
+                removeClass(document.getElementById('filler'), 'hide');
+                removeClass(document.getElementById('button'), 'disabled');
+              }, 2000);
             }
           }
         };
-        Request.send(JSON.stringify({ Username: document.getElementById('username').value, Password: document.getElementById('password').value }));
+        Request.send(JSON.stringify({ User: document.getElementById('username').value, Password: document.getElementById('password').value, UpdateLastLogin: true }));
       }
       document.getElementById('button').onclick = SendLogin;
       window.addEventListener("keyup", function(event) {

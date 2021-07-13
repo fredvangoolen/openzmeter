@@ -1,24 +1,20 @@
 var path = require('path');
 var webpack = require('webpack');
-//const TerserPlugin = require('terser-webpack-plugin');
-//const UglifyJsPlugin = require('uglifyjs-webpack-plugin');
 const VueLoaderPlugin = require('vue-loader/lib/plugin');
-//const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
 module.exports = {
   entry: './main.js',
   output: {
-    path: path.resolve(__dirname, '../Tmp/WEB'),
+    path: path.resolve(__dirname, '../Tmp'),
     publicPath: '/',
     filename: 'openZmeter.js'
   },
   plugins: [
     new webpack.IgnorePlugin(/^\.\/locale$/, /moment$/),
     new VueLoaderPlugin(),
-//    new BundleAnalyzerPlugin({}),
     new webpack.ProvidePlugin({
-    $: "jquery",
-    jQuery: "jquery",
-    "window.jQuery": "jquery"
+      $: "jquery",
+      jQuery: "jquery",
+      "window.jQuery": "jquery"
     })
   ],
   module: {
@@ -29,30 +25,30 @@ module.exports = {
           'vue-style-loader',
           'css-loader'
         ]
-      },      {
+      }, {
         test: /\.vue$/,
-        loader: 'vue-loader',
-        options: {
-          loaders: {
-          }
-        }
-      },
-      {
+        loader: 'vue-loader'
+      }, {
+        resourceQuery: /blockType=i18n/,
+        type: 'javascript/auto',
+        loader: '@intlify/vue-i18n-loader'
+      }, {
         test: /\.js$/,
+        exclude: /node_modules/,
         loader: 'babel-loader',
         options: {
-          compact: true
-        },
-        exclude: /node_modules/
-      },
-      {
-        test: /\.(png|svg|woff2|ttf|eot|woff)$/,
+          compact: true,
+          plugins: ['@babel/plugin-syntax-dynamic-import']
+        }
+      }, {
+        test: /\.(png|svg|woff2|ttf|eot|woff)$/i,
         use: [{
-            loader: 'url-loader',
-            options: {
-              limit: 80000 // Convert images < 80kb to base64 strings
-            }
-          }]
+          loader: 'url-loader',
+          options: {
+            limit: 800000,
+            esModule: false
+          }
+        }]
       }
     ]
   },
@@ -73,7 +69,7 @@ module.exports = {
     noInfo: true,
     overlay: true,
     proxy: {
-      '*': { target: 'http://195.77.159.50:8704'}
+      '*': { target: 'http://192.168.0.13/'}
     }
   },
   performance: {
@@ -83,7 +79,7 @@ module.exports = {
 };
 
 if(process.env.NODE_ENV === 'production') {
-  module.exports.devtool = '#source-map';
+  module.exports.devtool = false;
   module.exports.resolve.alias['vue$'] =  'vue/dist/vue.min.js';
   module.exports.plugins = (module.exports.plugins || []).concat([
     new webpack.DefinePlugin({

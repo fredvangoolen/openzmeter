@@ -5,21 +5,25 @@
         <div class="panel panel-current">
           <div class="panel-heading">
             <div class="header-text">Current</div>
-            <div class="header-buttons clearfix">
+            <portal to="fs-toolbar" :disabled="!Expanded" class="header-buttons">
               <toolbar-aggregation storage="Aggregation" :options="['3S', '1M', '10M', '1H']" v-model="Aggreg"></toolbar-aggregation>
               <toolbar-period storage="Period" v-model="Range" :analyzer="analyzer"></toolbar-period>
               <toolbar-phases storage="ViewPhases" :analyzer="analyzer" :current="true" :multi="true" v-model="Phases"></toolbar-phases>
               <div class="btn-group">
                 <button-export file="Current" :rows="Export"></button-export>
-                <button-expand :expanded.sync="Expanded"></button-expand>
+                <button-expand v-model="Expanded"></button-expand>
               </div>
-            </div>
+            </portal>
           </div>
           <div class="panel-body">
-            <spinner v-if="TransferGraph.Data==null"></spinner>
             <div class="row">
               <counters class="col-md-6 col-lg-4 col-xl-3" :analyzer="analyzer" :data1M="Transfer1M.LastData" :data3S="Transfer3S.LastData" :dataGraph="TransferGraph.Data" :height.sync="Height"></counters>
-              <current class="col-md-6 col-lg-8 col-xl-9" :phases="Phases" :analyzer="analyzer" :data="TransferGraph.Data" :height="Height" @range="Range=$event"></current>
+              <div class="col-md-6 col-lg-8 col-xl-9">
+                <portal to="fs-body" :disabled="!Expanded" class="panel-body">
+                  <spinner v-if="TransferGraph.Data==null"></spinner>
+                  <current :phases="Phases" :analyzer="analyzer" :data="TransferGraph.Data" :height="Expanded?DialogHeight:Height" @range="Range=$event"></current>
+                </portal>
+              </div>
             </div>
           </div>
         </div>
@@ -34,6 +38,7 @@
         <parameters v-if="ActiveTab=='Parameters'" :data="TransferCubism.Data" :dataNow="TransferNow.Data" :analyzer="analyzer" :paused.sync="Paused"></parameters>
       </div>
     </div>
+    <dlg-fs v-if="Expanded" title="Voltage" :height.sync="DialogHeight"></dlg-fs>
   </div>
   <div v-else-if="analyzer == null">
     <div class="alert alert-danger text-center">
@@ -53,18 +58,17 @@
   export default {
     props: { analyzer: { type: Object } },
     data: function() {
-      return { ActiveTab: '', Aggreg: '', Range: null, Phases: null, Height: 300, Paused: false, Expanded: false,
-               TransferGraph: this.CreateSeriesTransfer(this, ['CURRENT']),
-               TransferNow: this.CreateSeriesTransfer(this, ['CURRENT', 'VOLTAGE_SAMPLES', 'CURRENT_SAMPLES', 'VOLTAGE_HARMONICS', 'CURRENT_HARMONICS', 'VOLTAGE_FFT', 'CURRENT_FFT', 'POWER_FACTOR', 'CURRENT_THD', 'PHI']),
-               TransferCubism: this.CreateSeriesTransfer(this, ['CURRENT_HARMONICS', 'POWER_FACTOR', 'CURRENT_THD', 'PHI']),
-               Transfer1M: this.CreateSeriesTransfer(this, ['CURRENT']),
-               Transfer3S: this.CreateSeriesTransfer(this, ['CURRENT'])
+      return { ActiveTab: null, Aggreg: null, Range: null, Phases: null, Height: 300, Paused: false, Expanded: false, DialogHeight: 300,
+               TransferGraph: this.SeriesTransfer(['Current']),
+               TransferNow: this.NowTransfer(['Current', 'Voltage_Samples', 'Current_Samples', 'Voltage_Harmonics_Complex', 'Current_Harmonics_Complex', 'Voltage_FFT', 'Current_FFT', 'Power_Factor', 'Current_THD', 'Phi']),
+               TransferCubism: this.SeriesTransfer(['Current_Harmonics', 'Power_Factor', 'Current_THD', 'Phi']),
+               Transfer1M: this.SeriesTransfer(['Current']),
+               Transfer3S: this.SeriesTransfer(['Current'])
       };
     },
     created: function() {
-      this.TransferGraph.AggregFail = () => { this.Aggreg = null };
       this.TransferGraph.Update(this.analyzer, this.Aggreg, this.Range);
-      this.TransferNow.UpdateNow(this.analyzer);
+      this.TransferNow.Update(this.analyzer);
       this.TransferCubism.Update(this.analyzer, '1M', 'LastDay');
       this.Transfer1M.Update(this.analyzer, '1M', 'LastSamples');
       this.Transfer3S.Update(this.analyzer, '3S', 'LastSamples');
@@ -79,7 +83,7 @@
     watch: {
       analyzer: function(val) {
         this.TransferGraph.Update(this.analyzer, this.Aggreg, this.Range);
-        this.TransferNow.UpdateNow(this.analyzer);
+        this.TransferNow.Update(this.analyzer);
         this.TransferCubism.Update(this.analyzer, '1M', 'LastDay');
         this.Transfer1M.Update(this.analyzer, '1M', 'LastSamples');
         this.Transfer3S.Update(this.analyzer, '3S', 'LastSamples');
@@ -94,17 +98,19 @@
         if(this.Paused == true) {
           this.TransferNow.Destroy();
         } else {
-          this.TransferNow.UpdateNow(this.analyzer);
+          this.TransferNow.Update(this.analyzer);
         }
       }
     },
     methods: {
       Export: function() {
         if(this.TransferGraph.Data == null) return [];
-        var Rows = [['Sampletime'].concat(this.analyzer.GetSeriesNames('Current', this.analyzer.CurrentChannels))];
-        for(var n in this.TransferGraph.Data.Sampletime) {
-          var Row = [this.TransferGraph.Data.Sampletime[n]];
-          for(var i in this.TransferGraph.Data.Current[n]) Row.push(this.Round(this.TransferGraph.Data.Current[n][i], 3));
+        var Rows = [['Time'].concat(this.analyzer.SerieNames('Current'))];
+        var TimeCol = this.TransferGraph.Data.Headers.indexOf('Time');
+        var CurrentCol = this.TransferGraph.Data.Headers.indexOf('Current');
+        for(var n = 0; n < this.TransferGraph.Data.Rows.length; n++) {
+          var Row = [this.analyzer.FormatDateTime(this.TransferGraph.Data.Rows[n][TimeCol])];
+          for(var i = 0; i < this.TransferGraph.Data.Rows[n][CurrentCol].length; i++) Row.push(this.Round(this.TransferGraph.Data.Rows[n][CurrentCol][i], 3));
           Rows.push(Row);
         }
         return Object.seal(Rows);

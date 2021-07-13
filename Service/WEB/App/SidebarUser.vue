@@ -2,13 +2,13 @@
   <div class="this" :class="{ expanded: expanded }">
     <img class="icon" :src="require('Imgs/user32.png')">
     <div class="btn-group">
-      <button type="button" class="btn btn-default btn-xs" data-toggle="tooltip" title="User edit" @click="ShowDialog=true"><img :src="require('Imgs/user_edit.png')"></button>
-      <button type="button" class="btn btn-default btn-xs" data-toggle="tooltip" title="User logout" @click="Logout"><img :src="require('Imgs/user_go.png')"></button>
+      <button type="button" class="btn btn-default btn-xs" title="User edit" @click="ShowDialog=true"><img :src="require('Imgs/user_edit.png')"></button>
+      <button type="button" class="btn btn-default btn-xs" title="User logout" @click="Logout"><img :src="require('Imgs/user_go.png')"></button>
     </div>
     <div class="name">{{ (user==null) ? '-' : user.Name }}</div>
-    <user-logout ref="logout"></user-logout>
+    <user-logout v-if="UserUnathorized"></user-logout>
     <user-edit v-if="ShowDialog" :user="user" @close="ShowDialog=false"></user-edit>
-    <offline ref="offline"></offline>
+    <offline v-if="NoNetwork"></offline>
   </div>
 </template>
 
@@ -19,9 +19,11 @@
   export default {
     props: { user: null, expanded: Boolean },
     data() {
-      return { ShowDialog: false };
+      return { ShowDialog: false, UserUnathorized: false, NoNetwork: false };
     },
     created: function() {
+      window.EventBus.$on('UserUnathorized', () => { this.UserUnathorized = true; });
+      window.EventBus.$on('NoNetwork', (b) => { this.NoNetwork = b; });
       if(localStorage.getItem("UserName") == null) {
         this.Logout();
       } else {
@@ -31,15 +33,15 @@
     methods: {
       GetUser: function() {
         this.ShowDialog = false;
-        this.$http.post('getUser', { User: localStorage.getItem("UserName") }).then(
-          (result) => { this.$emit('update:user', result.data); },
-          (fail) => { this.Logout(); }
+        this.Post('getUser', { User: localStorage.getItem("UserName") }).then(
+          (result) => this.$emit('update:user', result),
+          () => this.Logout()
         );
       },
       Logout: function() {
-        this.$http.post('logOut', {}).then(
-          (result) => { location.reload(); },
-          (fail) => { location.reload(); }
+        this.Post('logOut', {}).then(
+          () => { location.reload(); },
+          () => { location.reload(); }
         );
       }
     },
@@ -72,10 +74,13 @@
     padding-left: 2px;
     line-height: 24px;
     padding-top: 4px;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    white-space: nowrap;
   }
   .btn-group {
     margin-top: 4px;
-    margin-left: -2px;
+    margin-left: -1px;
   }
   .btn-group > .btn {
     background: #444;

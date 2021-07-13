@@ -1,0 +1,43 @@
+{
+  "components": {
+    "schemas": {
+      "UserListTemplate": {
+        "type": "object",
+        "properties": {
+          "User": { "type": "string" },
+          "Name": { "type": "string" },
+          "Email": { "type": "string" },
+          "TimeZone": { "type": "string" }
+        },
+        "example": {
+          "User": "admin",
+          "Name": "System administrator",
+          "Email": "example@example.com",
+          "TimeZone": "UTC"
+        },
+        "required": [ "User", "Name", "Email", "TimeZone" ]
+      }
+    }
+  },
+  "paths": {
+    "/getUsers": {
+      "post": {
+        "summary": "Get user list",
+        "tags": [ "Users" ],
+        "requestBody": { "$ref": "#/components/requestBodies/EmptyObject" },
+        "responses": {
+          "200": {
+            "description": "The method executed without error",
+            "content": {
+              "application/json": {
+                "schema": { "type": "array", "items": { "$ref": "#/components/schemas/UserListTemplate" } }
+              }
+            }
+          },
+          "401": { "$ref": "#/components/responses/401Response" },
+          "403": { "$ref": "#/components/responses/403Response" }
+        }
+      }
+    }
+  }
+}

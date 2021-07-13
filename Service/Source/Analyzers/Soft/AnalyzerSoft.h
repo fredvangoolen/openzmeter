@@ -16,251 +16,106 @@
 #pragma once
 #include <pthread.h>
 #include <inttypes.h>
-#include <deque>
-#include <list>
-extern "C" {
-  #include "mqtt-c/mqtt.h"
-  #include "mqtt-c/mqtt_pal.h"
-}
-#include "muParser/muParser.h"
+#include "cctz/time_zone.h"
 #include "cpp-httplib/httplib.h"
 #include "Analyzer.h"
-#include "Tariff.h"
+#include "ConsumerQueue.h"
+#include "AnalyzerSoftFFTs.h"
+#include "AnalyzerSoftBlock.h"
+#include "AnalyzerSoftZeroCrossing.h"
+#include "AnalyzerSoftEvents.h"
+#include "AnalyzerSoftGA.h"
+#include "AnalyzerSoftAggreg200MS.h"
+#include "AnalyzerSoftAggreg3S.h"
+#include "AnalyzerSoftAggreg1M.h"
+#include "AnalyzerSoftAggreg10M.h"
+#include "AnalyzerSoftAggreg15M.h"
+#include "AnalyzerSoftAggreg1H.h"
+#include "AnalyzerSoftFrequency.h"
+#include "AnalyzerSoftSync.h"
+#include "AnalyzerSoftMQTT.h"
+#include "AnalyzerSoftAlarms.h"
+#include "AnalyzerSeries.h"
+#include "AnalyzerRates.h"
+#include "AnalyzerAccess.h"
 //----------------------------------------------------------------------------------------------------------------------
-using namespace mu;
 using namespace httplib;
+using namespace cctz;
 //----------------------------------------------------------------------------------------------------------------------
-class AnalyzerSoft final : public Analyzer {
+class AnalyzerSoft : public Analyzer {
   private :
-    static const uint8_t FILTERSTAGES         =  5;        //Filter stages for zerocrossing
-    static const uint8_t ZEROCROSSING_SECONDS = 10;        //Used seconds to calc frequency
-  public :
-    enum AggregType  { UNINITIALIZED, AGGREG_200MS, AGGREG_3S, AGGREG_1M, AGGREG_10M, AGGREG_15M, AGGREG_1H };
-    enum EventType   { EVT_NONE = 0x00, EVT_SWELL = 0x01, EVT_DIP = 0x02, EVT_INTERRUPTION = 0x04, EVT_RVC = 0x08 };
-    enum EventState  { EVT_RUNNING, EVT_CLOSING, EVT_CLOSED };
-    enum SyncState   { NOT_LOGGED, LOGGED, CONNECTED, TERMINATE };
-  private :
-    static constexpr float   FrequencyRanges[]   = { -INFINITY, -5, -4, -3, -2, -1, -0.9, -0.8, -0.7, -0.6, -0.5, -0.45, -0.40, -0.35, -0.30, -0.25, -0.20, -0.15, -0.10, -0.05, 0.00, 0.05, 0.10, 0.15, 0.20, 0.25, 0.30, 0.35, 0.40, 0.45, 0.5, 0.6, 0.7, 0.8, 0.9, 1, 2, 3, 4, 5, INFINITY };
-    static constexpr uint8_t FrequencyRangesLen  = (sizeof(FrequencyRanges) / sizeof(float)) - 1;
-    static constexpr float   VoltageRanges[]     = { -INFINITY, -20, -15, -10, -9, -8, -7, -6, -5, -4, -3, -2, -1, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 15, 20, INFINITY };
-    static constexpr uint8_t VoltageRangesLen    = (sizeof(VoltageRanges) / sizeof(float)) - 1;
-    static constexpr float   THDRanges[]         = { 0, 0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5, 5.5, 6, 6.5, 7, 7.5, 8, 8.5, 9, 9.5, 10, 11, 12, 13, 14, 15, INFINITY };
-    static constexpr uint8_t THDRangesLen        = (sizeof(THDRanges) / sizeof(float)) - 1;
-    static constexpr float   UnbalanceRanges[]   = {0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8, 1.9, 2.0, 2.25, 2.50, 2.75, 3.0, 3.25, 3.50, 3.75, 4.0, 4.5, 5.0, INFINITY};
-    static constexpr uint8_t UnbalanceRangesLen  = (sizeof(UnbalanceRanges) / sizeof(float)) - 1;
-    static constexpr float   HarmonicsAllowed[]  = {2, 5, 1, 6, 0.5, 5, 0.5, 1.5, 0.5, 3.5, 0.5, 3, 0.5, 0.5, 0.5, 2, 0.5, 1.5, 0.5, 0.5, 0.5, 1.5, 0.5, 1.5};
-    static constexpr uint8_t HarmonicsAllowedLen = (sizeof(HarmonicsAllowed) / sizeof(float));
-   private :
-    typedef struct {
-      AggregType               Type;                               //Aggregation type
-      bool                     Flag;                               //Flagged period
-      float                    Frequency;                          //Frecuency
-      float                    Unbalance;                          //Unbalance (only in 3phase)
-      float                    Voltage[3];                         //Aggregation average RMS voltage
-      float                    Current[4];                         //Aggregation average RMS current
-      uint64_t                 Timestamp;                          //Aggregation timestampt
-      uint16_t                 AggregSamples;                      //Number of samples accumulated in aggreg
-      uint16_t                 StatsFrequency[FrequencyRangesLen]; //Distribucion de frecuencias
-      uint16_t                 StatsVoltage[VoltageRangesLen];     //Distribucion de tensiones
-      uint16_t                 StatsTHD[THDRangesLen];             //Cada posicion representa un rango desde 0% hasta 8% (y el ultimo otros valores)
-      uint16_t                 StatsHarmonics[2];                  //Numero de muestras que cumplen los limites de harmonicos / no cumplen
-      uint16_t                 StatsUnbalance[UnbalanceRangesLen]; //Distribucion de unbalance
-      float                    Active_Power[3];                    //Aggregation average Active Power (P)
-      float                    Reactive_Power[3];                  //Reactive power
-      float                    Active_Energy[3];                   //Energia consumida
-      float                    Reactive_Energy[3];                 //Reactive energy
-      float                    Apparent_Power[3];                  //Potencia aparente (S)
-      float                    Power_Factor[3];                    //Factor de potencia (cos(PHI))
-      float                    Voltage_THD[3];                     //Distorsion harmonica de la tension
-      float                    Current_THD[4];                     //Distorsion harmonica de la corriente
-      float                    Voltage_Phase[3];                   //Angulo entre canales de tension
-      float                    Phi[3];                             //Angulo de Phi
-      float                    Voltage_Harmonics[150];             //Harmonicos del canal de tension
-      float                    Current_Harmonics[200];             //Harmonicos del canal de corriente
-      float                    Power_Harmonics[150];               //Power harmonics
-    } Params_t;
-    typedef struct {
-     float                    *InPtr;
-     float                    *OutPtr;
-    } FFTChannel_t;
-    typedef struct {
-      float                    A0;
-      float                    A1;
-      float                    A2;
-      float                    B1;
-      float                    B2;
-      float                    ChannelsZ1[3];
-      float                    ChannelsZ2[3];
-    } Filter_t;
-    typedef struct {
-      string                   Name;
-      uint8_t                  Priority;
-      uint16_t                 Samples;
-      uint16_t                 Window;
-      uint16_t                 ResultPos;
-      uint16_t                 ResultCount;
-      AggregType               Aggreg;
-      Parser                   Evaluator;
-      uint8_t                 *Results;
-      bool                     Triggered;
-    } Alarm_t;
-    typedef struct {
-      vector<float>            RMS;
-      uint64_t                 Timestamp;
-    } EventCycle_t;
-    typedef struct {
-      enum EventType           Type;                     //Running event type
-      EventState               State;                    //Events state
-      uint64_t                 Start;                    //Event start timestamp
-      uint64_t                 Duration;                 //Event duration in samples
-      vector<float>            Reference;                //Voltage reference for event (Stationary for RVC, nominal for others)
-      vector<float>            PeakValue;                //max/min voltage variation along event
-      vector<float>            ChangeValue;              //diference voltage of event
-      deque<vector<float> >    SamplesRAW_A;             //
-      deque<vector<float> >    SamplesRMS_A;             //
-      deque<vector<float> >    SamplesRAW_B;             //
-      deque<vector<float> >    SamplesRMS_B;             //
-    } Event_t;
-    typedef struct {
-      pthread_mutex_t         *Mutex;                    //Export list locks
-      pthread_cond_t          *Cond;                     //Wakeup parent after last thread ends
-      uint32_t                *Count;                    //Count of running sync threads
-      string                   Server;                   //
-      string                   Cookie;                   //
-      string                   Method;                   //
-      json                     Params;                   //
-      uint64_t                 Sequence;                 //
-      AnalyzerSoft            *Analyzer;                 //
-    } Sync_t;
-  private :
-    static pthread_mutex_t     pFFTMutex;                //Planer mutex
-    static uint32_t            pFFTRunning;              //Currently running FFTs
-  private : //Not modified after creation
     const float                pSamplerate;              //Velocidad de muestreo
     const string               pConfigPath;              //Path to configuration
     const uint8_t              pVoltageChannels;         //Voltage channels
     const uint8_t              pCurrentChannels;         //Current channels
-    const AnalyzerMode         pMode;                    //Operation mode
-  private : //Used in BufferAppend, Configure and Analyzer_Func and some callbacks
-    RWLocks                    pAnalyzerLock;            //Locks access to analysis shared variables
-    bool                       pSave200MS;               //Save 10 cycles aggregation to database
-    float                      pNominalVoltage;          //Analyzer nominal voltage
-    float                      pNominalFrequency;        //Analyzer nominal frequency
-    float                      pMaxCurrent;              //Max current, over this value warnings are shown
-    float                      pMinCurrent;              //Min current, under this value some analysis are disabled
-    uint32_t                   pMaxSamples;              //Max block samples
-    string                     pTimeZone;                //Country code
-    uint64_t                   pSequence;                //Sequence number of analyzed blocks
-    uint16_t                   pBlockSamples;            //Number of samples in block
-    uint16_t                   pBlockCyclesCount;        //Block cycles count
-    uint16_t                   pBlockCycles[24];         //Max block sizes
-    float                     *pVoltageSamples;          //Voltage samples
-    float                     *pCurrentSamples;          //Current samples
-    uint16_t                   pFFTSamples;              //FFT result samples
-    float                     *pVoltageFFT;              //FFT voltage output (complex)
-    float                     *pCurrentFFT;              //FFT current output (complex)
-    FFTChannel_t               pVoltageFFTChannels[3];   //FFT configuration channels
-    FFTChannel_t               pCurrentFFTChannels[4];   //FFT configuration channels
-    float                      pLastSamples[3];          //Filter samples backup
-    Filter_t                   pFilters[FILTERSTAGES];   //Filter bank
-    float                     *pDelayVoltage;            //Delay buffer for samples
-    float                     *pDelayCurrent;            //Delay buffer for samples
-    uint16_t                   pDelaySize;               //Delay samples
-    uint16_t                   pDelayPos;                //Delay pos
-    uint16_t                   pFreqCyclesPos;           //Frequency cycles write position
-    uint16_t                   pFreqCyclesLen;           //Frequency cycles buffer len
-    uint32_t                  *pFreqCycles;              //Frequency calc cycles lenghts
-    json                       pRates;                   //Applied rates local copy
-    ProviderLocks              pNowDataLock;             //GetSeriesNow access control
-  private : //Used only in Analyzer_Func
-    uint64_t                   pPrevTimestamp;           //Previous block time
-    Params_t                   pAggreg200MS;             //200ms aggregation
-    Params_t                   pAggreg3S;                //3 seconds aggregation
-    Params_t                   pAggreg1M;                //1 minute aggregation
-    Params_t                   pAggreg10M;               //10 minutes aggregation
-    Params_t                   pAggreg15M;               //15 minutes aggregation
-    Params_t                   pAggreg1H;                //1 hour aggregation
-  private : //Workers
-    Worker                    *pAnalyzerWorker;          //Analyzer worker
-    Worker                    *pVoltageFFTWorker[3];     //Voltage FFT worker
-    Worker                    *pCurrentFFTWorker[4];     //Current FFT worker
-    Worker                    *pAlarmsWorker;            //Alarms detection worker
-    Worker                    *pEventsWorker;            //Events detector
-  private : //Alarms related (should be locked)
-    vector<Alarm_t>            pAlarms;                  //Alarms control object
-  private : //Events related (only acceded inside analyzer thread)
-    list<Event_t>              pEvents;                  //Running events
-    bool                       pPrevStationary;          //Steady state flag
-    deque<vector<float> >      pPrevSamples;             //Previous samples
-    deque<EventCycle_t>        pPrevCycles;              //Previous cycles
-  private : //Readed in thread, changed in configure
-    pthread_t                  pSyncThread;              //Export thread
-    bool                       pSyncTerminate;           //Sync terminate signal
-    string                     pSyncServer;              //Export server address
-    string                     pSyncUser;                //Export server user
-    string                     pSyncPass;                //Export server password
   private :
-    pthread_t                  pMQTTThread;              //MQTT thread
-    mqtt_client                pMQTTClient;              //MQTT client state
-    uint32_t                   pMQTTBuffSize;            //MQTT buffers size
-    uint8_t                   *pMQTTSendBuff;            //MQTT send buffer
-    uint8_t                   *pMQTTRecvBuff;            //MQTT recv buffer
-    bool                       pMQTTTerminate;           //MQTT terminate signal
-    string                     pMQTTServer;              //MQTT server address
-    string                     pMQTTPrefix;              //MQTT prefix
-    string                     pMQTTUser;                //MQTT server user
-    string                     pMQTTPass;                //MQTT server password
-    bool                       pMQTT3S;                  //Enable 3 seconds publish
-    bool                       pMQTT1M;                  //Enable 1 minute publish
-    bool                       pMQTT10M;                 //Enable 10 minutes publish
-    bool                       pMQTT15M;                 //Enable 15 minutes publish
-    bool                       pMQTT1H;                  //Enable 1 hour publish
-    bool                       pMQTTAlarms;              //Enable alarms publish
-    bool                       pMQTTConfig;              //Enable config publish
+    AnalyzerAccess            *pAccess;                  //Access control class
+    AnalyzerSoftZeroCrossing  *pZeroCross;               //Zero crosing and block builder
+    AnalyzerSoftFrequency     *pFrequency;               //Frequency meter
+    AnalyzerSoftFFTs          *pFFTs;                    //FFT executor
+    AnalyzerSoftAggreg200MS   *pAggreg200MS;             //200ms aggregation
+    AnalyzerSoftAggreg3S      *pAggreg3S;                //3 seconds aggregation
+    AnalyzerSoftAggreg1M      *pAggreg1M;                //1 minute aggregation
+    AnalyzerSoftAggreg10M     *pAggreg10M;               //10 minutes aggregation
+    AnalyzerSoftAggreg15M     *pAggreg15M;               //15 minutes aggregation
+    AnalyzerSoftAggreg1H      *pAggreg1H;                //1 hour aggregation
+    AnalyzerRates             *pRates;                   //Rate handle class
+    AnalyzerSeries            *pSeries;                  //Read stored data
+    AnalyzerSoftEvents        *pEvents;                  //Events detector
+    AnalyzerSoftMQTT          *pMQTT;                    //MQTT Control object
+    AnalyzerSoftAlarms        *pAlarms;                  //Alarms control
+    AnalyzerSoftSync          *pSync;                    //Remote sync object
+    AnalyzerSoftBlock         *pWorkingBlock;            //Current block
+    ConsumerQueue             *pConsumers;               //Block analysis consumers control
   private :
-    static void  Analyzer_Func(void *creation, void *run);
-    static void  Events_Func(void *creation, void *run);
-    static void  FFT_Func(void *creation, void *run);
-    static void  Alarms_Func(void *creation, void *run);
-    static void *Sync_Thread(void *params);
-    static void *MQTT_Thread(void *params);
-    static void *Sync_RespThread(void *params);
-    static float CalcChange(const float in, const float reference);
-    static float CalcAngle(const float *a, const float *b);
-    static float BinPower(const float *a);
+    volatile bool              pTerminate;               //Terminate thread
+    deque<AnalyzerSoftBlock*>  pPendingBlocks;           //Pending blocks to analyze
+    pthread_t                  pThread;                  //Analyzer thread
+    pthread_mutex_t            pMutex;                   //Locks access to analysis shared variables
+    pthread_cond_t             pCond;                    //Thread wake condition
+    float                      pNominalVoltage;          //Configured nominal voltage
+    float                      pNominalFrequency;        //Configured nominal frequency
+    bool                       pSave200MS;               //Save 10/12 cycles aggregation to database
   private :
-    void Configure(const json &options);
-    void InitAggreg(Params_t &params, AggregType type);
-    void InitAlarmParser(Parser &parser, const string &expr, const AggregType &type);
-    void AccumulateAggreg(Params_t &src, const Params_t &dst);
-    void NormalizeAggreg(Params_t &src);
-    void SaveAggreg(Params_t &params);
-    void PublishAggreg(const Params_t &params, const string &topic);
-    void PublishAlarm(const uint64_t time, const string &name, const uint8_t prio, const bool triggered);
-    void PublishConfig(const json &options);
-    void InitEvent(const EventType type, const vector<float> &reference, const uint32_t pos);
-    bool FindRunningEvent(const uint32_t mask);
-    void SaveEvent(Event_t &evt);
-  private :
-    void GetAnalyzer(const json &params, Response &response) override;
-    void SetAnalyzer(const json &params, Response &response) override;
-    void GetSeries(const json &params, Response &response) override;
-    void GetSeriesNow(const json &params, Response &response) override;
-    void GetSeriesRange(const json &params, Response &response) override;
-    void GetEvents(const json &params, Response &response) override;
-    void GetEvent(const json &params, Response &response) override;
-    void SetEvent(const json &params, Response &response) override;
-    void DelEvent(const json &params, Response &response) override;
-    void GetPrices(const json &params, Response &response) override;
-    void TestAlarm(const json &params, Response &response) override;
-    void GetAlarms(const json &params, Response &response) override;
-    void GetRemote(const json &params, Response &response) override;
-    void SetRemote(const json &params, Response &response) override;
+    void Thread();
+    void Config(const json &options);
+    json GetSeriesNow(const vector<string> &series);
+    void HandleAction(const string &name, const json &params);
   public :
-    static json CheckConfig(const json &config, const Analyzer::AnalyzerMode mode);
+    void GetAnalyzer(HTTPRequest &req) override;
+    void SetAnalyzer(HTTPRequest &req) override;
+    void GetStatus(HTTPRequest &req) override;
+    void GetSeries(HTTPRequest &req) override;
+    void SetSeries(HTTPRequest &req) override;
+    void GetSeriesNow(HTTPRequest &req) override;
+    void GetCosts(HTTPRequest &req) override;
+    void GetBills(HTTPRequest &req) override;
+    void GetWaveStream(HTTPRequest &req) override;
+    void GetSeriesRange(HTTPRequest &req) override;
+    void DelSeriesRange(HTTPRequest &req) override;
+    void GetEvents(HTTPRequest &req) override;
+    void SetEvents(HTTPRequest &req) override;
+    void GetEventsRange(HTTPRequest &req) override;
+    void DelEventsRange(HTTPRequest &req) override;
+    void GetEvent(HTTPRequest &req) override;
+    void SetEvent(HTTPRequest &req) override;
+    void DelEvent(HTTPRequest &req) override;
+    void TestAlarm(HTTPRequest &req) override;
+    void GetAlarms(HTTPRequest &req) override;
+    void SetAlarms(HTTPRequest &req) override;
+    void SetAlarm(HTTPRequest &req) override;
+    void DelAlarm(HTTPRequest &req) override;
+    void GetAlarmsRange(HTTPRequest &req) override;
+    void DelAlarmsRange(HTTPRequest &req) override;
+    void SetRemote(HTTPRequest &req) override;
+    bool HandleModbus(uint8_t *buff, const uint16_t start, const uint8_t len) override;
+  public :
+    static json CheckConfig(const json &config, const Analyzer::AnalyzerMode mode, const bool except);
+  protected :
+    virtual void ResultsReady(AnalyzerSoftAggreg200MS *params);
   public :
     AnalyzerSoft(const string &id, const Analyzer::AnalyzerMode mode, const string &optionPath, const float samplerate);
     ~AnalyzerSoft();
-    bool BufferAppend(float *voltageSamples, float *currentSamples, const uint32_t buffUsage);
-    bool IsWorking();
+    void BufferAppend(const float *voltageSamples, const float *currentSamples);
 };
+//----------------------------------------------------------------------------------------------------------------------

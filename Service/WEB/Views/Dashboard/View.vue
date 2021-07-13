@@ -20,7 +20,7 @@
               <div class="col-md-7 col-lg-8 col-xl-9">
                 <portal to="fs-body" :disabled="!Expanded" class="panel-body">
                   <spinner v-if="TransferGraph.Data==null"></spinner>
-                  <energy :analyzer="analyzer" :height="Expanded?DialogHeight:Height-10" :data="TransferGraph.Data" :periods="TransferGraph.Periods" @range="Range=$event"></energy>
+                  <energy :analyzer="analyzer" :height="Expanded?DialogHeight:Height-10" :data="TransferGraph.Data" @range="Range=$event"></energy>
                 </portal>
               </div>
             </div>
@@ -31,16 +31,16 @@
     </div>
     <div class="row">
       <div class="col-lg-6 col-md-12">
-        <graphs ref="g0" serie="VOLTAGE" :analyzer="analyzer" :data="Transfer3S.Data" :paused.sync="Paused3S"></graphs>
+        <graphs ref="g0" serie="Voltage" :analyzer="analyzer" :data="Transfer3S.Data" :last="Transfer3S.LastData" :paused.sync="Paused3S"></graphs>
       </div>
       <div class="col-lg-6 col-md-12">
-        <graphs ref="g1" serie="CURRENT" :analyzer="analyzer" :data="Transfer3S.Data" :paused.sync="Paused3S"></graphs>
+        <graphs ref="g1" serie="Current" :analyzer="analyzer" :data="Transfer3S.Data" :last="Transfer3S.LastData" :paused.sync="Paused3S"></graphs>
       </div>
-      <div v-bind:class="{'col-lg-6': (analyzer.NominalFrequency > 0.0)}" class="col-md-12">
-        <graphs ref="g2" serie="ACTIVE_POWER" :analyzer="analyzer" :data="Transfer3S.Data" :paused.sync="Paused3S"></graphs>
+      <div :class="{'col-lg-6': (analyzer.NominalFrequency > 0.0)}" class="col-md-12">
+        <graphs ref="g2" serie="Active_Power" :analyzer="analyzer" :data="Transfer3S.Data" :last="Transfer3S.LastData" :paused.sync="Paused3S"></graphs>
       </div>
       <div class="col-lg-6 col-md-12" v-if="analyzer.NominalFrequency > 0.0">
-        <graphs ref="g3" serie="FREQUENCY" :analyzer="analyzer" :data="Transfer3S.Data" :paused.sync="Paused3S"></graphs>
+        <graphs ref="g3" serie="Frequency" :analyzer="analyzer" :data="Transfer3S.Data" :last="Transfer3S.LastData" :paused.sync="Paused3S"></graphs>
       </div>
     </div>
     <div class="row" v-if="analyzer.NominalFrequency > 0.0">
@@ -67,17 +67,17 @@
     props: { analyzer: { type: Object } },
     data () {
       return { Aggreg: null, Range: null, Height: 200, Paused3S: false, Expanded: false, DialogHeight: 200,
-               TransferNow: this.CreateSeriesTransfer(this, ['VOLTAGE_THD', 'ACTIVE_POWER', 'REACTIVE_POWER', 'CURRENT_THD', 'POWER_FACTOR', 'PHI']),
-               Transfer3S: this.CreateSeriesTransfer(this, ['VOLTAGE', 'CURRENT', 'ACTIVE_POWER', 'FREQUENCY']),
-               Transfer1M: this.CreateSeriesTransfer(this,  ['VOLTAGE_THD', 'ACTIVE_POWER', 'REACTIVE_POWER', 'CURRENT_THD', 'POWER_FACTOR', 'PHI']),
-               TransferGraph: this.CreateSeriesTransfer(this, ['ACTIVE_POWER', 'PERIOD_EXPENSE', 'PERIOD_COLOR', 'PERIOD_NAME', 'BILLS'])
+               TransferNow: this.NowTransfer(['Voltage_THD', 'Active_Power', 'Reactive_Power', 'Current_THD', 'Power_Factor', 'Phi']),
+               Transfer3S: this.SeriesTransfer(['Voltage', 'Current', 'Active_Power', 'Frequency']),
+               Transfer1M: this.SeriesTransfer(['Voltage_THD', 'Active_Power', 'Reactive_Power', 'Current_THD', 'Power_Factor', 'Phi']),
+               TransferGraph: this.PriceTransfer(['Active_Energy', 'Cost', 'Color', 'Period', 'Bill'])
       };
     },
     created: function() {
-      this.TransferNow.UpdateNow(this.analyzer);
+      this.TransferNow.Update(this.analyzer);
       this.Transfer3S.Update(this.analyzer, '3S', 'LastHours');
       this.Transfer1M.Update(this.analyzer, '1M', 'LastDay');
-      this.TransferGraph.UpdatePrices(this.analyzer, this.Aggreg, this.Range);
+      this.TransferGraph.Update(this.analyzer, this.Aggreg, this.Range);
     },
     beforeDestroy: function() {
       this.TransferNow.Destroy();
@@ -90,17 +90,17 @@
     },
     watch: {
       analyzer: function() {
-        this.TransferNow.UpdateNow(this.analyzer);
+        this.TransferNow.Update(this.analyzer);
         this.Transfer3S.Update(this.analyzer, '3S', 'LastHours');
         this.Transfer1M.Update(this.analyzer, '1M', 'LastDay');
-        this.TransferGraph.UpdatePrices(this.analyzer, this.Aggreg, this.Range);
+        this.TransferGraph.Update(this.analyzer, this.Aggreg, this.Range);
         this.BindGraphs();
       },
       Aggreg: function(val, prev) {
-        if(prev != null) this.TransferGraph.UpdatePrices(this.analyzer, this.Aggreg, this.Range);
+        if(prev != null) this.TransferGraph.Update(this.analyzer, this.Aggreg, this.Range);
       },
       Range: function() {
-        this.TransferGraph.UpdatePrices(this.analyzer, this.Aggreg, this.Range);
+        this.TransferGraph.Update(this.analyzer, this.Aggreg, this.Range);
       }
     },
     methods: {
@@ -116,9 +116,14 @@
       },
       Export: function() {
         if(this.TransferGraph.Data == null) return [];
-        var Div = (this.TransferGraph.Data.Aggreg == '1H') ? 1 : 4;
-        var Data = [['Sampletime', 'Active Energy', 'Period name', 'Period expense']];
-        for(var i = 0; i < this.TransferGraph.Data.Sampletime.length; i++) Data.push([this.TransferGraph.Data.Sampletime[i], this.Round(this.TransferGraph.Data.Active_Power[i] / Div, 3), this.TransferGraph.Data.Period_Name[i], this.Round(this.TransferGraph.Data.Period_Expense[i], 3)]);
+        var Data = [['Time', 'Active Energy', 'Period expense']];
+        var TimeCol = this.TransferGraph.Data.Headers.indexOf('Time');
+        var ActiveCol = this.TransferGraph.Data.Headers.indexOf('Active_Energy');
+        var ExpenseCol = this.TransferGraph.Data.Headers.indexOf('Cost');
+        for(var i = 0; i < this.TransferGraph.Data.Rows.length; i++) {
+          if(this.TransferGraph.Data.Rows[i][ActiveCol] == null) continue;
+          Data.push([this.analyzer.FormatDateTime(this.TransferGraph.Data.Rows[i][TimeCol]), this.Round(this.TransferGraph.Data.Rows[i][ActiveCol], 3), this.Round(this.TransferGraph.Data.Rows[i][ExpenseCol], 3)]);
+        }
         return Object.seal(Data);
       }
     },

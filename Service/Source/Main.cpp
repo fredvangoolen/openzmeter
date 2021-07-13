@@ -18,16 +18,32 @@
 #include <errno.h>
 #include <cctz/time_zone.h>
 #include "Tools.h"
+#include "LogFile.h"
+#include "ResourceFile.h"
+#include "PidFile.h"
 #include "HTTPServer.h"
-#include "Telegram.h"
+#include "TelegramManager.h"
 #include "DeviceManager.h"
-#include "SysSupport.h"
+#include "UserManager.h"
+#include "NTPManager.h"
+#include "WifiManager.h"
+#include "EthernetManager.h"
+#include "BluetoothManager.h"
+#include "VPNManager.h"
+#include "AnalyzerManager.h"
+#include "TariffManager.h"
+#include "ConfigFile.h"
+#include "UpdateManager.h"
+#include "SystemManager.h"
+#include "ModbusManager.h"
+#include "DatabasePool.h"
+#include "MessageLoop.h"
+#include "ESIOS/ESIOSManager.h"
 //---------------------------------------------------------------------------------------------------------------------
-using namespace cctz;
 volatile bool Terminate = false;
 //---------------------------------------------------------------------------------------------------------------------
 void SignalHandler(int signal) {
-  LOGFile::Info("Shutting down. Please wait while all task ends...\n");
+  LogFile::Info("Shutting down. Please wait while all task ends...");
   Terminate = true;
 }
 int main(int argc, char** argv) {
@@ -40,11 +56,12 @@ int main(int argc, char** argv) {
   signal(SIGTERM, SignalHandler);
 
   string ConfigFileName = "/etc/openZmeter.conf";
+  LogFile::Info("Starting openZmeter service (Version: &s - Branch: %s - Arch: %s)", __BUILD_DATE__, __BUILD_BRANCH__, __BUILD_ARCH__);
   for(int i = 1; i != argc; i++) {
     if(memcmp(argv[i], "--config=", 9) == 0) {
       ConfigFileName = &argv[i][9];
     } else if(strcmp(argv[i], "--debug") == 0) {
-      LOGFile::EnableDebug();
+      LogFile::EnableDebug();
     } else if(strcmp(argv[i], "--daemon") == 0) {
       Tools::RunDaemon();
     } else if(strcmp(argv[i], "--help") == 0) {
@@ -56,31 +73,32 @@ int main(int argc, char** argv) {
       printf("Option %s not recogniced. Use --help to show valid options.\n\n", argv[i]);
     }
   }
-  /* Load config file */
-  ConfigManager ConfigManager(ConfigFileName);
-  /* Create PID File */
-  PIDFile PIDFile;
-  /* Create LOG file */
-  LOGFile LOGFile;
-  /* Create database tables */
-  DatabasePool DBPool;
-  /* Create WEB service */
-  HTTPServer HTTPServer;
-  /* Create Telegram manager */
-  Telegram TG;
-  /* Create system manager */
-  SysSupport SystemManager;
-  /* Create devices interface */
-  DeviceManager DeviceManager;
+  if(pthread_setname_np(pthread_self(), "Main") != 0) LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
+  TaskPool         Pool;                           // Task pool
+  TaskPool::SetThreadProperties(pthread_self(), TaskPool::NORMAL);
+  ResourceFile     Resources;                      // Init resources
+  ConfigFile       ConfigFile(ConfigFileName);     // Load config file
+  PidFile          PIDFile;                        // Create PID file
+  LogFile          LogFile;                        // Create LOG file
+  DatabasePool     DBPool;                         // Init database pool
+  MessageLoop      Loop;                           // Create application message loop
+  SystemManager    Sys;                            // System status and actions
+  BluetoothManager BT;                             // Create bluetooth manager
+  WifiManager      Wifi;                           // Create wifi manager
+  EthernetManager  Ethernet;                       // Create ethernet manager
+  UpdateManager    Update;                         // Create update manager
+  VPNManager       VPN;                            // Create VPN manager
+  NTPManager       NTP;                            // Create NTP manager
+  UserManager      User;                           // Create user manager
+  TariffManager    TariffManager;                  // Create tariffs interface
+  ESIOSManager     Esios;                          // Create ESIOS manager
+  AnalyzerManager  AnalyzerManager;                // Create analyzers interface
+  DeviceManager    DeviceManager;                  // Create devices interface
+  TelegramManager  TelegramBoot;                   // Create Telegram manager
+  ModbusManager    Modbus;                         // Create ModbusTCP
+  HTTPServer       HTTPServer;                     // Init WEB service
 
-  uint32_t Iter = 0;
-  while(!Terminate) {
-    if((Iter % 3600) == 0) HTTPServer.RemoveExpiredSessions();
-    if((Iter % 60) == 10) DatabasePool::AdjustWorkers();
-    if((Iter % 60) == 20) Telegram::AdjustWorkers();
-    if((Iter % 60) == 30) HTTPTaskQueue::AdjustWorkers();
-    Iter++;
-    usleep(1000000);
-  }
+  while(!Terminate) MessageLoop::HandleEvents();
   return EXIT_SUCCESS;
 }
+//---------------------------------------------------------------------------------------------------------------------

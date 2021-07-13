@@ -34,7 +34,7 @@
       <tr v-for="(day, idxd) in Days" :key="idxd">
         <td>{{ day.DayOfWeek }}</td>
         <td>{{ day.Date }}</td>
-        <td v-for="(block, idx) in day.Cells" :key="idx" :colspan="(aggreg === '1H') ? 4 : 1" :title="day.Date + ' - ' + block.Date + '\x0A' + block.Text" v-bind:style="{ 'border': '1px solid', 'border-color': block.BorderColor, 'background': block.Color }"></td>
+        <td v-for="(block, idx) in day.Cells" :key="idx" :colspan="(aggreg === '1H') ? 4 : 1" :title="day.Date + ' - ' + block.Date + '\x0A' + block.Text" :style="{ 'border': '1px solid', 'border-color': block.BorderColor, 'background': block.Color }"></td>
       </tr>
     </tbody>
   </table>
@@ -46,7 +46,7 @@
   import * as oZm from 'JS/openZmeter.js';
   var DaysNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
   export default {
-    props: { analyzer: Object, data: Object, aggreg: String },
+    props: { analyzer: Object, data: Array, aggreg: String },
     data: function() {
       return { Days: {} };
     },
@@ -61,9 +61,13 @@
       CalcOptions: function() {
         this.Days = [];
         if((this.data == null) || (this.aggreg == null)) return;
-        var Tmp = { };
-        for(var i in this.data.Sampletime) {
-          var RowDate = moment(this.data.Sampletime[i]).tz(this.analyzer.TimeZone);
+        var Headers   = this.data[0];
+        var Rows      = this.data.slice(1);
+        var Tmp       = { };
+        var TimeCol   = Headers.indexOf('Time');
+        var EnergyCol = Headers.indexOf('Active_Energy');
+        for(var i = 0; i < Rows.length; i++) {
+          var RowDate = moment(Rows[i][TimeCol]).tz(this.analyzer.TimeZone);
           if(Tmp.Date != RowDate.format('DD/MM/YYYY')) {
             this.Days.push(Object.assign({}, Tmp));
             Tmp = { };
@@ -79,8 +83,8 @@
             }
           }
           var Cell = (this.aggreg === '15M') ? RowDate.hour() * 4 + Math.trunc(RowDate.minute() / 15) : RowDate.hour();
-          for(var c in this.data.Active_Power[i]) {
-            if(this.data.Active_Power[i][c] != null) Tmp.Cells[Cell].Value = (Tmp.Cells[Cell].Value === undefined) ? this.data.Active_Power[i][c] / 4.0 : Tmp.Cells[Cell].Value + this.data.Active_Power[i][c] / 4.0;
+          for(var c = 0; c < Rows[i][EnergyCol].length; c++) {
+            Tmp.Cells[Cell].Value = (Tmp.Cells[Cell].Value == null) ? Rows[i][EnergyCol][c] : Tmp.Cells[Cell].Value + Rows[i][EnergyCol][c];
           }
         }
         if(Tmp.Date != undefined) this.Days.push(Tmp);
@@ -141,5 +145,4 @@
   .heatmap_table tbody td {
     background-repeat: repeat-x;
   }
-
 </style>

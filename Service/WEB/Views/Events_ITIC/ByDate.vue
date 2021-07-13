@@ -44,30 +44,13 @@
         Opt.axes.x.axisLabelFormatter = (x) => { return (((x % 1) == 0) && (x >= 0) && (x < this.Months.length)) ? this.Months[x] : ''; };
         for(var i = 0; i < this.Months.length; i++) Opt.file.push([i, 0]);
         if(this.data != null) {
-          for(var i in this.data.StartTime) {
-            var Month = moment(this.data.StartTime[i]).tz(this.analyzer.TimeZone).month();
+          var StartCol = this.data.Headers.indexOf('StartTime');
+          for(var i = 0; i < this.data.Rows.length; i++) {
+            var Month = moment(this.data.Rows[i][StartCol]).tz(this.analyzer.TimeZone).month();
             Opt.file[Month][1] = Opt.file[Month][1] + 1;
           }
         }
         return Object.seal(Opt);
-      }
-    },
-    methods: {
-      SetData: function(start, end, events) {
-        var ByDate = [];
-        this.GenerateMonths(start, end);
-        //if(this.Dates.length < 3) this.GenerateDays(start, end);
-        for(var i = 0; i < this.Dates.length; i++) ByDate.push([i, 0]);
-        for(var i = 0; i < events.StartTime.length; i++) {
-          if((events.StartTime[i] < start) || (events.StartTime[i] > end)) continue;
-          for(var n = 0; n < this.Dates.length; n++) {
-            if((events.StartTime[i] >= this.Dates[n][0]) && (events.StartTime[i] < this.Dates[n][1])) {
-              ByDate[n][1] = ByDate[n][1] + 1;
-              break;
-            }
-          }
-        }
-        this.$refs.graph.SetOptions({ file: ByDate, dateWindow: [-1, this.Dates.length] });
       }
     },
     components: { Graph }
