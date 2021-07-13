@@ -30,7 +30,7 @@ UpdateManager::UpdateManager() {
 #ifdef OPENWRT
   LogFile::Info("Starting UpdateManager...");
   Config(CheckConfig(ConfigFile::ReadConfig("/Update")));
-  MessageLoop::RegisterListener("Updates_PeriodicTasks", PeriodicTasks, 10000);
+  MessageLoop::RegisterListener("Updates_PeriodicTasks", PeriodicTasks, 900000);
   HTTPServer::RegisterCallback("getUpdates",   GetUpdatesCallback);
   HTTPServer::RegisterCallback("setUpdates",   SetUpdatesCallback);
   LogFile::Info("UpdateManager started");

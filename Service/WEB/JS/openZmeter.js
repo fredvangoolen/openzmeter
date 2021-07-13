@@ -4,7 +4,7 @@ const openZmeter = {
     Vue.prototype.CBOR = CBOR;
     Vue.prototype.PostToastError = null;
     Vue.prototype.Post = (url, params) => {
-      const CommMode = 'application/json';
+      const CommMode = 'application/cbor';
       return new Promise(function(resolve, reject) {
         Vue.http.post(url, (CommMode == 'application/cbor') ? CBOR.encode(params) : params, { responseType: (CommMode == 'application/cbor') ? 'arraybuffer' : 'json', headers: { 'Accept': CommMode, 'Content-Type': CommMode } }).then(
           (result) => {
