@@ -22,11 +22,11 @@ build_nanopi_air:
     - cd Tmp/openWRT_nanopi_air
     - mkdir -p Package
     - mkdir -p Package/usr/sbin
-    - mv openZmeter Package/usr/sbin/
+    - cp openZmeter Package/usr/sbin/
     - mkdir -p Package/CONTROL
     - |
       cat > Package/CONTROL/control << EOF
-      Package: openZmeter-${BUILD_NAME}
+      Package: openZmeter-${BUILD_BRANCH}
       Version: ${BUILD_DATE}
       Section: base
       Priority: optional
@@ -61,4 +61,3 @@ build_nanopi_air:
       EOF
     - chmod +x Package/etc/init.d/openZmeter
     - ipkg-build -o root -g root Package .
-
