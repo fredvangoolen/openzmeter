@@ -1,4 +1,4 @@
-update=Sat Jul 10 23:51:08 2021
+update=mar 13 jul 2021 17:46:04 CEST
 version=1
 last_client=kicad
 [cvpcb]
@@ -83,7 +83,7 @@ Name=In1.Cu_(GND)
 Type=0
 Enabled=1
 [pcbnew/Layer.In2.Cu]
-Name=In2.Cu_(Power)
+Name=In2.Cu
 Type=0
 Enabled=1
 [pcbnew/Layer.In3.Cu]
@@ -199,7 +199,7 @@ Name=In30.Cu
 Type=0
 Enabled=0
 [pcbnew/Layer.B.Cu]
-Name=B.Cu
+Name=B.Cu_(Power)
 Type=0
 Enabled=1
 [pcbnew/Layer.B.Adhes]
