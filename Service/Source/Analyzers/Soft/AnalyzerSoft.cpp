@@ -38,8 +38,6 @@ AnalyzerSoft::AnalyzerSoft(const string &id, const Analyzer::AnalyzerMode mode, 
   LogFile::Debug("Creating tables for analyzer '%s'", pSerial.c_str());
   Database DB(pSerial, true);
   DB.ExecResource("SQL/Database_Analyzer.sql");
-  pCyclicHistogram = new AnalyzerSoftCyclicHistogram(id, 200, 4096); // Setup cyclic histogram manager
-  pJoltAlgorithm  = new AnalyzerSoftJoltAlgorithm(id); // Setup jolt manager
   pMutex          = PTHREAD_MUTEX_INITIALIZER;
   pCond           = PTHREAD_COND_INITIALIZER;
   pTerminate      = false;
@@ -73,6 +71,8 @@ AnalyzerSoft::AnalyzerSoft(const string &id, const Analyzer::AnalyzerMode mode, 
     TaskPool::SetThreadProperties(pThread, TaskPool::ABOUTNORMAL);
   }
   Config(CheckConfig(ConfigFile::ReadConfig(optionPath), mode, false));
+  pCyclicHistogram = new AnalyzerSoftCyclicHistogram(id, (int)(pNominalVoltage * 1.7), 4096); // Setup cyclic histogram manager
+  pJoltAlgorithm  = new AnalyzerSoftJoltAlgorithm(id); // Setup jolt manager
   LogFile::Info("AnalyzerSoft with serial '%s' started", pSerial.c_str());
 }
 AnalyzerSoft::~AnalyzerSoft() {
@@ -202,6 +202,9 @@ void AnalyzerSoft::Thread() {
     pWorkingBlock = pPendingBlocks.front();
     pPendingBlocks.pop_front();
     if(pthread_mutex_unlock(&pMutex) != 0) LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
+    pCyclicHistogram->AddPoints(pWorkingBlock, (int)pSamplerate);
+    pJoltAlgorithm->AddPoints(pWorkingBlock);
+
     uint64_t Start     = Tools::GetTime64();
     uint16_t BlockSize = pWorkingBlock->Samples();
     pAggreg200MS->Reset();

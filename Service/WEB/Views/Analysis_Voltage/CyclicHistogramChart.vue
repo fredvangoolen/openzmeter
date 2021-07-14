@@ -3,15 +3,25 @@
     <div class="panel-heading clearfix">
       <div class="header-text">Cyclic Histogram</div>
     </div>
-    <div class="col-lg-8 col-md-12" style="padding: 50px;">
+    <div class="col-lg-8 col-md-12" style="padding: 50px">
       <div id="graphCyclicHistogram"></div>
     </div>
-    <div class="col-lg-4 col-md-12" style="padding: 50px;">
+    <div class="col-lg-4 col-md-12" style="padding: 50px">
       <h3>Cyclic Histogram Information</h3>
-      <p>Capture Start Time: {{starttime_str}} ({{starttime_ago_str}})</p>
-      <p>Capture End Time: {{endtime_str}} ({{endtime_ago_str}})</p>
-      <p v-if="id!=null">Event Start Time: {{event_starttime_str}} ({{event_starttime_ago_str}})</p>
-      <button type="button" class="btn btn-primary" @click="UpdateCyclicHistogramData">Refresh Chart</button>
+      <p>Capture Start Time: {{ starttime_str }} ({{ starttime_ago_str }})</p>
+      <p>Capture End Time: {{ endtime_str }} ({{ endtime_ago_str }})</p>
+      <p v-if="id != null">
+        Event Start Time: {{ event_starttime_str }} ({{
+          event_starttime_ago_str
+        }})
+      </p>
+      <button
+        type="button"
+        class="btn btn-primary"
+        @click="UpdateCyclicHistogramData"
+      >
+        Refresh Chart
+      </button>
     </div>
   </div>
 </template>
@@ -22,7 +32,7 @@ import Plotly from "plotly.js-dist";
 import * as oZm from "JS/openZmeter.js";
 export default {
   props: { analyzer: Object, id: "string" },
-  created: function() {
+  created: function () {
     this.event_id = this.$route.params.id;
     this.timer = setInterval(this.UpdateCyclicHistogramTimes, 5000);
     this.UpdateCyclicHistogramData();
@@ -33,14 +43,19 @@ export default {
   },
   methods: {
     UpdateCyclicHistogramData() {
-      this.$http
-        .post("getCyclicHistogram", {
+      fetch("getCyclicHistogram", {
+        method: "POST",
+        body: JSON.stringify({
           ID: this.event_id,
-          Analyzer: this.analyzer.Analyzer
-        })
-        .then(
-          result => {
-            let data = result.body;
+          Analyzer: this.analyzer.Analyzer,
+        }),
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json",
+        },
+      }).then((result) => {
+        if (result.status == 200) {
+          result.json().then((data) => {
             this.cyclicHistogramData = data.points;
 
             this.starttime = moment(data.starttime);
@@ -59,12 +74,12 @@ export default {
                 "dddd, MMM D, YYYY hh:mm:ss.SSS"
               );
             }
-          },
-          fail => {
-            this.cyclicHistogramData = [];
-            alert("Cyclic Histogram samples are not avaliable right now.");
-          }
-        );
+          });
+        } else {
+          this.cyclicHistogramData = [];
+          alert("Cyclic Histogram samples are not avaliable right now.");
+        }
+      });
     },
     UpdateCyclicHistogramChart() {
       this.graphCyclicHistogram = document.getElementById(
@@ -75,11 +90,11 @@ export default {
 
       let z_min = Math.min.apply(
         Math,
-        this.cyclicHistogramData.map(x => x.count)
+        this.cyclicHistogramData.map((x) => x.count)
       );
       let z_max = Math.max.apply(
         Math,
-        this.cyclicHistogramData.map(x => x.count)
+        this.cyclicHistogramData.map((x) => x.count)
       );
 
       // Build the color scale
@@ -98,7 +113,7 @@ export default {
           [get_colorscale_normalized_value(1, z_max), "rgb(255,200,0)"],
           [get_colorscale_normalized_value(2, z_max), "rgb(255,155,0)"],
           [get_colorscale_normalized_value(3, z_max), "rgb(255,96,0)"],
-          [1, "rgb(255,0,0)"]
+          [1, "rgb(255,0,0)"],
         ];
       } else {
         colorscale = [
@@ -110,22 +125,22 @@ export default {
           [0.625, "rgb(255,200,0)"],
           [0.75, "rgb(255,155,0)"],
           [0.875, "rgb(255,96,0)"],
-          [1, "rgb(255,0,0)"]
+          [1, "rgb(255,0,0)"],
         ];
       }
 
       let phases = [0, 1, 2];
 
-      phases.forEach(phase => {
+      phases.forEach((phase) => {
         let points_filtered = this.cyclicHistogramData.filter(
-          x => x.phase == phase
+          (x) => x.phase == phase
         );
         let phase_number = phase + 1;
 
         let new_trace = {
-          x: points_filtered.map(x => x.sample),
-          y: points_filtered.map(x => x.voltage_bin),
-          z: points_filtered.map(x => x.count),
+          x: points_filtered.map((x) => x.sample),
+          y: points_filtered.map((x) => x.voltage_bin),
+          z: points_filtered.map((x) => x.count),
           name: "Phase " + phase_number,
           type: "heatmap",
           coloraxis: "coloraxis",
@@ -133,7 +148,7 @@ export default {
           zmin: z_min,
           zmax: z_max,
           connectgaps: false,
-          hoverongaps: false
+          hoverongaps: false,
         };
 
         if (phase != 0) {
@@ -151,12 +166,12 @@ export default {
         legend: {
           orientation: "h",
           x: 0.1,
-          y: 1.2
+          y: 1.2,
         },
         margin: { t: 0 },
         coloraxis: { colorscale: colorscale },
         plot_bgcolor: "#000000",
-        paper_bgcolor: "#F1F1F1"
+        paper_bgcolor: "#F1F1F1",
       };
       let config = { responsive: true };
       Plotly.react(this.graphCyclicHistogram, traces, layout, config);
@@ -177,7 +192,7 @@ export default {
       if (this.event_id != null) {
         this.event_starttime_ago_str = this.event_starttime.fromNow();
       }
-    }
+    },
   },
   data() {
     return {
@@ -194,16 +209,16 @@ export default {
       endtime_ago_str: "",
       event_starttime_ago_str: "",
       timer_momentjs: "",
-      timer: null
+      timer: null,
     };
   },
   watch: {
-    cyclicHistogramData: function() {
+    cyclicHistogramData: function () {
       this.UpdateCyclicHistogramTimes();
       this.UpdateCyclicHistogramChart();
-    }
+    },
   },
-  computed: {}
+  computed: {},
 };
 </script>
 

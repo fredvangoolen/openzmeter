@@ -3,14 +3,16 @@
     <div class="panel-heading clearfix">
       <div class="header-text">Jolt</div>
     </div>
-    <div class="col-lg-8 col-md-12" style="padding: 50px;">
+    <div class="col-lg-8 col-md-12" style="padding: 50px">
       <div id="graphJolt"></div>
     </div>
-    <div class="col-lg-4 col-md-12" style="padding: 50px;">
+    <div class="col-lg-4 col-md-12" style="padding: 50px">
       <h3>Jolt Information</h3>
-      <p>Start Time: {{startTime_str}}</p>
-      <p>End Time: {{endTime_str}}</p>
-      <button type="button" class="btn btn-primary" @click="UpdateJoltData">Refresh Chart</button>
+      <p>Start Time: {{ startTime_str }}</p>
+      <p>End Time: {{ endTime_str }}</p>
+      <button type="button" class="btn btn-primary" @click="UpdateJoltData">
+        Refresh Chart
+      </button>
     </div>
   </div>
 </template>
@@ -21,7 +23,7 @@ import Plotly from "plotly.js-dist";
 import * as oZm from "JS/openZmeter.js";
 export default {
   props: { analyzer: Object, range: [String, Array] },
-  created: function() {
+  created: function () {
     this.UpdateRange();
     this.timer = setInterval(this.UpdateJoltInformation, 5000);
 
@@ -32,7 +34,7 @@ export default {
     clearInterval(this.timer);
   },
   methods: {
-    UpdateRange: function() {
+    UpdateRange: function () {
       if (this.range != null) {
         if (typeof this.range == "string") {
           // Parse predefined range string
@@ -94,28 +96,34 @@ export default {
         this.endTime = null;
       }
     },
-    UpdateJoltData: function() {
+    UpdateJoltData: function () {
       if (this.startTime != null && this.endTime != null) {
-        this.$http
-          .post("getJoltData", {
+        fetch("getJoltData", {
+          method: "POST",
+          body: JSON.stringify({
             StartTime: this.startTime.valueOf(),
             EndTime: this.endTime.valueOf(),
-            Analyzer: this.analyzer.Analyzer
-          })
-          .then(
-            result => {
-              this.joltData = result.body.points;
-            },
-            fail => {
-              this.joltData = [];
-              alert("Jolt data samples are not avaliable right now.");
-            }
-          );
+            Analyzer: this.analyzer.Analyzer,
+          }),
+          headers: {
+            Accept: "application/json",
+            "Content-Type": "application/json",
+          },
+        }).then((result) => {
+          if (result.status == 200) {
+            result.json().then((data) => {
+              this.joltData = data.points;
+            });
+          } else {
+            this.joltData = [];
+            alert("Jolt data samples are not avaliable right now.");
+          }
+        });
       } else {
         this.joltData = [];
       }
     },
-    UpdateChart: function() {
+    UpdateChart: function () {
       this.graphJolt = document.getElementById("graphJolt");
 
       let points = this.joltData;
@@ -123,40 +131,40 @@ export default {
 
       let phases = [0, 1, 2];
 
-      phases.forEach(function(phase) {
-        let points_filtered = points.filter(x => x.phase == phase);
+      phases.forEach(function (phase) {
+        let points_filtered = points.filter((x) => x.phase == phase);
         let phase_number = phase + 1;
 
         traces.push({
-          x: points_filtered.map(x =>
+          x: points_filtered.map((x) =>
             moment(x.time).format("YYYY-MM-DD HH:mm:ss")
           ),
-          y: points_filtered.map(x => x.avg),
+          y: points_filtered.map((x) => x.avg),
           name: "Phase " + phase_number + ", Avg",
           mode: "lines+markers",
-          showlegend: true
+          showlegend: true,
         });
 
         traces.push({
-          x: points_filtered.map(x =>
+          x: points_filtered.map((x) =>
             moment(x.time).format("YYYY-MM-DD HH:mm:ss")
           ),
-          y: points_filtered.map(x => x.min),
+          y: points_filtered.map((x) => x.min),
           name: "Phase " + phase_number + ", Min",
           mode: "lines+markers",
           showlegend: true,
-          visible: "legendonly"
+          visible: "legendonly",
         });
 
         traces.push({
-          x: points_filtered.map(x =>
+          x: points_filtered.map((x) =>
             moment(x.time).format("YYYY-MM-DD HH:mm:ss")
           ),
-          y: points_filtered.map(x => x.max),
+          y: points_filtered.map((x) => x.max),
           name: "Phase " + phase_number + ", Max",
           mode: "lines+markers",
           showlegend: true,
-          visible: "legendonly"
+          visible: "legendonly",
         });
       });
 
@@ -166,7 +174,7 @@ export default {
         xaxis: { title: "Time" },
         yaxis: { title: "Jolt [V/s³]" },
         plot_bgcolor: "#000000",
-        paper_bgcolor: "#F1F1F1"
+        paper_bgcolor: "#F1F1F1",
       };
       let config = { responsive: true };
       Plotly.react(this.graphJolt, traces, layout, config);
@@ -174,18 +182,24 @@ export default {
     UpdateJoltInformation() {
       if (this.startTime != null) {
         this.startTime_str =
-          this.startTime.format("dddd, MMM D, YYYY hh:mm:ss.SSS") + " (" + this.startTime.fromNow() + ")";
+          this.startTime.format("dddd, MMM D, YYYY hh:mm:ss.SSS") +
+          " (" +
+          this.startTime.fromNow() +
+          ")";
       } else {
         this.startTime_str = "";
       }
 
       if (this.endTime != null) {
         this.endTime_str =
-          this.endTime.format("dddd, MMM D, YYYY hh:mm:ss.SSS") + " (" + this.endTime.fromNow() + ")";
+          this.endTime.format("dddd, MMM D, YYYY hh:mm:ss.SSS") +
+          " (" +
+          this.endTime.fromNow() +
+          ")";
       } else {
         this.endTime_str = "";
       }
-    }
+    },
   },
   data() {
     return {
@@ -195,25 +209,25 @@ export default {
       endTime: null,
       startTime_str: "",
       endTime_str: "",
-      joltData: []
+      joltData: [],
     };
   },
   watch: {
-    range: function() {
+    range: function () {
       this.UpdateRange();
       this.UpdateJoltData();
     },
-    startTime: function() {
+    startTime: function () {
       this.UpdateJoltInformation();
     },
-    endTime: function() {
+    endTime: function () {
       this.UpdateJoltInformation();
     },
-    joltData: function() {
+    joltData: function () {
       this.UpdateChart();
-    }
+    },
   },
-  computed: {}
+  computed: {},
 };
 </script>
 

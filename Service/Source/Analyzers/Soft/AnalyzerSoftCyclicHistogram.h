@@ -11,7 +11,7 @@ class AnalyzerSoftCyclicHistogram final
 public:
     AnalyzerSoftCyclicHistogram(const string &analyzer_schema, uint32_t nominalVoltage, size_t voltageBinSize = 512);
     ~AnalyzerSoftCyclicHistogram();
-    void AddPoints(AnalyzerSoftBlock *inputBlock);
+    void AddPoints(AnalyzerSoftBlock *inputBlock, int sampleRate);
     json GetCyclicHistogramForEvent(uint64_t eventStartTime);
     json GetCurrentCyclicHistogram();
     void WriteToDisk();

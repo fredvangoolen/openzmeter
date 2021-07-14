@@ -25,15 +25,18 @@ AnalyzerSoftCyclicHistogram::~AnalyzerSoftCyclicHistogram()
     DB = NULL;
 }
 
-void AnalyzerSoftCyclicHistogram::AddPoints(AnalyzerSoftBlock *inputBlock)
+void AnalyzerSoftCyclicHistogram::AddPoints(AnalyzerSoftBlock *inputBlock, int sampleRate)
 {
-    size_t usableSamplesPerPhase = inputBlock->Samples();
+    uint16_t numSamples = inputBlock->Samples();
     uint8_t numPhases = inputBlock->VoltageChannels();
+    uint32_t numNominalSamplesPerCycle = sampleRate / (int)inputBlock->NominalFrequency();
 
-    uint32_t numSamplesCycle = inputBlock->Cycles();
+    //LogFile::Warning("numSamples: %u", numSamples);
+    //LogFile::Warning("numPhases: %u", numPhases);
+    //LogFile::Warning("numNominalSamplesPerCycle: %u", numNominalSamplesPerCycle);
 
     // Log the current time as the end time for this histogram
-    endTime = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+    endTime = Tools::GetTime64();
 
     if (startTime == 0)
     {
@@ -58,10 +61,10 @@ void AnalyzerSoftCyclicHistogram::AddPoints(AnalyzerSoftBlock *inputBlock)
     // Check if inner vectors are large enough to hold individual phase's samples
     for (uint8_t phaseNumber = 0; phaseNumber < numPhases; phaseNumber++)
     {
-        if (numSamplesCycle > cumulativeCount[phaseNumber].size())
+        if (numNominalSamplesPerCycle > cumulativeCount[phaseNumber].size())
         {
             // Resize the cumulative count array to fit all data
-            ResizeCumulativeCount(phaseNumber, numSamplesCycle);
+            ResizeCumulativeCount(phaseNumber, numNominalSamplesPerCycle);
         }
     }
 
@@ -69,7 +72,7 @@ void AnalyzerSoftCyclicHistogram::AddPoints(AnalyzerSoftBlock *inputBlock)
     uint32_t cycleStartIdx = 0;
     float cycleXDiff = 0;
     // Find the index of each zero-crossing instance (from - to +)
-    for (uint32_t i = 0; i < (usableSamplesPerPhase - 1); i++)
+    for (uint16_t i = 0; i < (numSamples - 1); i++)
     {
         for (uint8_t phaseNumber = 0; phaseNumber < numPhases; phaseNumber++)
         {
@@ -126,7 +129,7 @@ void AnalyzerSoftCyclicHistogram::AddPoints(AnalyzerSoftBlock *inputBlock)
                     uint32_t binIndex = ((voltageNew + nominalVoltage) / (2 * nominalVoltage)) * (voltageBinSize - 1);
 
                     size_t sampleIdx = i - cycleStartIdx;
-                    if (sampleIdx < numSamplesCycle)
+                    if (sampleIdx < numNominalSamplesPerCycle)
                     {
                         if (phaseNumber == 0 && sampleIdx == 0)
                             continue;
