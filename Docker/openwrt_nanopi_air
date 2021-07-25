@@ -28,6 +28,8 @@ RUN make package/dbus/compile V=sc -j1
 RUN make package/libusb/compile V=sc -j1
 RUN BUILD_VARIANT="single" make package/fftw3/compile V=sc -j1
 RUN make package/util-linux/compile V=sc -j1
+RUN make package/glib2/compile V=sc -j1
+RUN make package/bluez/compile V=sc -j1
 
 #Clean intermediate files --------------------------------------------------
 #RUN cd /opt/openWRT_SDK && rm -rf build_dir

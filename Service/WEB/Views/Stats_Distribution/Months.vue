@@ -13,11 +13,8 @@
 </template>
 
 <script>
-  import vuetable from 'vuetable-2';
   import moment from 'moment';
   import 'moment-timezone';
-  import 'CSS/table-responsive.css';
-  import * as oZm from 'JS/openZmeter.js';
   var Names = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
   export default {
     props: { data: Array, analyzer: Object },
@@ -69,11 +66,7 @@
           this.ExportData.push(Row);
         }
       }
-    },
-    updated: function(){
-      oZm.createCaptionsForResponsiveTable(this.$refs.table);
-    },
-    components: { vuetable }
+    }
   }
 </script>
 

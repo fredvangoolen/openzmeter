@@ -1,19 +1,42 @@
 <template>
-  <div id="app">
+  <div id="app" v-if="User!=null">
     <div class="sidenav-overlay" :class="{ 'overlay-enabled': Expanded }" @mouseenter="CloseBar"></div>
     <topbar :analyzer="Analyzer" @expandmenu="ShowBar" :expanded="Expanded" :status="TransferStatus.Data"></topbar>
     <sidebar :analyzer.sync="Analyzer" :user.sync="User" @expandmenu="ShowBar" :expanded="Expanded" :status="TransferStatus.Data"></sidebar>
     <router-view :analyzer="Analyzer" :user="User" id="contents"></router-view>
     <portal-target name="dialogs" :multiple="true"></portal-target>
+    <offline v-if="NoNetwork"></offline>
   </div>
+  <router-view v-else :user.sync="User"></router-view>
 </template>
 
 <script>
   import Topbar from './Topbar.vue';
   import Sidebar from './Sidebar.vue';
+  import Offline from './Offline.vue';
   export default {
     data: function() {
-      return { Analyzer: null, User: null, Expanded: false, CloseTimer: null, TransferStatus: this.StatusTransfer(['Events', 'Alarms']) };
+      return { Analyzer: null, User: null, Expanded: false, CloseTimer: null, NoNetwork: false, TransferStatus: this.StatusTransfer(['Events', 'Alarms']) };
+    },
+    created: function() {
+      window.EventBus.$on('UserUnathorized', () => {
+        localStorage.setItem("UserName", undefined);
+        this.$router.replace('Login');
+        this.User = null;
+      });
+      window.EventBus.$on('NoNetwork', (b) => { this.NoNetwork = b; });
+      if(window.LocalConnection == true) {
+        this.$router.replace('Config');
+      } else {
+        this.Post('getUser', { User: localStorage.getItem("UserName") }).then(
+          (result) => { this.User = result; },
+          () => {
+            localStorage.setItem("UserName", undefined);
+            this.$router.replace('Login');
+            this.User = null;
+          }
+        );
+      }
     },
     watch: {
       Analyzer: function() {
@@ -29,7 +52,7 @@
         this.CloseTimer = setTimeout(() => { this.Expanded = false; }, 250);
       }
     },
-    components: { Topbar,  Sidebar }
+    components: { Topbar, Sidebar, Offline }
   }
 </script>
 

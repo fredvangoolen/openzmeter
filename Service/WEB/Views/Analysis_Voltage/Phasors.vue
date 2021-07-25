@@ -67,9 +67,7 @@
   import moment from 'moment';
   import Dygraph from 'JS/dygraph.js';
   import Graph from 'Components/Graph.vue';
-  import vuetable from 'vuetable-2';
   import Complex from 'complex';
-  import 'CSS/table-responsive.css';
   export default {
     props: { analyzer: Object, data: Object, paused: Boolean },
     data: function() {
@@ -308,7 +306,7 @@
         this.SequenceHeight = Math.min(600, this.$refs.SequenceContainer.clientWidth - 30);
       }
     },
-    components: { Graph, vuetable }
+    components: { Graph }
   }
 </script>
 

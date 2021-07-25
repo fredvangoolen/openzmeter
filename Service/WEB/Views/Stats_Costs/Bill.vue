@@ -63,11 +63,9 @@
 </template>
 
 <script>
-  import * as oZm from 'JS/openZmeter.js';
   import Dygraph from 'JS/dygraph.js';
   import moment from 'moment';
   import Graph from 'Components/Graph.vue';
-  import vuetable from 'vuetable-2';
   export default {
     props: { bill: Object, analyzer: Object },
     data: function() {
@@ -163,8 +161,7 @@
       TermFormat: function(val) {
         return (val == 'COST_ENERGY') ? 'Energy' : (val == 'COST_POWER') ? 'Power' : 'General';
       }
-    },
-    components: { vuetable }
+    }
   }
 </script>
 

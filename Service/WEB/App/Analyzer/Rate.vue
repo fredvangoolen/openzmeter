@@ -56,7 +56,7 @@
         </div>
         <div class="col-xs-12"><hr style="margin-top: 10px; margin-bottom: 5px;"/></div>
         <div class="col-xs-12" style="margin-top: 5px">
-          <button type="button" class="btn btn-default btn-xs btn-danger" style="width:100%" @click="LoadTariffs()">Change tariff template</button>
+          <button type="button" class="btn btn-default btn-xs btn-danger btn-block" @click="LoadTariffs()">Change tariff template</button>
         </div>
       </div>
       <div class="row" v-if="View=='Periods'">
@@ -247,8 +247,6 @@
 </template>
 
 <script>
-  import vuetable from 'vuetable-2';
-  import * as oZm from 'JS/openZmeter.js';
   import moment from 'moment';
   export default {
     props: { analyzer: Object, rate: Number },
@@ -367,8 +365,7 @@
         }
         this.$set(this.Rate, 'Billing', Bills);
       }
-    },
-    components: { vuetable }
+    }
   }
 </script>
 

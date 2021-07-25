@@ -51,10 +51,6 @@
   import AnalyzerMaintenance from './Maintenance.vue';
   import AnalyzerAlarms from './Alarms.vue';
   import AnalyzerRemote from './Remote.vue';
-  import Vuetable from 'vuetable-2';
-  import 'CSS/table-responsive.css';
-  import * as oZm from 'JS/openZmeter.js';
-  import CBOR from 'cbor-js';
   export default {
     props: { analyzer: Object },
     data() {
@@ -67,9 +63,6 @@
           { name: '__slot:actions', title: '' }
         ]
       };
-    },
-    updated: function(){
-      oZm.createCaptionsForResponsiveTable(this.$refs.table);
     },
     mounted: function() {
       this.GetAnalyzers();
@@ -125,7 +118,7 @@
         this.$emit('close');
       }
     },
-    components: { Vuetable, AnalyzerRemote, AnalyzerConfigure, AnalyzerRates, AnalyzerMaintenance, AnalyzerAlarms, AnalyzerPermissions }
+    components: { AnalyzerRemote, AnalyzerConfigure, AnalyzerRates, AnalyzerMaintenance, AnalyzerAlarms, AnalyzerPermissions }
   }
 </script>
 
