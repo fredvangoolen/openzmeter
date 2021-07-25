@@ -61,4 +61,3 @@ build_nanopi_air:
       EOF
     - chmod +x Package/etc/init.d/openZmeter
     - ipkg-build -o root -g root Package .
-

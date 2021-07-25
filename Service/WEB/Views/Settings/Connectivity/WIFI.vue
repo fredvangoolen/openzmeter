@@ -81,7 +81,6 @@
 </template>
 
 <script>
-  import Vuetable from 'vuetable-2';
   export default {
     props: { settings: Object },
     data() {
@@ -162,8 +161,7 @@
           }
         );
       }
-    },
-    components: { Vuetable }
+    }
   }
 </script>
 

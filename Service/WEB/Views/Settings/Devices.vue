@@ -22,14 +22,11 @@
 </template>
 
 <script>
-  import Vuetable from 'vuetable-2';
   import DeviceVirtual from './Devices/Virtual.vue';
   import DeviceV1 from './Devices/V1.vue';
   import DeviceV2 from './Devices/V2.vue';
   import DeviceV3 from './Devices/V3.vue';
   import DeviceRemote from './Devices/Remote.vue';
-  import 'CSS/table-responsive.css';
-  import * as oZm from 'JS/openZmeter.js';
   export default {
     data() {
       return { Devices: [], ShowSpinner: true, Driver: null, Settings: null, Enabled: false,
@@ -80,10 +77,7 @@
     mounted: function () {
       this.LoadTable();
     },
-    updated: function () {
-      oZm.createCaptionsForResponsiveTable(this.$refs.table);
-    },
-    components: {Vuetable, DeviceVirtual, DeviceV1, DeviceV2, DeviceV3, DeviceRemote}
+    components: { DeviceVirtual, DeviceV1, DeviceV2, DeviceV3, DeviceRemote }
   }
 </script>
 

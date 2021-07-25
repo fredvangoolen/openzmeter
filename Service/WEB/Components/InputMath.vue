@@ -32,8 +32,6 @@
 <script>
   import 'highlight-within-textarea/jquery.highlight-within-textarea.js';
   import 'highlight-within-textarea/jquery.highlight-within-textarea.css';
-  import vuetable from 'vuetable-2';
-  import 'CSS/table-responsive.css';
   export default {
     props: { value: String, vars: Array },
     data: function() {
@@ -84,8 +82,7 @@
           $('.hl_textarea').focus();
         }, 100);
       }
-    },
-    components: { vuetable }
+    }
   }
 </script>
 

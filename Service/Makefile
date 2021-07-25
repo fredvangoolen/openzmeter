@@ -70,7 +70,7 @@ endif
 # Build steps
 $(WEB_TARGET): $(WEB_SOURCE)
 	@echo "Building WEB interface"
-	@rm -f $(WEB_TARGET)
+	@rm -f Tmp/*.js
 	@if [ ! -d "WEB/node_modules" ]; then cd WEB; npm install; fi
 	@cd WEB; npm run --silent build
 

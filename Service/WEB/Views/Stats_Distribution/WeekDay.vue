@@ -15,9 +15,6 @@
 <script>
   import moment from 'moment';
   import 'moment-timezone';
-  import vuetable from 'vuetable-2';
-  import 'CSS/table-responsive.css';
-  import * as oZm from 'JS/openZmeter.js';
   var Names = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
   export default {
     props: { data: Array, analyzer: Object },
@@ -71,11 +68,7 @@
           this.ExportData.push(Row);
         }
       }
-    },
-    updated: function(){
-      oZm.createCaptionsForResponsiveTable(this.$refs.table);
-    },
-    components: { vuetable }
+    }
   }
 </script>
 

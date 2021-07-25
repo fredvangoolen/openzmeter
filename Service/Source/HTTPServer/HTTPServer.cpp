@@ -31,6 +31,7 @@
 #include "HTTPRequestPool.h"
 #include "MessageLoop.h"
 #include "TaskPool.h"
+#include "BluetoothManager.h"
 //----------------------------------------------------------------------------------------------------------------------
 map<string, HTTPServer::Callback_t> __attribute__((init_priority(200))) HTTPServer::pCallbacks;
 map<string, string>                 __attribute__((init_priority(200))) HTTPServer::pComponents;
@@ -209,29 +210,13 @@ void HTTPServer::HandleGet(const Request &request, Response &response) {
     };
     return response.set_chunked_content_provider(MimeType(URL).c_str(), Func);
   }
-  if(request.has_header("Cookie")) {
-    string Cookie = "";
-    string Header = request.get_header_value("Cookie");
-    auto Begin = Header.find("SESSION=");
-    if(Begin != string::npos) Cookie = Header.substr(Begin + 8, Header.find(';', Begin) - Begin - 8);
-    if(Cookie != "") {
-      Database DB;
-      DB.ExecSentenceAsyncResult("SELECT id, username FROM sessions WHERE id = " + DB.Bind(Cookie));
-      if(DB.FecthRow()) UserName = DB.ResultString("username");
-    }
-  }
-  if(URL == "Login") {
-    if(UserName != "") return response.set_redirect(pRelativePath.c_str());
-    response.set_content(PatchFile("WEB/Login.html", "{{ RELATIVE_PATH }}", pRelativePath), "text/html");
-    response.status = HTTP_OK;
-    return;
-  } else if(URL == "MainLogo.png") {
+  if(URL == "MainLogo.png") {
     response.set_content(pLogoImg, "image/png");
     response.status = HTTP_OK;
     return;
   }
-  if(UserName == "") return response.set_redirect(string(pRelativePath + "Login").c_str());
   string File = PatchFile("WEB/Index.html", "{{ VERSION }}", __BUILD_DATE__);
+  File = PatchString(File, "{{ LOCAL_CONNECTION }}", BluetoothManager::InNetwork(request.remote_addr) ? "true" : "false");
   response.set_content(PatchString(File, "{{ RELATIVE_PATH }}", pRelativePath), "text/html");
   response.status = HTTP_OK;
   return;

@@ -40,9 +40,6 @@
 </template>
 
 <script>
-  import * as oZm from 'JS/openZmeter.js';
-  import vuetable from 'vuetable-2';
-  import 'CSS/table-responsive.css';
   export default {
     props: { settings: Object },
     data() {
@@ -59,9 +56,6 @@
       CanAdd: function() {
         return (this.NewAnalyzer.match("^[0-9A-F]{24}(_CAL|_CH1|_CH2|_CH3|_CH4)?(_1P|_3P|_3PN)$") != null);
       }
-    },
-    updated: function() {
-      oZm.createCaptionsForResponsiveTable(this.$refs.table);
     },
     created: function() {
       this.Settings = Object.assign({}, this.settings);
@@ -97,8 +91,7 @@
           }
         );
       }
-    },
-    components: { vuetable }
+    }
   }
 </script>
 

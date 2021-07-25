@@ -237,7 +237,6 @@
 </template>
 
 <script>
-  import vuetable from 'vuetable-2';
   import moment from 'moment';
   export default {
     props: { tariff: Object, source: Object },
@@ -350,8 +349,7 @@
           }
         );
       }
-    },
-    components: { vuetable }
+    }
   }
 </script>
 

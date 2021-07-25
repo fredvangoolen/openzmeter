@@ -59,7 +59,6 @@
 </template>
 
 <script>
-  import vuetable from 'vuetable-2';
   export default {
     props: { settings: Object },
     data: function() {
@@ -141,8 +140,7 @@
           }
         );
       }
-    },
-    components: { vuetable }
+    }
   }
 </script>
 

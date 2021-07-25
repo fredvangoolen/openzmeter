@@ -34,8 +34,6 @@
 </template>
 
 <script>
-  import vuetable from 'vuetable-2';
-  import 'CSS/table-responsive.css';
   import * as oZm from 'JS/openZmeter.js';
   export default {
     props: { analyzer: Object },
@@ -49,9 +47,6 @@
           {name: '__slot:actions', title: ''}
         ]
       };
-    },
-    updated: function() {
-      oZm.createCaptionsForResponsiveTable(this.$refs.table);
     },
     created: function() {
       this.Analyzer = Object.assign({}, this.analyzer);
@@ -85,8 +80,7 @@
           }
         );
       }
-    },
-    components: { vuetable }
+    }
   }
 </script>
 

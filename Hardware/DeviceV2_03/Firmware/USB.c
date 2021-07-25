@@ -18,7 +18,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <string.h>
-#include "STM32F0xx.h"
+#include "stm32f303xc.h"
 #include "USB.h"
 // Configuration -------------------------------------------------------------------------------------------------------
 #define CDC_EP0_SIZE   0x08
@@ -181,37 +181,37 @@ void         USB_Enable(bool enable) {
             USB_CNTR_SUSPM | USB_CNTR_WKUPM
             ;
   } else if (RCC->APB1ENR & RCC_APB1ENR_USBEN) {
-    USB->BCDR = 0;
+//    USB->BCDR = 0;
     RCC->APB1RSTR |= RCC_APB1RSTR_USBRST;
     RCC->APB1ENR &= ~RCC_APB1ENR_USBEN;
   }
 }
 uint32_t     USB_GetInfo() {
   if(!(RCC->APB1ENR & RCC_APB1ENR_USBEN)) return STATUS_VAL(0);
-  if(USB->BCDR & USB_BCDR_DPPU) return STATUS_VAL(USBD_HW_ENABLED | USBD_HW_SPEED_FS);
+//  if(USB->BCDR & USB_BCDR_DPPU) return STATUS_VAL(USBD_HW_ENABLED | USBD_HW_SPEED_FS);
   return STATUS_VAL(USBD_HW_ENABLED);
 }
 uint8_t      USB_Connect(bool connect) {
   uint8_t res;
-  USB->BCDR = USB_BCDR_BCDEN | USB_BCDR_DCDEN;
-  if(USB->BCDR & USB_BCDR_DCDET) {
-    USB->BCDR = USB_BCDR_BCDEN | USB_BCDR_PDEN;
-    if(USB->BCDR & USB_BCDR_PS2DET) {
-      res = usbd_lane_unk;
-    } else if (USB->BCDR & USB_BCDR_PDET) {
-      USB->BCDR = USB_BCDR_BCDEN | USB_BCDR_SDEN;
-      if(USB->BCDR & USB_BCDR_SDET) {
-        res = usbd_lane_dcp;
-      } else {
-        res = usbd_lane_cdp;
-      }
-    } else {
-      res = usbd_lane_sdp;
-    }
-  } else {
-    res = usbd_lane_dsc;
-  }
-  USB->BCDR = (connect) ? USB_BCDR_DPPU : 0;
+//  USB->BCDR = USB_BCDR_BCDEN | USB_BCDR_DCDEN;
+//  if(USB->BCDR & USB_BCDR_DCDET) {
+//    USB->BCDR = USB_BCDR_BCDEN | USB_BCDR_PDEN;
+//    if(USB->BCDR & USB_BCDR_PS2DET) {
+//      res = usbd_lane_unk;
+//    } else if (USB->BCDR & USB_BCDR_PDET) {
+//      USB->BCDR = USB_BCDR_BCDEN | USB_BCDR_SDEN;
+//      if(USB->BCDR & USB_BCDR_SDET) {
+//        res = usbd_lane_dcp;
+//      } else {
+//        res = usbd_lane_cdp;
+//      }
+//    } else {
+//      res = usbd_lane_sdp;
+//    }
+//  } else {
+//    res = usbd_lane_dsc;
+//  }
+//  USB->BCDR = (connect) ? USB_BCDR_DPPU : 0;
   return res;
 }
 bool         USB_ConfigEP(uint8_t ep, uint8_t eptype, uint16_t epsize) {

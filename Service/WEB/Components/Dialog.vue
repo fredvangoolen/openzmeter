@@ -2,7 +2,7 @@
   <portal to="dialogs">
     <div class="modal" tabindex="1" role="dialog" data-backdrop="false" data-keyboard="false" ref="dialog">
       <div class="modal-backdrop in"></div>
-      <div class="modal-dialog" :class="{fullscreen: fullscreen}">
+      <div class="modal-dialog">
         <div class="modal-content">
           <div class="modal-header">
             <slot name="header"></slot>
@@ -22,7 +22,7 @@
 
 <script>
   export default {
-    props: { loading: Boolean, fullscreen: Boolean, progress: Number },
+    props: { loading: Boolean, progress: Number },
     data: function() {
       return { };
     },
@@ -42,22 +42,5 @@
     z-index: 1100;
     color: #333;
     font-size: 14px;
-  }
-  .modal-dialog.fullscreen {
-    z-index: 1100;
-    color: #333;
-    font-size: 14px;
-    width: 100%;
-    height: 100%;
-    padding: 0px;
-    margin: 0px !important;
-  }
-  .modal-dialog.fullscreen > .modal-content {
-    height: 100%;
-  }
-  @media (min-width: 640px) {
-    .modal-dialog.fullscreen {
-      padding: 10px;
-    }
   }
 </style>

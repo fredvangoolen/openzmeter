@@ -15,6 +15,7 @@
 // ---------------------------------------------------------------------------------------------------------------------
 #include "HTTPRequest.h"
 #include "HTTPServer.h"
+#include "BluetoothManager.h"
 // ---------------------------------------------------------------------------------------------------------------------
 HTTPRequest::HTTPRequest(const Request &request, Response *response) {
   pResponse = response;
@@ -58,9 +59,14 @@ HTTPRequest::HTTPRequest(const Request &request, Response *response) {
       if(DB.ExecSentenceAsyncResult("SELECT id, username FROM sessions WHERE id = " + DB.Bind(pCookie)) &&  DB.FecthRow()) pUserName = DB.ResultString("username");
     }
   }
-  if(pUserName.empty() && (request.remote_addr == "127.0.0.1") && pParams.contains("UserName") && pParams["UserName"].is_string()) {
-    pUserName = pParams["UserName"];
-    pParams.erase("UserName");
+  if(pUserName.empty()) {
+    if((request.remote_addr == "127.0.0.1") && pParams.contains("UserName") && pParams["UserName"].is_string()) {
+      pUserName = pParams["UserName"];
+      pParams.erase("UserName");
+    } else if(BluetoothManager::InNetwork(request.remote_addr)) {
+      pUserName = "admin";
+      pParams.erase("UserName");
+    }
   }
 }
 HTTPRequest::HTTPRequest(const json &params) {

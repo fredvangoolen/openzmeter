@@ -17,6 +17,8 @@
 #include "HTTPRequest.h"
 #ifdef OPENWRT
   #include <dbus/dbus.h>
+  #include <sys/ioctl.h>
+  #include <net/if.h>
 #endif
 // ---------------------------------------------------------------------------------------------------------------------
 class BluetoothManager final {
@@ -25,10 +27,10 @@ class BluetoothManager final {
     static volatile bool    pTerminate;    //Terminate flag
     static pthread_mutex_t  pMutex;        //Shared variables lock
     static pthread_t        pThread;       //bluetooth manager thread
-    static bool             pEnable;       //Enable or disable
-    static bool             pEnabled;      //Current status
     static string           pServerName;   //bluetooth network name
     static string           pInterface;    //bluetooth bridge name
+    static in_addr          pMask;         //Interface netmask
+    static in_addr          pIP;           //Interface IP
   private :
     static void     ToggleEnable();
     static string   GetMacBT(DBusConnection *bus);
@@ -42,8 +44,9 @@ class BluetoothManager final {
     static void     SetBluetoothCallback(HTTPRequest &req);
   public :
     static bool Enabled();
+    static bool InNetwork(const string &ip);
   public :
     BluetoothManager();
     ~BluetoothManager();
 };
-//----------------------------------------------------------------------------------------------------------------------
+// ---------------------------------------------------------------------------------------------------------------------

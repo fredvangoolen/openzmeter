@@ -6,9 +6,9 @@ USB.c:114:14:USB_GetNextPMA	12	static
 USB.c:123:14:USB_StallEP	12	static
 USB.c:159:14:USB_StalledEP	0	static
 USB.c:166:14:USB_Init	0	static
-USB.c:172:14:USB_Enable	8	static
+USB.c:172:14:USB_Enable	0	static
 USB.c:189:14:USB_GetInfo	0	static
-USB.c:194:14:USB_Connect	8	static
+USB.c:194:14:USB_Connect	0	static
 USB.c:217:14:USB_ConfigEP	24	static
 USB.c:286:14:USB_DeconfigEP	0	static
 USB.c:294:14:USB_RegisterEP	0	static

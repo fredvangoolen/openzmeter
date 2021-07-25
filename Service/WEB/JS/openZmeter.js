@@ -35,6 +35,21 @@ const openZmeter = {
         );
       });
     };
+/*    Vue.prototype.createCaptionsForResponsiveTable = (tableVue) => {
+      if(tableVue === undefined) return;
+      var headertext = [],
+      headers = tableVue.$el.querySelectorAll("th"),
+      tablebody = tableVue.$el.querySelector("tbody");
+      for(var i = 0; i < headers.length; i++) {
+        var current = headers[i];
+        headertext.push(current.textContent.replace(/\r?\n|\r/,""));
+      }
+      for (var i = 0, row; row = tablebody.rows[i]; i++) {
+        for (var j = 0, col; col = row.cells[j]; j++) {
+          col.setAttribute("data-th", headertext[j] + ':');
+        }
+      }
+    };*/
     Vue.prototype.PriceTransfer = (series) => {
       var Transfer = { Timer: null, CancelFunc: null, Data: null, Series: series, Analyzer: null, Aggreg: null, Range: null };
       Transfer.Destroy = () => {
@@ -522,26 +537,6 @@ export function RoundPlain(val, decimals) {
   var Colors = ['#d9534f', '#5cb85c', '#318ce7', '#333333'];
   return {Colors: Colors.slice(0, SerieLen), Width: (order == 0) ? 0.5 : 1.5 }
 }*/
-
-/**
- * Creates captions on stackable view (mobile devices) to create a card for each row.
- * @param {Table as vue object} tableVue
- */
-export function createCaptionsForResponsiveTable (tableVue) {
-  if(tableVue === undefined) return;
-  var headertext = [],
-  headers = tableVue.$el.querySelectorAll("th"),
-  tablebody = tableVue.$el.querySelector("tbody");
-  for(var i = 0; i < headers.length; i++) {
-    var current = headers[i];
-    headertext.push(current.textContent.replace(/\r?\n|\r/,""));
-  }
-  for (var i = 0, row; row = tablebody.rows[i]; i++) {
-    for (var j = 0, col; col = row.cells[j]; j++) {
-      col.setAttribute("data-th", headertext[j]);
-    }
-  }
-}
 
 ///* find abs max value of array (maybe array of arrays) */
 export function ArrayAbsMax(array) {
