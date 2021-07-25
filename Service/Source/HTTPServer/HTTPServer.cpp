@@ -216,8 +216,7 @@ void HTTPServer::HandleGet(const Request &request, Response &response) {
     return;
   }
   string File = PatchFile("WEB/Index.html", "{{ VERSION }}", __BUILD_DATE__);
-  File = PatchString(File, "{{ LOCAL_CONNECTION }}", "true");
-//  if(BluetoothManager::InNetwork(request.remote_addr)) response.set_header("X-LocalUser", "Bluetooth");
+  File = PatchString(File, "{{ LOCAL_CONNECTION }}", BluetoothManager::InNetwork(request.remote_addr) ? "true" : "false");
   response.set_content(PatchString(File, "{{ RELATIVE_PATH }}", pRelativePath), "text/html");
   response.status = HTTP_OK;
   return;

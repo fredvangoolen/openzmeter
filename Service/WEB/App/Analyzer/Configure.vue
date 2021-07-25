@@ -94,7 +94,6 @@
 </template>
 
 <script>
-  import Vuetable from 'vuetable-2';
   import moment from 'moment';
   export default {
     props: { analyzer: Object },
@@ -126,8 +125,7 @@
           }
         );
       }
-    },
-    components: { Vuetable }
+    }
   }
 </script>
 

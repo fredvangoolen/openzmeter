@@ -27,7 +27,6 @@
   import Dygraph from 'JS/dygraph.js';
   import Spinner from 'Components/Spinner.vue';
   import Graph from 'Components/Graph.vue';
-  import vuetable from 'vuetable-2';
   export default {
     data: function() {
       return { ShowWarning: true,  ShowSpinner: true, Time: 'Loading data...',
@@ -134,7 +133,7 @@
         this.ShowSpinner = false;
       }
     },
-    components: { Graph, vuetable }
+    components: { Graph }
   }
 </script>
 

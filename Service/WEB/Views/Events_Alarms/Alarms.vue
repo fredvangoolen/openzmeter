@@ -24,9 +24,7 @@
 </template>
 
 <script>
-  import Vuetable from 'vuetable-2';
   import moment from 'moment';
-  import * as oZm from 'JS/openZmeter.js';
   export default {
     props: { analyzer: Object, alarms: Object },
     data: function() {
@@ -105,8 +103,7 @@
         }
         return Object.seal(Export);
       }
-    },
-    components: { Vuetable }
+    }
   }
 </script>
 

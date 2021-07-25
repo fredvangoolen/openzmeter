@@ -110,17 +110,11 @@ bool BluetoothManager::Enabled() {
 bool BluetoothManager::InNetwork(const string &ip) {
 #ifdef OPENWRT
   in_addr Client;
-  printf("%s\n", ip.c_str());
   if(inet_aton(ip.c_str(), &Client) == 0) {
     LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
     return false;
   }
-  printf("Client: %08X, Interface: %08X, Mask: %08X\n", *((uint32_t*)&Client), *((uint32_t*)&pIP), *((uint32_t*)&pMask));
-
-
-
-  //printf("IP -> %s , Mask -> %s\n", inet_ntoa((in_addr)AdapterIP), inet_ntoa((in_addr)AdapterMask));
-  return true;
+  return ((pIP.s_addr & pMask.s_addr) == (Client.s_addr & pMask.s_addr));
 #else
   return false;
 #endif

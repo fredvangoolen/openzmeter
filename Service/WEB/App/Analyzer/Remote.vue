@@ -76,7 +76,6 @@
 </template>
 
 <script>
-  import vuetable from 'vuetable-2';
   export default {
     props: { analyzer: Object },
     data: function() {
@@ -115,8 +114,7 @@
           }
         );
       }
-    },
-    components: { vuetable }
+    }
   }
 </script>
 
