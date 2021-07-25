@@ -3273,41 +3273,30 @@ F 4 "Debug" V 4950 5550 50  0000 C CNN "Name"
 	1    4850 5550
 	-1   0    0    -1  
 $EndComp
-Text GLabel 5025 5825 0    50   Input ~ 0
+Text GLabel 4925 5775 0    50   Input ~ 0
 5V
 $Comp
 L power:GND #PWR0118
 U 1 1 67EFDF64
-P 6075 6325
-F 0 "#PWR0118" H 6075 6075 50  0001 C CNN
-F 1 "GND" V 6025 6375 50  0000 C CNN
-F 2 "" H 6075 6325 50  0000 C CNN
-F 3 "" H 6075 6325 50  0000 C CNN
-	1    6075 6325
-	0    -1   -1   0   
-$EndComp
-$Comp
-L Components:74LVC2G17 U13
-U 1 1 68051808
-P 5525 6025
-F 0 "U13" H 5425 6125 50  0000 C CNN
-F 1 "74LVC2G17" H 5562 6200 50  0001 C CNN
-F 2 "Footprints:SOT-23-6" H 5925 5775 50  0001 C CNN
-F 3 "http://www.ti.com/lit/sg/scyt129e/scyt129e.pdf" H 5925 5775 50  0001 C CNN
-	1    5525 6025
+P 5075 6350
+F 0 "#PWR0118" H 5075 6100 50  0001 C CNN
+F 1 "GND" H 4950 6275 50  0000 C CNN
+F 2 "" H 5075 6350 50  0000 C CNN
+F 3 "" H 5075 6350 50  0000 C CNN
+	1    5075 6350
 	1    0    0    -1  
 $EndComp
 Wire Wire Line
-	5050 6125 5225 6125
+	5050 6125 5100 6125
 $Comp
 L 3Phase-rescue:C_Small-3Phase-rescue C58
 U 1 1 687B03EC
-P 5550 5875
-F 0 "C58" V 5500 5925 50  0000 L CNN
-F 1 "100nF 25v" H 5560 5795 50  0001 L CNN
-F 2 "Footprints:C_0603_1608Metric" H 5550 5875 50  0001 C CNN
-F 3 "https://lcsc.com/product-detail/Multilayer-Ceramic-Capacitors-MLCC-SMD-SMT_SAMSUNG_CL10B104KA8NNNC_100nF-104-10-25V_C1590.html" H 5550 5875 50  0001 C CNN
-	1    5550 5875
+P 5700 5775
+F 0 "C58" V 5650 5600 50  0000 L CNN
+F 1 "100nF 25v" H 5710 5695 50  0001 L CNN
+F 2 "Footprints:C_0603_1608Metric" H 5700 5775 50  0001 C CNN
+F 3 "https://lcsc.com/product-detail/Multilayer-Ceramic-Capacitors-MLCC-SMD-SMT_SAMSUNG_CL10B104KA8NNNC_100nF-104-10-25V_C1590.html" H 5700 5775 50  0001 C CNN
+	1    5700 5775
 	0    1    -1   0   
 $EndComp
 $Comp
@@ -3901,7 +3890,7 @@ Wire Wire Line
 Wire Wire Line
 	7775 8775 7750 8775
 Wire Wire Line
-	5850 6225 6200 6225
+	5800 6225 6200 6225
 Wire Wire Line
 	6200 6525 5075 6525
 Wire Wire Line
@@ -4080,11 +4069,9 @@ Wire Wire Line
 Wire Wire Line
 	8600 4350 7750 4350
 Wire Wire Line
-	5050 6225 5225 6225
+	5050 6225 5100 6225
 Wire Wire Line
-	6075 6325 5875 6325
-Wire Wire Line
-	5850 6125 6125 6125
+	5800 6125 6125 6125
 Wire Wire Line
 	6125 6100 6125 6125
 Connection ~ 6125 6125
@@ -4105,26 +4092,6 @@ Wire Wire Line
 	6100 5650 6125 5650
 Wire Wire Line
 	6125 5650 6125 5800
-Wire Wire Line
-	5050 5650 5875 5650
-Wire Wire Line
-	5875 6325 5875 6025
-Connection ~ 5875 6325
-Wire Wire Line
-	5875 6325 5050 6325
-Connection ~ 5875 5650
-Wire Wire Line
-	5875 5650 5900 5650
-Wire Wire Line
-	5850 6025 5875 6025
-Connection ~ 5875 6025
-Wire Wire Line
-	5875 6025 5875 5875
-Wire Wire Line
-	5650 5875 5875 5875
-Connection ~ 5875 5875
-Wire Wire Line
-	5875 5875 5875 5650
 $Comp
 L 3Phase-rescue:R-3Phase-rescue R62
 U 1 1 795BCADF
@@ -4154,7 +4121,7 @@ Wire Wire Line
 Wire Wire Line
 	8125 6725 8175 6725
 Wire Wire Line
-	8125 6825 8175 6825
+	8125 6825 8150 6825
 Text GLabel 8400 7475 2    50   Input ~ 0
 2.5V
 Wire Wire Line
@@ -4162,24 +4129,13 @@ Wire Wire Line
 Wire Wire Line
 	8075 7475 8075 7700
 Wire Wire Line
-	5450 5875 5200 5875
+	4925 5775 5075 5775
 Wire Wire Line
-	5200 5875 5200 6025
-Wire Wire Line
-	5200 6025 5225 6025
-Wire Wire Line
-	5025 5825 5075 5825
-Wire Wire Line
-	5075 5825 5075 6025
+	5075 5775 5075 6025
 Wire Wire Line
 	5075 6025 5050 6025
-Text GLabel 5225 5750 2    50   Input ~ 0
+Text GLabel 5850 5775 2    50   Input ~ 0
 3.3V
-Wire Wire Line
-	5225 5750 5200 5750
-Wire Wire Line
-	5200 5750 5200 5875
-Connection ~ 5200 5875
 Text GLabel 5075 8825 0    50   Input ~ 0
 IN5_G3
 Text GLabel 5075 8725 0    50   Input ~ 0
@@ -4665,36 +4621,14 @@ F 3 "~" H 8800 3550 50  0001 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L Connector:Conn_01x01_Female J19
-U 1 1 648C0F93
+L Connector:Conn_01x01_Female J17
+U 1 1 648C2387
 P 8800 3450
-F 0 "J19" H 8828 3476 50  0001 L CNN
+F 0 "J17" H 8828 3476 50  0001 L CNN
 F 1 "Conn_01x01_Female" H 8828 3385 50  0001 L CNN
 F 2 "Footprints:TestPoint_1.8mm" H 8800 3450 50  0001 C CNN
 F 3 "~" H 8800 3450 50  0001 C CNN
 	1    8800 3450
-	1    0    0    -1  
-$EndComp
-$Comp
-L Connector:Conn_01x01_Female J18
-U 1 1 648C1969
-P 8800 3350
-F 0 "J18" H 8828 3376 50  0001 L CNN
-F 1 "Conn_01x01_Female" H 8828 3285 50  0001 L CNN
-F 2 "Footprints:TestPoint_1.8mm" H 8800 3350 50  0001 C CNN
-F 3 "~" H 8800 3350 50  0001 C CNN
-	1    8800 3350
-	1    0    0    -1  
-$EndComp
-$Comp
-L Connector:Conn_01x01_Female J17
-U 1 1 648C2387
-P 8800 3250
-F 0 "J17" H 8828 3276 50  0001 L CNN
-F 1 "Conn_01x01_Female" H 8828 3185 50  0001 L CNN
-F 2 "Footprints:TestPoint_1.8mm" H 8800 3250 50  0001 C CNN
-F 3 "~" H 8800 3250 50  0001 C CNN
-	1    8800 3250
 	1    0    0    -1  
 $EndComp
 Wire Wire Line
@@ -4713,39 +4647,126 @@ Wire Wire Line
 	7750 3650 8600 3650
 Wire Wire Line
 	8600 3550 7750 3550
-Wire Wire Line
-	7750 3450 8600 3450
-Wire Wire Line
-	8600 3350 7750 3350
 $Comp
 L power:GND #PWR0122
 U 1 1 64F7F627
-P 8550 3250
-F 0 "#PWR0122" H 8550 3000 50  0001 C CNN
-F 1 "GND" H 8500 3225 50  0000 R CNN
-F 2 "" H 8550 3250 50  0001 C CNN
-F 3 "" H 8550 3250 50  0001 C CNN
-	1    8550 3250
+P 8550 3450
+F 0 "#PWR0122" H 8550 3200 50  0001 C CNN
+F 1 "GND" H 8500 3425 50  0000 R CNN
+F 2 "" H 8550 3450 50  0001 C CNN
+F 3 "" H 8550 3450 50  0001 C CNN
+	1    8550 3450
 	0    1    1    0   
 $EndComp
 Wire Wire Line
-	8550 3250 8575 3250
+	8550 3450 8575 3450
 $Comp
 L Connector:Conn_01x01_Female J32
 U 1 1 6514E428
-P 8800 3150
-F 0 "J32" H 8828 3176 50  0001 L CNN
-F 1 "Conn_01x01_Female" H 8828 3085 50  0001 L CNN
-F 2 "Footprints:TestPoint_1.8mm" H 8800 3150 50  0001 C CNN
-F 3 "~" H 8800 3150 50  0001 C CNN
-	1    8800 3150
+P 8800 3350
+F 0 "J32" H 8828 3376 50  0001 L CNN
+F 1 "Conn_01x01_Female" H 8828 3285 50  0001 L CNN
+F 2 "Footprints:TestPoint_1.8mm" H 8800 3350 50  0001 C CNN
+F 3 "~" H 8800 3350 50  0001 C CNN
+	1    8800 3350
 	1    0    0    -1  
 $EndComp
 Wire Wire Line
-	8600 3150 8575 3150
+	8600 3350 8575 3350
 Wire Wire Line
-	8575 3150 8575 3250
-Connection ~ 8575 3250
+	8575 3350 8575 3450
+Connection ~ 8575 3450
 Wire Wire Line
-	8575 3250 8600 3250
+	8575 3450 8600 3450
+$Comp
+L 3Phase-rescue:R-3Phase-rescue R59
+U 1 1 610C5707
+P 7975 6625
+F 0 "R59" V 7975 6625 50  0000 C CNN
+F 1 "2.2k" V 7975 6625 50  0001 C CNN
+F 2 "Footprints:R_0603_1608Metric" V 7905 6625 50  0001 C CNN
+F 3 "https://lcsc.com/product-detail/Chip-Resistor-Surface-Mount_2-2KR-2201-1_C114662.html" H 7975 6625 50  0001 C CNN
+	1    7975 6625
+	0    1    -1   0   
+$EndComp
+Wire Wire Line
+	8150 6825 8150 6625
+Wire Wire Line
+	8150 6625 8125 6625
+Connection ~ 8150 6825
+Wire Wire Line
+	8150 6825 8175 6825
+Wire Wire Line
+	7825 6625 7750 6625
+$Comp
+L Components:74LVC2T45DC U13
+U 1 1 610C162C
+P 5450 6325
+F 0 "U13" H 5350 6200 50  0000 C CNN
+F 1 "74LVC2T45DC" H 5450 6776 50  0001 C CNN
+F 2 "Footprints:VSSOP-8_2.3x2mm_P0.5mm" H 5450 5475 50  0001 C CNN
+F 3 "https://assets.nexperia.com/documents/data-sheet/74LVC_LVCH2T45.pdf" H 5700 6075 50  0001 C CNN
+	1    5450 6325
+	-1   0    0    -1  
+$EndComp
+Wire Wire Line
+	5100 6325 5075 6325
+Wire Wire Line
+	5100 6025 5075 6025
+Connection ~ 5075 6025
+Wire Wire Line
+	5075 6350 5075 6325
+Connection ~ 5075 6325
+Wire Wire Line
+	5075 6325 5050 6325
+Wire Wire Line
+	5800 6325 6200 6325
+Wire Wire Line
+	5050 5650 5450 5650
+$Comp
+L 3Phase-rescue:C_Small-3Phase-rescue C62
+U 1 1 617F2593
+P 5200 5775
+F 0 "C62" V 5150 5825 50  0000 L CNN
+F 1 "100nF 25v" H 5210 5695 50  0001 L CNN
+F 2 "Footprints:C_0603_1608Metric" H 5200 5775 50  0001 C CNN
+F 3 "https://lcsc.com/product-detail/Multilayer-Ceramic-Capacitors-MLCC-SMD-SMT_SAMSUNG_CL10B104KA8NNNC_100nF-104-10-25V_C1590.html" H 5200 5775 50  0001 C CNN
+	1    5200 5775
+	0    1    -1   0   
+$EndComp
+$Comp
+L power:GND #PWR0124
+U 1 1 617F5C6C
+P 5450 5825
+F 0 "#PWR0124" H 5450 5575 50  0001 C CNN
+F 1 "GND" H 5325 5750 50  0000 C CNN
+F 2 "" H 5450 5825 50  0000 C CNN
+F 3 "" H 5450 5825 50  0000 C CNN
+	1    5450 5825
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	5450 5825 5450 5775
+Connection ~ 5450 5650
+Wire Wire Line
+	5450 5650 5900 5650
+Wire Wire Line
+	5300 5775 5450 5775
+Connection ~ 5450 5775
+Wire Wire Line
+	5450 5775 5450 5650
+Wire Wire Line
+	5100 5775 5075 5775
+Connection ~ 5075 5775
+Wire Wire Line
+	5450 5775 5600 5775
+Wire Wire Line
+	5800 5775 5825 5775
+Wire Wire Line
+	5800 6025 5825 6025
+Wire Wire Line
+	5825 6025 5825 5775
+Connection ~ 5825 5775
+Wire Wire Line
+	5825 5775 5850 5775
 $EndSCHEMATC

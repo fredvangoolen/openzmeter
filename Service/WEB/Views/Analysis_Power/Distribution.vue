@@ -28,12 +28,10 @@
   import Spinner from 'Components/Spinner.vue';
   import Graph from 'Components/Graph.vue';
   import vuetable from 'vuetable-2';
-  import 'CSS/table-responsive.css';
   export default {
     data: function() {
       return { ShowWarning: true,  ShowSpinner: true, Time: 'Loading data...',
         Columns: [
-//          {name: 'Color', title: 'Color'},
           {name: 'Harmonic', title: 'Harmonic'},
           {name: 'Power', title: 'Active power'},
           {name: 'Ratio', title: 'Ratio'}
@@ -59,9 +57,6 @@
     },
     mounted: function() {
       $(window).on('resize', this.Redraw.bind(this));
-    },
-    updated: function(){
-      oZm.createCaptionsForResponsiveTable(this.$refs.table);
     },
     beforeDestroy: function() {
       $(window).off('resize', this.Redraw);

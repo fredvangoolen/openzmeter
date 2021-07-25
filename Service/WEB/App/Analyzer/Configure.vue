@@ -84,7 +84,7 @@
           </tr>
           <tr>
             <td colspan="2">
-              <button type="button" class="btn btn-default btn-xs" style="width:100%" @click="Tags.push({ Name: 'Unnamed tag', Value: 'none'})"><img :src="require('Imgs/plus.png')"> New tag</button>
+              <button type="button" class="btn btn-default btn-xs btn-block" @click="Tags.push({ Name: 'Unnamed tag', Value: 'none'})"><img :src="require('Imgs/plus.png')"> New tag</button>
             </td>
           </tr>
         </table>

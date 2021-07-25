@@ -37,8 +37,6 @@
 
 <script>
   import * as oZm from 'JS/openZmeter.js';
-  import vuetable from 'vuetable-2';
-  import 'CSS/table-responsive.css';
   import AnalyzerAlarm from './Alarm.vue';
   export default {
     props: { analyzer: Object },
@@ -50,9 +48,6 @@
           { name: '__slot:actions', title: '' }
         ]
       };
-    },
-    updated: function() {
-      oZm.createCaptionsForResponsiveTable(this.$refs.table);
     },
     created: function() {
       this.Analyzer = Object.assign({}, this.analyzer);
@@ -90,7 +85,7 @@
         );
       }
     },
-    components: { vuetable, AnalyzerAlarm }
+    components: { AnalyzerAlarm }
   }
 </script>
 

@@ -1,4 +1,410 @@
-EESchema Schematic File Version 2
-EELAYER 25 0
+EESchema Schematic File Version 4
+EELAYER 30 0
 EELAYER END
+$Descr A4 11693 8268
+encoding utf-8
+Sheet 1 1
+Title ""
+Date ""
+Rev ""
+Comp ""
+Comment1 ""
+Comment2 ""
+Comment3 ""
+Comment4 ""
+$EndDescr
+$Comp
+L Amplifier_Instrumentation:INA128 U1
+U 1 1 60F05339
+P 6300 3225
+F 0 "U1" H 6450 3350 50  0000 L CNN
+F 1 "INA128" H 6744 3180 50  0001 L CNN
+F 2 "Package_SO:SO-8_3.9x4.9mm_P1.27mm" H 6400 3225 50  0001 C CNN
+F 3 "http://www.ti.com/lit/ds/symlink/ina128.pdf" H 6400 3225 50  0001 C CNN
+	1    6300 3225
+	1    0    0    -1  
+$EndComp
+$Comp
+L Device:R_Small R1
+U 1 1 60F063D9
+P 5400 2975
+F 0 "R1" V 5325 2975 50  0000 C CNN
+F 1 "R_Small" V 5295 2975 50  0001 C CNN
+F 2 "Footprints:R_0603_1608Metric" H 5400 2975 50  0001 C CNN
+F 3 "~" H 5400 2975 50  0001 C CNN
+	1    5400 2975
+	0    1    1    0   
+$EndComp
+$Comp
+L Device:C_Small C1
+U 1 1 60F06859
+P 5525 3100
+F 0 "C1" H 5617 3100 50  0000 L CNN
+F 1 "C_Small" H 5617 3055 50  0001 L CNN
+F 2 "Footprints:C_0603_1608Metric" H 5525 3100 50  0001 C CNN
+F 3 "~" H 5525 3100 50  0001 C CNN
+	1    5525 3100
+	1    0    0    -1  
+$EndComp
+$Comp
+L Device:C_Small C2
+U 1 1 60F06AFD
+P 5525 3350
+F 0 "C2" H 5617 3350 50  0000 L CNN
+F 1 "C_Small" H 5617 3305 50  0001 L CNN
+F 2 "Footprints:C_0603_1608Metric" H 5525 3350 50  0001 C CNN
+F 3 "~" H 5525 3350 50  0001 C CNN
+	1    5525 3350
+	1    0    0    -1  
+$EndComp
+$Comp
+L Device:R_Small R4
+U 1 1 60F06F80
+P 5525 3600
+F 0 "R4" H 5575 3600 50  0000 L CNN
+F 1 "R_Small" H 5584 3555 50  0001 L CNN
+F 2 "Footprints:R_0603_1608Metric" H 5525 3600 50  0001 C CNN
+F 3 "~" H 5525 3600 50  0001 C CNN
+	1    5525 3600
+	1    0    0    -1  
+$EndComp
+$Comp
+L Device:R_Small R2
+U 1 1 60F07301
+P 5400 3475
+F 0 "R2" V 5325 3475 50  0000 C CNN
+F 1 "R_Small" V 5295 3475 50  0001 C CNN
+F 2 "Footprints:R_0603_1608Metric" H 5400 3475 50  0001 C CNN
+F 3 "~" H 5400 3475 50  0001 C CNN
+	1    5400 3475
+	0    1    1    0   
+$EndComp
+Text GLabel 6300 2800 1    50   Input ~ 0
+5V
+$Comp
+L power:GND #PWR0101
+U 1 1 60F080B0
+P 6300 3625
+F 0 "#PWR0101" H 6300 3375 50  0001 C CNN
+F 1 "GND" H 6225 3625 50  0000 C CNN
+F 2 "" H 6300 3625 50  0001 C CNN
+F 3 "" H 6300 3625 50  0001 C CNN
+	1    6300 3625
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	6300 3525 6300 3625
+$Comp
+L Device:R_Small R5
+U 1 1 60F0DB11
+P 5925 3225
+F 0 "R5" H 5866 3225 50  0000 R CNN
+F 1 "R_Small" H 5984 3180 50  0001 L CNN
+F 2 "Footprints:R_0603_1608Metric" H 5925 3225 50  0001 C CNN
+F 3 "~" H 5925 3225 50  0001 C CNN
+	1    5925 3225
+	-1   0    0    1   
+$EndComp
+Wire Wire Line
+	6300 2925 6300 2900
+$Comp
+L power:GND #PWR0102
+U 1 1 60F0E9A4
+P 5475 3225
+F 0 "#PWR0102" H 5475 2975 50  0001 C CNN
+F 1 "GND" V 5480 3097 50  0000 R CNN
+F 2 "" H 5475 3225 50  0001 C CNN
+F 3 "" H 5475 3225 50  0001 C CNN
+	1    5475 3225
+	0    1    1    0   
+$EndComp
+Wire Wire Line
+	5525 3000 5525 2975
+Wire Wire Line
+	5900 2975 5900 3025
+Wire Wire Line
+	5900 3025 6000 3025
+Wire Wire Line
+	5525 2975 5900 2975
+Wire Wire Line
+	5525 3225 5525 3200
+Wire Wire Line
+	5525 3225 5525 3250
+Connection ~ 5525 3225
+Wire Wire Line
+	6000 3425 5900 3425
+Wire Wire Line
+	5900 3475 5525 3475
+Wire Wire Line
+	5525 3475 5525 3450
+Wire Wire Line
+	5900 3425 5900 3475
+Wire Wire Line
+	5500 2975 5525 2975
+Connection ~ 5525 2975
+Wire Wire Line
+	5500 3475 5525 3475
+Connection ~ 5525 3475
+$Comp
+L Reference_Voltage:MCP1525-TT U2
+U 1 1 60F2A702
+P 6900 2350
+F 0 "U2" H 6750 2500 50  0000 R CNN
+F 1 "MCP1525-TT" H 6770 2305 50  0001 R CNN
+F 2 "Package_TO_SOT_SMD:SOT-23" H 6925 2100 50  0001 L CIN
+F 3 "http://ww1.microchip.com/downloads/en/devicedoc/21653b.pdf" H 6900 2350 50  0001 C CIN
+	1    6900 2350
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	5475 3225 5525 3225
+Text GLabel 7550 2350 2    50   Input ~ 0
+2.5V
+$Comp
+L Device:R_Small R3
+U 1 1 60F30159
+P 5525 2850
+F 0 "R3" H 5575 2850 50  0000 L CNN
+F 1 "R_Small" H 5584 2805 50  0001 L CNN
+F 2 "Footprints:R_0603_1608Metric" H 5525 2850 50  0001 C CNN
+F 3 "~" H 5525 2850 50  0001 C CNN
+	1    5525 2850
+	1    0    0    -1  
+$EndComp
+Text GLabel 5525 2725 1    50   Input ~ 0
+2.5V
+Text GLabel 5525 3725 3    50   Input ~ 0
+2.5V
+Wire Wire Line
+	5300 2975 5175 2975
+Wire Wire Line
+	5175 3475 5300 3475
+Wire Wire Line
+	5525 2950 5525 2975
+Wire Wire Line
+	5525 2750 5525 2725
+Wire Wire Line
+	5525 3500 5525 3475
+Wire Wire Line
+	5525 3700 5525 3725
+Text GLabel 6400 3775 3    50   Input ~ 0
+2.5V
+$Comp
+L Device:R_Small R6
+U 1 1 60F34EBD
+P 6975 3225
+F 0 "R6" V 6900 3225 50  0000 C CNN
+F 1 "R_Small" V 6870 3225 50  0001 C CNN
+F 2 "Footprints:R_0603_1608Metric" H 6975 3225 50  0001 C CNN
+F 3 "~" H 6975 3225 50  0001 C CNN
+	1    6975 3225
+	0    1    1    0   
+$EndComp
+$Comp
+L Device:R_Small R7
+U 1 1 60F35DB9
+P 6975 3725
+F 0 "R7" V 7050 3725 50  0000 C CNN
+F 1 "R_Small" V 6870 3725 50  0001 C CNN
+F 2 "Footprints:R_0603_1608Metric" H 6975 3725 50  0001 C CNN
+F 3 "~" H 6975 3725 50  0001 C CNN
+	1    6975 3725
+	0    1    1    0   
+$EndComp
+$Comp
+L Device:C_Small C5
+U 1 1 60F363B2
+P 7100 3350
+F 0 "C5" H 7192 3350 50  0000 L CNN
+F 1 "C_Small" H 7192 3305 50  0001 L CNN
+F 2 "Footprints:C_0603_1608Metric" H 7100 3350 50  0001 C CNN
+F 3 "~" H 7100 3350 50  0001 C CNN
+	1    7100 3350
+	1    0    0    -1  
+$EndComp
+$Comp
+L Device:C_Small C6
+U 1 1 60F37110
+P 7100 3600
+F 0 "C6" H 7192 3600 50  0000 L CNN
+F 1 "C_Small" H 7192 3555 50  0001 L CNN
+F 2 "Footprints:C_0603_1608Metric" H 7100 3600 50  0001 C CNN
+F 3 "~" H 7100 3600 50  0001 C CNN
+	1    7100 3600
+	1    0    0    -1  
+$EndComp
+$Comp
+L power:GND #PWR0103
+U 1 1 60F39A1C
+P 7025 3475
+F 0 "#PWR0103" H 7025 3225 50  0001 C CNN
+F 1 "GND" V 7030 3347 50  0000 R CNN
+F 2 "" H 7025 3475 50  0001 C CNN
+F 3 "" H 7025 3475 50  0001 C CNN
+	1    7025 3475
+	0    1    1    0   
+$EndComp
+Wire Wire Line
+	7075 3225 7100 3225
+Wire Wire Line
+	7100 3225 7100 3250
+Wire Wire Line
+	6875 3225 6700 3225
+Wire Wire Line
+	6400 3525 6400 3725
+Wire Wire Line
+	6400 3725 6875 3725
+Wire Wire Line
+	6400 3775 6400 3725
+Connection ~ 6400 3725
+$Comp
+L Device:C_Small C3
+U 1 1 60F3FF0D
+P 6425 2900
+F 0 "C3" V 6288 2900 50  0000 C CNN
+F 1 "C_Small" H 6517 2855 50  0001 L CNN
+F 2 "Footprints:C_0603_1608Metric" H 6425 2900 50  0001 C CNN
+F 3 "~" H 6425 2900 50  0001 C CNN
+	1    6425 2900
+	0    1    1    0   
+$EndComp
+$Comp
+L power:GND #PWR0104
+U 1 1 60F40564
+P 6550 2900
+F 0 "#PWR0104" H 6550 2650 50  0001 C CNN
+F 1 "GND" H 6450 2775 50  0000 C CNN
+F 2 "" H 6550 2900 50  0001 C CNN
+F 3 "" H 6550 2900 50  0001 C CNN
+	1    6550 2900
+	0    -1   -1   0   
+$EndComp
+Wire Wire Line
+	6325 2900 6300 2900
+Connection ~ 6300 2900
+Wire Wire Line
+	6300 2900 6300 2800
+Wire Wire Line
+	6525 2900 6550 2900
+Wire Wire Line
+	7025 3475 7100 3475
+Wire Wire Line
+	7100 3475 7100 3450
+Wire Wire Line
+	7100 3475 7100 3500
+Connection ~ 7100 3475
+Wire Wire Line
+	7075 3725 7100 3725
+Wire Wire Line
+	7100 3725 7100 3700
+Wire Wire Line
+	7325 3325 7325 3725
+Wire Wire Line
+	7325 3725 7100 3725
+Wire Wire Line
+	7325 3325 7600 3325
+Connection ~ 7100 3725
+Wire Wire Line
+	7600 3225 7100 3225
+Connection ~ 7100 3225
+$Comp
+L power:GND #PWR0105
+U 1 1 60F46D73
+P 7450 3550
+F 0 "#PWR0105" H 7450 3300 50  0001 C CNN
+F 1 "GND" H 7600 3475 50  0000 C CNN
+F 2 "" H 7450 3550 50  0001 C CNN
+F 3 "" H 7450 3550 50  0001 C CNN
+	1    7450 3550
+	1    0    0    -1  
+$EndComp
+Text GLabel 7500 3425 0    50   Input ~ 0
+5V
+Text GLabel 6425 2025 0    50   Input ~ 0
+5V
+$Comp
+L Device:C_Small C4
+U 1 1 60F4FB1E
+P 6550 2475
+F 0 "C4" H 6725 2475 50  0000 R CNN
+F 1 "C_Small" H 6642 2430 50  0001 L CNN
+F 2 "Footprints:C_0603_1608Metric" H 6550 2475 50  0001 C CNN
+F 3 "~" H 6550 2475 50  0001 C CNN
+	1    6550 2475
+	-1   0    0    1   
+$EndComp
+Wire Wire Line
+	6425 2025 6550 2025
+Wire Wire Line
+	6900 2025 6900 2050
+Wire Wire Line
+	6550 2375 6550 2025
+Connection ~ 6550 2025
+Wire Wire Line
+	6550 2025 6900 2025
+Wire Wire Line
+	6550 2575 6550 2675
+Wire Wire Line
+	6550 2675 6900 2675
+Wire Wire Line
+	6900 2675 6900 2650
+$Comp
+L power:GND #PWR0106
+U 1 1 60F59254
+P 6900 2700
+F 0 "#PWR0106" H 6900 2450 50  0001 C CNN
+F 1 "GND" H 6800 2575 50  0000 C CNN
+F 2 "" H 6900 2700 50  0001 C CNN
+F 3 "" H 6900 2700 50  0001 C CNN
+	1    6900 2700
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	6900 2700 6900 2675
+Connection ~ 6900 2675
+$Comp
+L Device:C_Small C7
+U 1 1 60F5A709
+P 7400 2475
+F 0 "C7" H 7575 2475 50  0000 R CNN
+F 1 "C_Small" H 7492 2430 50  0001 L CNN
+F 2 "Footprints:C_0603_1608Metric" H 7400 2475 50  0001 C CNN
+F 3 "~" H 7400 2475 50  0001 C CNN
+	1    7400 2475
+	-1   0    0    1   
+$EndComp
+Wire Wire Line
+	7300 2350 7400 2350
+Wire Wire Line
+	7400 2350 7400 2375
+Wire Wire Line
+	6900 2675 7400 2675
+Wire Wire Line
+	7400 2675 7400 2575
+Wire Wire Line
+	7550 2350 7400 2350
+Connection ~ 7400 2350
+Wire Wire Line
+	5175 2975 5175 3475
+Wire Wire Line
+	5925 3125 6000 3125
+Wire Wire Line
+	6000 3325 5925 3325
+$Comp
+L Connector:Conn_01x04_Female J1
+U 1 1 60F4466E
+P 7800 3425
+F 0 "J1" H 7692 3000 50  0000 C CNN
+F 1 "Conn_01x04_Female" H 7692 3091 50  0000 C CNN
+F 2 "Connector_PinSocket_2.00mm:PinSocket_1x04_P2.00mm_Vertical" H 7800 3425 50  0001 C CNN
+F 3 "~" H 7800 3425 50  0001 C CNN
+	1    7800 3425
+	1    0    0    1   
+$EndComp
+Wire Wire Line
+	7500 3425 7600 3425
+Wire Wire Line
+	7600 3525 7450 3525
+Wire Wire Line
+	7450 3525 7450 3550
 $EndSCHEMATC

@@ -23,10 +23,7 @@
 </template>
 
 <script>
-  import Vuetable from 'vuetable-2';
   import UserEdit from 'App/User/Dialog.vue';
-  import 'CSS/table-responsive.css';
-  import * as oZm from 'JS/openZmeter.js';
   export default {
     data() {
       return { Users: [], FilterUsers: [], ShowSpinner: true, ShowDialog: false, Enabled: false, User: null,
@@ -89,10 +86,7 @@
         );
       }
     },
-    updated: function () {
-      oZm.createCaptionsForResponsiveTable(this.$refs.table);
-    },
-    components: { Vuetable, UserEdit }
+    components: { UserEdit }
   }
 </script>
 

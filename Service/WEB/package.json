@@ -6,8 +6,7 @@
   "author": "",
   "scripts": {
     "build": "cross-env NODE_ENV=production webpack --display=errors-only",
-    "dev": "cross-env NODE_ENV=development webpack-dev-server --host 0.0.0.0 --port 8080 --hot",
-    "i18n:report": "vue-cli-service i18n:report --src './src/**/*.?(js|vue)' --locales './src/Locales/**/*.json'"
+    "dev": "cross-env NODE_ENV=development webpack-dev-server --host 0.0.0.0 --port 8080 --hot"
   },
   "dependencies": {
     "auto-blur": "^1.1.2",
@@ -30,7 +29,6 @@
     "vis-data": "^7.0.0",
     "vis-timeline": "^7.3.9",
     "vue": "^2.6.12",
-    "vue-i18n": "^8.17.3",
     "vue-resource": "^1.5.1",
     "vue-router": "^3.4.3",
     "vue-toast-notification": "^0.6.1",

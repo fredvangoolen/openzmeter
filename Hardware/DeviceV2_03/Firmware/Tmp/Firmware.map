@@ -14,8 +14,8 @@ ButtonStatus        0x2               Tmp/Main.c.o
 Memory Configuration
 
 Name             Origin             Length             Attributes
-flash            0x0000000008000000 0x0000000000008000
-ram              0x0000000020000000 0x0000000000001800
+flash            0x0000000008000000 0x0000000000020000
+ram              0x0000000020000000 0x0000000000008000
 *default*        0x0000000000000000 0xffffffffffffffff
 
 Linker script and memory map
@@ -25,12 +25,12 @@ LOAD Tmp/System.c.o
 LOAD Tmp/USB.c.o
                 0x0000000008000000                . = ORIGIN (flash)
 
-.text           0x0000000008000000     0x199c
+.text           0x0000000008000000     0x18a4
  *(.vectors)
  .vectors       0x0000000008000000       0xc0 Tmp/System.c.o
                 0x0000000008000000                Vectors
  *(.text)
- .text          0x00000000080000c0      0xa6c Tmp/Main.c.o
+ .text          0x00000000080000c0      0x9e0 Tmp/Main.c.o
                 0x00000000080000c0                USB_HandleEP1_TX
                 0x00000000080001c0                USB_HandleEP2_RX
                 0x000000000800025c                SysTick_ISR
@@ -38,67 +38,67 @@ LOAD Tmp/USB.c.o
                 0x00000000080004b8                DMA_CH1_ISR
                 0x00000000080005ec                USB_SetConfiguration
                 0x0000000008000650                Setup
-                0x0000000008000884                Sleep
-                0x0000000008000898                Loop
- .text          0x0000000008000b2c       0x58 Tmp/System.c.o
-                0x0000000008000b2c                Default_Handler
-                0x0000000008000b30                Init
- .text          0x0000000008000b84      0xe18 Tmp/USB.c.o
-                0x0000000008000b84                USB_SetAddress
-                0x0000000008000ba8                EPT
-                0x0000000008000bbc                EPR
-                0x0000000008000bd0                USB_IntToUnicode
-                0x0000000008000bf8                USB_GetNextPMA
-                0x0000000008000c3c                USB_StallEP
-                0x0000000008000d04                USB_StalledEP
-                0x0000000008000d44                USB_Init
-                0x0000000008000d60                USB_Enable
-                0x0000000008000db4                USB_GetInfo
-                0x0000000008000dd8                USB_Connect
-                0x0000000008000e24                USB_ConfigEP
-                0x0000000008000f88                USB_DeconfigEP
-                0x0000000008000fb8                USB_RegisterEP
-                0x0000000008000fcc                USB_ReadPMA
-                0x0000000008001020                USB_ReadEP
-                0x0000000008001240                USB_WritePMA
-                0x00000000080012a0                USB_WriteEP
-                0x00000000080014a4                USB_StallEP0
-                0x00000000080014cc                USB_HandleEP0_Complete
-                0x00000000080014e4                USB_HandleEP0_Process
-                0x00000000080016d4                USB_HandleEP0_TX
-                0x0000000008001754                USB_HandleEP0_RX
-                0x0000000008001850                USB_HandleEP0
-                0x000000000800187c                USB_ISR
+                0x00000000080007f8                Sleep
+                0x000000000800080c                Loop
+ .text          0x0000000008000aa0       0x58 Tmp/System.c.o
+                0x0000000008000aa0                Default_Handler
+                0x0000000008000aa4                Init
+ .text          0x0000000008000af8      0xdac Tmp/USB.c.o
+                0x0000000008000af8                USB_SetAddress
+                0x0000000008000b1c                EPT
+                0x0000000008000b30                EPR
+                0x0000000008000b44                USB_IntToUnicode
+                0x0000000008000b6c                USB_GetNextPMA
+                0x0000000008000bb0                USB_StallEP
+                0x0000000008000c78                USB_StalledEP
+                0x0000000008000cb8                USB_Init
+                0x0000000008000cd4                USB_Enable
+                0x0000000008000d20                USB_GetInfo
+                0x0000000008000d3c                USB_Connect
+                0x0000000008000d40                USB_ConfigEP
+                0x0000000008000ea4                USB_DeconfigEP
+                0x0000000008000ed4                USB_RegisterEP
+                0x0000000008000ee8                USB_ReadPMA
+                0x0000000008000f3c                USB_ReadEP
+                0x000000000800115c                USB_WritePMA
+                0x00000000080011bc                USB_WriteEP
+                0x00000000080013c0                USB_StallEP0
+                0x00000000080013e8                USB_HandleEP0_Complete
+                0x0000000008001400                USB_HandleEP0_Process
+                0x00000000080015dc                USB_HandleEP0_TX
+                0x000000000800165c                USB_HandleEP0_RX
+                0x0000000008001758                USB_HandleEP0
+                0x0000000008001784                USB_ISR
 
-.glue_7         0x000000000800199c        0x0
- .glue_7        0x000000000800199c        0x0 linker stubs
+.glue_7         0x00000000080018a4        0x0
+ .glue_7        0x00000000080018a4        0x0 linker stubs
 
-.glue_7t        0x000000000800199c        0x0
- .glue_7t       0x000000000800199c        0x0 linker stubs
+.glue_7t        0x00000000080018a4        0x0
+ .glue_7t       0x00000000080018a4        0x0 linker stubs
 
-.vfp11_veneer   0x000000000800199c        0x0
- .vfp11_veneer  0x000000000800199c        0x0 linker stubs
+.vfp11_veneer   0x00000000080018a4        0x0
+ .vfp11_veneer  0x00000000080018a4        0x0 linker stubs
 
-.v4_bx          0x000000000800199c        0x0
- .v4_bx         0x000000000800199c        0x0 linker stubs
+.v4_bx          0x00000000080018a4        0x0
+ .v4_bx         0x00000000080018a4        0x0 linker stubs
 
-.iplt           0x000000000800199c        0x0
- .iplt          0x000000000800199c        0x0 Tmp/Main.c.o
+.iplt           0x00000000080018a4        0x0
+ .iplt          0x00000000080018a4        0x0 Tmp/Main.c.o
 
-.rel.dyn        0x000000000800199c        0x0
- .rel.iplt      0x000000000800199c        0x0 Tmp/Main.c.o
+.rel.dyn        0x00000000080018a4        0x0
+ .rel.iplt      0x00000000080018a4        0x0 Tmp/Main.c.o
 
-.rodata         0x000000000800199c       0xa4
- .rodata        0x000000000800199c       0xa4 Tmp/USB.c.o
-                0x00000000080019c4                StringLangID
-                0x00000000080019c8                StringVendor
-                0x00000000080019d4                StringProduct
-                0x0000000008001a0c                USB_Descriptor
-                0x0000000008001a20                USB_ConfigDescriptor
+.rodata         0x00000000080018a4       0xa4
+ .rodata        0x00000000080018a4       0xa4 Tmp/USB.c.o
+                0x00000000080018cc                StringLangID
+                0x00000000080018d0                StringVendor
+                0x00000000080018dc                StringProduct
+                0x0000000008001914                USB_Descriptor
+                0x0000000008001928                USB_ConfigDescriptor
                 0x0000000020000000                . = ORIGIN (ram)
 
-.data           0x0000000020000000        0x0 load address 0x0000000008001a40
-                0x0000000008001a40                INIT_DATA_VALUES = LOADADDR (.data)
+.data           0x0000000020000000        0x0 load address 0x0000000008001948
+                0x0000000008001948                INIT_DATA_VALUES = LOADADDR (.data)
                 0x0000000020000000                INIT_DATA_START = .
  *(.data)
  .data          0x0000000020000000        0x0 Tmp/Main.c.o
@@ -107,10 +107,10 @@ LOAD Tmp/USB.c.o
                 0x0000000020000000                INIT_DATA_END = .
                 0x0000000020000000                BSS_START = .
 
-.igot.plt       0x0000000020000000        0x0 load address 0x0000000008001a40
+.igot.plt       0x0000000020000000        0x0 load address 0x0000000008001948
  .igot.plt      0x0000000020000000        0x0 Tmp/Main.c.o
 
-.bss            0x0000000020000000     0x16fc load address 0x0000000008001a40
+.bss            0x0000000020000000     0x16fc load address 0x0000000008001948
  *(.bss)
  .bss           0x0000000020000000        0x0 Tmp/Main.c.o
  .bss           0x0000000020000000        0x0 Tmp/System.c.o
@@ -129,20 +129,20 @@ LOAD Tmp/USB.c.o
                 0x00000000200016fc                BSS_END = .
 OUTPUT(Tmp/Firmware elf32-littlearm)
 
-.debug_info     0x0000000000000000     0x33e4
- .debug_info    0x0000000000000000     0x15fd Tmp/Main.c.o
- .debug_info    0x00000000000015fd      0x11a Tmp/System.c.o
- .debug_info    0x0000000000001717     0x1ccd Tmp/USB.c.o
+.debug_info     0x0000000000000000     0x36d6
+ .debug_info    0x0000000000000000     0x18cf Tmp/Main.c.o
+ .debug_info    0x00000000000018cf      0x11a Tmp/System.c.o
+ .debug_info    0x00000000000019e9     0x1ced Tmp/USB.c.o
 
-.debug_abbrev   0x0000000000000000      0xa96
+.debug_abbrev   0x0000000000000000      0xac5
  .debug_abbrev  0x0000000000000000      0x454 Tmp/Main.c.o
  .debug_abbrev  0x0000000000000454       0xda Tmp/System.c.o
- .debug_abbrev  0x000000000000052e      0x568 Tmp/USB.c.o
+ .debug_abbrev  0x000000000000052e      0x597 Tmp/USB.c.o
 
-.debug_loc      0x0000000000000000     0x17b4
- .debug_loc     0x0000000000000000      0x452 Tmp/Main.c.o
- .debug_loc     0x0000000000000452       0x76 Tmp/System.c.o
- .debug_loc     0x00000000000004c8     0x12ec Tmp/USB.c.o
+.debug_loc      0x0000000000000000     0x1765
+ .debug_loc     0x0000000000000000      0x416 Tmp/Main.c.o
+ .debug_loc     0x0000000000000416       0x76 Tmp/System.c.o
+ .debug_loc     0x000000000000048c     0x12d9 Tmp/USB.c.o
 
 .debug_aranges  0x0000000000000000       0x60
  .debug_aranges
@@ -152,22 +152,22 @@ OUTPUT(Tmp/Firmware elf32-littlearm)
  .debug_aranges
                 0x0000000000000040       0x20 Tmp/USB.c.o
 
-.debug_ranges   0x0000000000000000      0x468
- .debug_ranges  0x0000000000000000      0x178 Tmp/Main.c.o
- .debug_ranges  0x0000000000000178      0x2f0 Tmp/USB.c.o
+.debug_ranges   0x0000000000000000      0x340
+ .debug_ranges  0x0000000000000000       0xc0 Tmp/Main.c.o
+ .debug_ranges  0x00000000000000c0      0x280 Tmp/USB.c.o
 
-.debug_line     0x0000000000000000      0x963
- .debug_line    0x0000000000000000      0x3ab Tmp/Main.c.o
- .debug_line    0x00000000000003ab       0x55 Tmp/System.c.o
- .debug_line    0x0000000000000400      0x563 Tmp/USB.c.o
+.debug_line     0x0000000000000000      0x882
+ .debug_line    0x0000000000000000      0x30c Tmp/Main.c.o
+ .debug_line    0x000000000000030c       0x55 Tmp/System.c.o
+ .debug_line    0x0000000000000361      0x521 Tmp/USB.c.o
 
-.debug_str      0x0000000000000000     0x1001
- .debug_str     0x0000000000000000      0x9a6 Tmp/Main.c.o
-                                        0xa43 (size before relaxing)
- .debug_str     0x00000000000009a6       0x67 Tmp/System.c.o
+.debug_str      0x0000000000000000     0x1345
+ .debug_str     0x0000000000000000      0xcf4 Tmp/Main.c.o
+                                        0xd99 (size before relaxing)
+ .debug_str     0x0000000000000cf4       0x67 Tmp/System.c.o
                                         0x17b (size before relaxing)
- .debug_str     0x0000000000000a0d      0x5f4 Tmp/USB.c.o
-                                        0xb10 (size before relaxing)
+ .debug_str     0x0000000000000d5b      0x5ea Tmp/USB.c.o
+                                        0xb29 (size before relaxing)
 
 .comment        0x0000000000000000       0x57
  .comment       0x0000000000000000       0x57 Tmp/Main.c.o
@@ -176,18 +176,18 @@ OUTPUT(Tmp/Firmware elf32-littlearm)
  .comment       0x0000000000000057       0x58 Tmp/USB.c.o
 
 .ARM.attributes
-                0x0000000000000000       0x31
+                0x0000000000000000       0x2b
  .ARM.attributes
-                0x0000000000000000       0x31 Tmp/Main.c.o
+                0x0000000000000000       0x2b Tmp/Main.c.o
  .ARM.attributes
-                0x0000000000000031       0x31 Tmp/System.c.o
+                0x000000000000002b       0x2b Tmp/System.c.o
  .ARM.attributes
-                0x0000000000000062       0x31 Tmp/USB.c.o
+                0x0000000000000056       0x2b Tmp/USB.c.o
 
-.debug_frame    0x0000000000000000      0x3d4
+.debug_frame    0x0000000000000000      0x3c4
  .debug_frame   0x0000000000000000      0x120 Tmp/Main.c.o
  .debug_frame   0x0000000000000120       0x38 Tmp/System.c.o
- .debug_frame   0x0000000000000158      0x27c Tmp/USB.c.o
+ .debug_frame   0x0000000000000158      0x26c Tmp/USB.c.o
 
 Cross Reference Table
 

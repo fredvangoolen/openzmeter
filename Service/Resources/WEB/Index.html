@@ -90,6 +90,7 @@
     </div>
     <div id="app"></div>
     <script>
+      if({{ LOCAL_CONNECTION }} == true) window.LocalConnection = true;
       var req  = new XMLHttpRequest();
       var path = 'openZmeter.js?v={{ VERSION }}';
       req.onprogress= function(evt) {
@@ -98,16 +99,14 @@
       };
       req.open('GET', path, true);
       req.onload = function() {
-          var Script = document.createElement('script');
-          Script.setAttribute('src', path);
-          Script.onload = function() {
-            var Loader = document.getElementById("Preloader");
-            Loader.parentNode.removeChild(Loader);
-            var Style = document.getElementById("PreloadStyle");
-            Style.parentNode.removeChild(Style);
-          };
-          document.head.appendChild(Script);
-      };
+        var Script = document.createElement('script');
+        Script.innerHTML = req.responseText;
+        document.head.appendChild(Script);
+        var Loader = document.getElementById("Preloader");
+        Loader.parentNode.removeChild(Loader);
+        var Style = document.getElementById("PreloadStyle");
+        Style.parentNode.removeChild(Style);
+      }
       req.send();
     </script>
   </body>

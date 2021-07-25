@@ -40,11 +40,9 @@
 </template>
 
 <script>
-  import Vuetable from 'vuetable-2';
   import moment from 'moment';
   import Tariff from './Tariffs/Tariff.vue';
   import EspEsios from './Tariffs/EspEsios.vue';
-  import 'CSS/table-responsive.css';
   import * as oZm from 'JS/openZmeter.js';
   export default {
     data: function() {
@@ -137,10 +135,7 @@
         }
       }
     },
-//    updated: function() {
-//      oZm.createCaptionsForResponsiveTable(this.$refs.table);
-//    },
-    components: { Vuetable, Tariff, EspEsios }
+    components: { Tariff, EspEsios }
   }
 </script>
 
