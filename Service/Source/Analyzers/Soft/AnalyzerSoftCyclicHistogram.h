@@ -6,6 +6,13 @@
 #include "AnalyzerSoftBlock.h"
 #include <stdlib.h>
 
+enum CyclicHistogramFilterMode
+{
+    None,
+    Ideal,
+    Nominal
+};
+
 class AnalyzerSoftCyclicHistogram final
 {
 public:
@@ -20,9 +27,10 @@ public:
     void Clear();
 
 private:
+    CyclicHistogramFilterMode voltageFilterMode;
     bool skippedFirstPointSet;
-    uint32_t nominalVoltage;
-    size_t voltageBinSize;
+    uint32_t maxAmplitude;
+    size_t binCount;
     Database *DB;
     uint64_t startTime;
     uint64_t endTime;
