@@ -30,6 +30,13 @@
 import moment from "moment";
 import Plotly from "plotly.js-dist";
 import * as oZm from "JS/openZmeter.js";
+
+const arrayMinMax = (arr) =>
+  arr.reduce(
+    ([min, max], val) => [Math.min(min, val), Math.max(max, val)],
+    [Number.POSITIVE_INFINITY, Number.NEGATIVE_INFINITY]
+  );
+
 export default {
   props: { analyzer: Object, id: "string" },
   created: function () {
@@ -88,14 +95,12 @@ export default {
 
       let traces = [];
 
-      let z_min = Math.min.apply(
-        Math,
+      const z_min_max = arrayMinMax(
         this.cyclicHistogramData.map((x) => x.count)
       );
-      let z_max = Math.max.apply(
-        Math,
-        this.cyclicHistogramData.map((x) => x.count)
-      );
+
+      const z_min = z_min_max[0];
+      const z_max = z_min_max[1];
 
       // Build the color scale
       function get_colorscale_normalized_value(k, N) {
