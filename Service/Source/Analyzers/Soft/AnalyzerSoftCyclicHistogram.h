@@ -8,9 +8,9 @@
 
 enum CyclicHistogramFilterMode
 {
-    None,
-    Ideal,
-    Nominal
+    None = 0,
+    Ideal = 1,
+    Nominal = 2
 };
 
 class AnalyzerSoftCyclicHistogram final
@@ -18,7 +18,8 @@ class AnalyzerSoftCyclicHistogram final
 public:
     AnalyzerSoftCyclicHistogram(const string &analyzer_schema);
     ~AnalyzerSoftCyclicHistogram();
-    void Config(const json &config);
+    json GetConfig();
+    void SetConfig(const json &config);
     static json CheckConfig(const json &config);
     void AddPoints(AnalyzerSoftBlock *inputBlock, int sampleRate);
     json GetCyclicHistogramForEvent(uint64_t eventStartTime);

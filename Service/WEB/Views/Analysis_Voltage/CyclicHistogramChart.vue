@@ -57,7 +57,7 @@ export default {
   },
   methods: {
     UpdateCyclicHistogramData() {
-      fetch("getCyclicHistogram", {
+      fetch("getCyclicHistogramConfig", {
         method: "POST",
         body: JSON.stringify({
           ID: this.event_id,
@@ -67,31 +67,54 @@ export default {
           Accept: "application/json",
           "Content-Type": "application/json",
         },
-      }).then((result) => {
-        if (result.status == 200) {
-          result.json().then((data) => {
-            this.cyclicHistogramData = data.points;
+      }).then((config_result) => {
+        if (config_result.status == 200) {
+          config_result.json().then((config) => {
+            this.maxAmplitude = config["MaxAmplitude"];
+            this.binCount = config["BinCount"];
 
-            this.starttime = moment(data.starttime);
-            this.starttime_str = this.starttime.format(
-              "dddd, MMM D, YYYY hh:mm:ss.SSS"
-            );
+            if (config["Enabled"]) {
+              fetch("getCyclicHistogramData", {
+                method: "POST",
+                body: JSON.stringify({
+                  ID: this.event_id,
+                  Analyzer: this.analyzer.Analyzer,
+                }),
+                headers: {
+                  Accept: "application/json",
+                  "Content-Type": "application/json",
+                },
+              }).then((result) => {
+                if (result.status == 200) {
+                  result.json().then((data) => {
+                    this.cyclicHistogramData = data.points;
 
-            this.endtime = moment(data.endtime);
-            this.endtime_str = this.endtime.format(
-              "dddd, MMM D, YYYY hh:mm:ss.SSS"
-            );
+                    this.starttime = moment(data.starttime);
+                    this.starttime_str = this.starttime.format(
+                      "dddd, MMM D, YYYY hh:mm:ss.SSS"
+                    );
 
-            if (this.event_id != null) {
-              this.event_starttime = moment(this.event_id);
-              this.event_starttime_str = this.event_starttime.format(
-                "dddd, MMM D, YYYY hh:mm:ss.SSS"
-              );
+                    this.endtime = moment(data.endtime);
+                    this.endtime_str = this.endtime.format(
+                      "dddd, MMM D, YYYY hh:mm:ss.SSS"
+                    );
+
+                    if (this.event_id != null) {
+                      this.event_starttime = moment(this.event_id);
+                      this.event_starttime_str = this.event_starttime.format(
+                        "dddd, MMM D, YYYY hh:mm:ss.SSS"
+                      );
+                    }
+                  });
+                } else {
+                  this.cyclicHistogramData = [];
+                  alert(
+                    "Cyclic Histogram samples are not avaliable right now."
+                  );
+                }
+              });
             }
           });
-        } else {
-          this.cyclicHistogramData = [];
-          alert("Cyclic Histogram samples are not avaliable right now.");
         }
       });
     },
@@ -172,7 +195,7 @@ export default {
         height: 600,
         title: { text: "Cyclic Histogram" },
         xaxis: { title: "Sample Number" },
-        yaxis: { title: "Voltage Bin Number", range: [0, 4096] },
+        yaxis: { title: "Voltage Bin Number", range: [0, this.binCount] },
         legend: {
           orientation: "h",
           x: 0.1,
@@ -205,7 +228,7 @@ export default {
     },
     ClearCyclicHistogramData() {
       if (confirm("Are you sure you want to clear Cyclic Histogram data?")) {
-        fetch("clearCyclicHistogram", {
+        fetch("clearCyclicHistogramData", {
           method: "POST",
           body: JSON.stringify({
             ID: this.event_id,

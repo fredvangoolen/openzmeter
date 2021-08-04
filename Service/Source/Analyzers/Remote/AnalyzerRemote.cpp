@@ -133,10 +133,16 @@ void AnalyzerRemote::GetSeriesNow(HTTPRequest &req) {
   if(!req.CheckParamSet("Series", {"Frequency", "Flag", "Unbalance", "Voltage", "Current", "Active_Power", "Reactive_Power", "Active_Energy", "Reactive_Energy", "Apparent_Power", "Power_Factor", "Voltage_THD", "Current_THD", "Phi", "Voltage_Phase", "Voltage_Harmonics", "Current_Harmonics", "Power_Harmonics", "Voltage_Harmonics_Complex", "Current_Harmonics_Complex", "Voltage_FFT", "Current_FFT", "Voltage_Samples", "Current_Samples"})) return;
   pNow->GetSeriesNow(req);
 }
-void AnalyzerRemote::GetCyclicHistogram(HTTPRequest &req) {
+void AnalyzerRemote::GetCyclicHistogramConfig(HTTPRequest &req) {
   return req.Error("", HTTP_METHOD_NOT_ALLOWED);
 }
-void AnalyzerRemote::ClearCyclicHistogram(HTTPRequest &req) {
+void AnalyzerRemote::SetCyclicHistogramConfig(HTTPRequest &req) {
+  return req.Error("", HTTP_METHOD_NOT_ALLOWED);
+}
+void AnalyzerRemote::GetCyclicHistogramData(HTTPRequest &req) {
+  return req.Error("", HTTP_METHOD_NOT_ALLOWED);
+}
+void AnalyzerRemote::ClearCyclicHistogramData(HTTPRequest &req) {
   return req.Error("", HTTP_METHOD_NOT_ALLOWED);
 }
 void AnalyzerRemote::GetJoltData(HTTPRequest &req) {

@@ -30,8 +30,10 @@ AnalyzerManager::AnalyzerManager() {
   HTTPServer::RegisterCallback("getStatus",       GetStatusCallback,      "API/Analyzer/GetStatus.json");
   HTTPServer::RegisterCallback("getSeries",       GetSeriesCallback,      "API/Analyzer/GetSeries.json");
   HTTPServer::RegisterCallback("getSeriesNow",    GetSeriesNowCallback,   "API/Analyzer/GetSeriesNow.json");
-  HTTPServer::RegisterCallback("getCyclicHistogram", GetCyclicHistogramCallback, "API/Analyzer/GetCyclicHistogram.json");
-  HTTPServer::RegisterCallback("clearCyclicHistogram", ClearCyclicHistogramCallback, "API/Analyzer/ClearCyclicHistogram.json");
+  HTTPServer::RegisterCallback("getCyclicHistogramConfig", GetCyclicHistogramConfigCallback, "API/Analyzer/GetCyclicHistogramData.json");
+  HTTPServer::RegisterCallback("setCyclicHistogramConfig", SetCyclicHistogramConfigCallback, "API/Analyzer/SetCyclicHistogramData.json");
+  HTTPServer::RegisterCallback("getCyclicHistogramData", GetCyclicHistogramDataCallback, "API/Analyzer/GetCyclicHistogramData.json");
+  HTTPServer::RegisterCallback("clearCyclicHistogramData", ClearCyclicHistogramDataCallback, "API/Analyzer/ClearCyclicHistogramData.json");
   HTTPServer::RegisterCallback("getJoltData",     GetJoltDataCallback,    "API/Analyzer/GetJoltData.json");
   HTTPServer::RegisterCallback("getCosts",        GetCostsCallback,       "API/Analyzer/GetCosts.json");
   HTTPServer::RegisterCallback("getBills",        GetBillsCallback,       "API/Analyzer/GetBills.json");
@@ -161,11 +163,17 @@ void AnalyzerManager::GetSeriesCallback(HTTPRequest &req) {
 void AnalyzerManager::GetSeriesNowCallback(HTTPRequest &req) {
   CallAnalyzerFunction(req, &Analyzer::GetSeriesNow);
 }
-void AnalyzerManager::GetCyclicHistogramCallback(HTTPRequest &req) {
-  CallAnalyzerFunction(req, &Analyzer::GetCyclicHistogram);
+void AnalyzerManager::GetCyclicHistogramConfigCallback(HTTPRequest &req) {
+  CallAnalyzerFunction(req, &Analyzer::GetCyclicHistogramConfig);
 }
-void AnalyzerManager::ClearCyclicHistogramCallback(HTTPRequest &req) {
-  CallAnalyzerFunction(req, &Analyzer::ClearCyclicHistogram);
+void AnalyzerManager::SetCyclicHistogramConfigCallback(HTTPRequest &req) {
+  CallAnalyzerFunction(req, &Analyzer::SetCyclicHistogramConfig);
+}
+void AnalyzerManager::GetCyclicHistogramDataCallback(HTTPRequest &req) {
+  CallAnalyzerFunction(req, &Analyzer::GetCyclicHistogramData);
+}
+void AnalyzerManager::ClearCyclicHistogramDataCallback(HTTPRequest &req) {
+  CallAnalyzerFunction(req, &Analyzer::ClearCyclicHistogramData);
 }
 void AnalyzerManager::GetJoltDataCallback(HTTPRequest &req) {
   CallAnalyzerFunction(req, &Analyzer::GetJoltData);

@@ -33,8 +33,10 @@ class AnalyzerManager final {
     static void GetStatusCallback(HTTPRequest &req);
     static void GetSeriesCallback(HTTPRequest &req);
     static void GetSeriesNowCallback(HTTPRequest &req);
-    static void GetCyclicHistogramCallback(HTTPRequest &req);
-    static void ClearCyclicHistogramCallback(HTTPRequest &req);
+    static void GetCyclicHistogramConfigCallback(HTTPRequest &req);
+    static void SetCyclicHistogramConfigCallback(HTTPRequest &req);
+    static void GetCyclicHistogramDataCallback(HTTPRequest &req);
+    static void ClearCyclicHistogramDataCallback(HTTPRequest &req);
     static void GetJoltDataCallback(HTTPRequest &req);
     static void GetCostsCallback(HTTPRequest &req);
     static void GetBillsCallback(HTTPRequest &req);

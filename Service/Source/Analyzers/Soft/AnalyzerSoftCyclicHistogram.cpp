@@ -5,8 +5,6 @@
 
 AnalyzerSoftCyclicHistogram::AnalyzerSoftCyclicHistogram(const string &analyzer_schema)
 {
-    this->pVoltageFilterMode = CyclicHistogramFilterMode::None;
-
     // Setup database structure
     DB = new Database(analyzer_schema);
     DB->ExecResource("SQL/Database_CyclicHistogram.sql");
@@ -26,9 +24,21 @@ AnalyzerSoftCyclicHistogram::~AnalyzerSoftCyclicHistogram()
     DB = NULL;
 }
 
-void AnalyzerSoftCyclicHistogram::Config(const json &config)
+json AnalyzerSoftCyclicHistogram::GetConfig()
+{
+    json result = json::object();
+
+    result["Enabled"] = pEnabled;
+    result["MaxAmplitude"] = pMaxAmplitude;
+    result["BinCount"] = pBinCount;
+
+    return result;
+}
+
+void AnalyzerSoftCyclicHistogram::SetConfig(const json &config)
 {
     pEnabled = false;
+    pVoltageFilterMode = CyclicHistogramFilterMode::None;
     pMaxAmplitude = 120 * 1.7;
     pBinCount = 512;
 
@@ -37,6 +47,8 @@ void AnalyzerSoftCyclicHistogram::Config(const json &config)
 
     if (config.contains("Enabled") && config["Enabled"].is_boolean())
         pEnabled = config["Enabled"];
+    if (config.contains("VoltageFilterMode") && config["VoltageFilterMode"].is_number_unsigned())
+        pVoltageFilterMode = config["VoltageFilterMode"];
     if (config.contains("MaxAmplitude") && config["MaxAmplitude"].is_number())
         pMaxAmplitude = config["MaxAmplitude"];
     if (config.contains("BinCount") && config["BinCount"].is_number_unsigned())
@@ -48,6 +60,7 @@ json AnalyzerSoftCyclicHistogram::CheckConfig(const json &config)
     json ConfigOUT = json::object();
 
     ConfigOUT["Enabled"] = false;
+    ConfigOUT["VoltageFilterMode"] = CyclicHistogramFilterMode::None;
     ConfigOUT["MaxAmplitude"] = 120 * 1.7;
     ConfigOUT["BinCount"] = 512;
 
@@ -55,6 +68,8 @@ json AnalyzerSoftCyclicHistogram::CheckConfig(const json &config)
     {
         if (config.contains("Enabled") && config["Enabled"].is_boolean())
             ConfigOUT["Enabled"] = config["Enabled"];
+        if (config.contains("VoltageFilterMode") && config["VoltageFilterMode"].is_number_unsigned())
+            ConfigOUT["VoltageFilterMode"] = config["VoltageFilterMode"];
         if (config.contains("MaxAmplitude") && config["MaxAmplitude"].is_number())
             ConfigOUT["MaxAmplitude"] = config["MaxAmplitude"];
         if (config.contains("BinCount") && config["BinCount"].is_number_unsigned())
@@ -360,9 +375,9 @@ json AnalyzerSoftCyclicHistogram::GetCurrentCyclicHistogram()
                 if (count != 0)
                 {
                     json point = json::array();
-                    point.push_back(i); // Phase
-                    point.push_back(j); // Sample
-                    point.push_back(k); // Voltage Bin
+                    point.push_back(i);     // Phase
+                    point.push_back(j);     // Sample
+                    point.push_back(k);     // Voltage Bin
                     point.push_back(count); // Count
 
                     result["points"].push_back(point);

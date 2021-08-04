@@ -194,7 +194,7 @@ void AnalyzerSoft::Config(const json &options) {
   pEvents->Config(options["EventsEnabled"], pNominalVoltage, pNominalFrequency);
   pSync->Config(options["Sync"]);
   pMQTT->Config(options);
-  pCyclicHistogram->Config(options["CyclicHistogram"]);
+  pCyclicHistogram->SetConfig(options["CyclicHistogram"]);
   pthread_mutex_unlock(&pMutex);
 }
 void AnalyzerSoft::Thread() {
@@ -433,11 +433,21 @@ void AnalyzerSoft::GetSeriesNow(HTTPRequest &req) {
   if(Result == nullptr) return req.Error("", HTTP_METHOD_NOT_ALLOWED);
   req.Success(Result);
 }
-void AnalyzerSoft::GetCyclicHistogram(HTTPRequest &req)
-{
+void AnalyzerSoft::GetCyclicHistogramConfig(HTTPRequest &req){
   if(pAccess->TestUser(AnalyzerAccess::READ, req.UserName()) == false) return req.Error("", HTTP_FORBIDDEN);
 
-  // Database DB(Serial());
+  json result = pCyclicHistogram->GetConfig();
+  if(result == nullptr) return req.Error("", HTTP_METHOD_NOT_ALLOWED);
+  req.Success(result);
+}
+void AnalyzerSoft::SetCyclicHistogramConfig(HTTPRequest &req){
+  if(pAccess->TestUser(AnalyzerAccess::WRITE, req.UserName()) == false) return req.Error("", HTTP_FORBIDDEN);
+  pCyclicHistogram->SetConfig(AnalyzerSoftCyclicHistogram::CheckConfig(req.Params()));
+  req.Success(json::object());
+}
+void AnalyzerSoft::GetCyclicHistogramData(HTTPRequest &req)
+{
+  if(pAccess->TestUser(AnalyzerAccess::READ, req.UserName()) == false) return req.Error("", HTTP_FORBIDDEN);
 
   uint64_t ID = 0;
 
@@ -460,17 +470,15 @@ void AnalyzerSoft::GetCyclicHistogram(HTTPRequest &req)
   if(result == nullptr) return req.Error("", HTTP_METHOD_NOT_ALLOWED);
   req.Success(result);
 }
-void AnalyzerSoft::ClearCyclicHistogram(HTTPRequest &req)
+void AnalyzerSoft::ClearCyclicHistogramData(HTTPRequest &req)
 {
-  if(pAccess->TestUser(AnalyzerAccess::READ, req.UserName()) == false) return req.Error("", HTTP_FORBIDDEN);
+  if(pAccess->TestUser(AnalyzerAccess::WRITE, req.UserName()) == false) return req.Error("", HTTP_FORBIDDEN);
   pCyclicHistogram->Clear();
   req.Success(json::object());
 }
 void AnalyzerSoft::GetJoltData(HTTPRequest &req)
 {
   if(pAccess->TestUser(AnalyzerAccess::READ, req.UserName()) == false) return req.Error("", HTTP_FORBIDDEN);
-
-  Database DB(Serial());
 
   if (!req.Params().contains("StartTime") || !req.Params()["StartTime"].is_number() || !req.Params().contains("EndTime") || !req.Params()["EndTime"].is_number()){
     req.Error("StartTime and EndTime parameters are required.", HTTP_BAD_REQUEST);
