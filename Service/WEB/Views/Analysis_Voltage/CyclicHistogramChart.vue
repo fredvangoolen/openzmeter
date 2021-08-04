@@ -22,6 +22,13 @@
       >
         Refresh Chart
       </button>
+      <button
+        type="button"
+        class="btn btn-danger"
+        @click="ClearCyclicHistogramData"
+      >
+        Clear Chart
+      </button>
     </div>
   </div>
 </template>
@@ -95,9 +102,7 @@ export default {
 
       let traces = [];
 
-      const z_min_max = arrayMinMax(
-        this.cyclicHistogramData.map((x) => x[3])
-      );
+      const z_min_max = arrayMinMax(this.cyclicHistogramData.map((x) => x[3]));
 
       const z_min = z_min_max[0];
       const z_max = z_min_max[1];
@@ -196,6 +201,25 @@ export default {
 
       if (this.event_id != null) {
         this.event_starttime_ago_str = this.event_starttime.fromNow();
+      }
+    },
+    ClearCyclicHistogramData() {
+      if (confirm("Are you sure you want to clear Cyclic Histogram data?")) {
+        fetch("clearCyclicHistogram", {
+          method: "POST",
+          body: JSON.stringify({
+            ID: this.event_id,
+            Analyzer: this.analyzer.Analyzer,
+          }),
+          headers: {
+            Accept: "application/json",
+            "Content-Type": "application/json",
+          },
+        }).then((result) => {
+          if (result.status == 200) {
+          } else {
+          }
+        });
       }
     },
   },

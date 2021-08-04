@@ -437,7 +437,7 @@ void AnalyzerSoft::GetCyclicHistogram(HTTPRequest &req)
 {
   if(pAccess->TestUser(AnalyzerAccess::READ, req.UserName()) == false) return req.Error("", HTTP_FORBIDDEN);
 
-  Database DB(Serial());
+  // Database DB(Serial());
 
   uint64_t ID = 0;
 
@@ -459,7 +459,12 @@ void AnalyzerSoft::GetCyclicHistogram(HTTPRequest &req)
 
   if(result == nullptr) return req.Error("", HTTP_METHOD_NOT_ALLOWED);
   req.Success(result);
-  //return HTTPServer::FillResponse(response, result.dump(), "application/json", HTTP_OK);
+}
+void AnalyzerSoft::ClearCyclicHistogram(HTTPRequest &req)
+{
+  if(pAccess->TestUser(AnalyzerAccess::READ, req.UserName()) == false) return req.Error("", HTTP_FORBIDDEN);
+  pCyclicHistogram->Clear();
+  req.Success(json::object());
 }
 void AnalyzerSoft::GetJoltData(HTTPRequest &req)
 {

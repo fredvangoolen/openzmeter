@@ -57,6 +57,7 @@ class Analyzer {
     virtual void SetSeries(HTTPRequest &req) = 0;
     virtual void GetSeriesNow(HTTPRequest &req) = 0;
     virtual void GetCyclicHistogram(HTTPRequest &req) = 0;
+    virtual void ClearCyclicHistogram(HTTPRequest &req) = 0;
     virtual void GetJoltData(HTTPRequest &req) = 0;
     virtual void GetCosts(HTTPRequest &req) = 0;
     virtual void GetBills(HTTPRequest &req) = 0;

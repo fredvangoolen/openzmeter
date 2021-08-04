@@ -46,6 +46,7 @@ class AnalyzerRemote : public Analyzer {
     void SetSeries(HTTPRequest &req) override;
     void GetSeriesNow(HTTPRequest &req) override;
     void GetCyclicHistogram(HTTPRequest &req) override;
+    void ClearCyclicHistogram(HTTPRequest &req) override;
     void GetJoltData(HTTPRequest &req) override;
     void GetWaveStream(HTTPRequest &req) override;
     void GetSeriesRange(HTTPRequest &req) override;

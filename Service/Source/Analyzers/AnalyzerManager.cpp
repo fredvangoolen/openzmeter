@@ -31,6 +31,7 @@ AnalyzerManager::AnalyzerManager() {
   HTTPServer::RegisterCallback("getSeries",       GetSeriesCallback,      "API/Analyzer/GetSeries.json");
   HTTPServer::RegisterCallback("getSeriesNow",    GetSeriesNowCallback,   "API/Analyzer/GetSeriesNow.json");
   HTTPServer::RegisterCallback("getCyclicHistogram", GetCyclicHistogramCallback, "API/Analyzer/GetCyclicHistogram.json");
+  HTTPServer::RegisterCallback("clearCyclicHistogram", ClearCyclicHistogramCallback, "API/Analyzer/ClearCyclicHistogram.json");
   HTTPServer::RegisterCallback("getJoltData",     GetJoltDataCallback,    "API/Analyzer/GetJoltData.json");
   HTTPServer::RegisterCallback("getCosts",        GetCostsCallback,       "API/Analyzer/GetCosts.json");
   HTTPServer::RegisterCallback("getBills",        GetBillsCallback,       "API/Analyzer/GetBills.json");
@@ -162,6 +163,9 @@ void AnalyzerManager::GetSeriesNowCallback(HTTPRequest &req) {
 }
 void AnalyzerManager::GetCyclicHistogramCallback(HTTPRequest &req) {
   CallAnalyzerFunction(req, &Analyzer::GetCyclicHistogram);
+}
+void AnalyzerManager::ClearCyclicHistogramCallback(HTTPRequest &req) {
+  CallAnalyzerFunction(req, &Analyzer::ClearCyclicHistogram);
 }
 void AnalyzerManager::GetJoltDataCallback(HTTPRequest &req) {
   CallAnalyzerFunction(req, &Analyzer::GetJoltData);

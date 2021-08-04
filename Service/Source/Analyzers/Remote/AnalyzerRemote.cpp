@@ -136,6 +136,9 @@ void AnalyzerRemote::GetSeriesNow(HTTPRequest &req) {
 void AnalyzerRemote::GetCyclicHistogram(HTTPRequest &req) {
   return req.Error("", HTTP_METHOD_NOT_ALLOWED);
 }
+void AnalyzerRemote::ClearCyclicHistogram(HTTPRequest &req) {
+  return req.Error("", HTTP_METHOD_NOT_ALLOWED);
+}
 void AnalyzerRemote::GetJoltData(HTTPRequest &req) {
   return req.Error("", HTTP_METHOD_NOT_ALLOWED);
 }
