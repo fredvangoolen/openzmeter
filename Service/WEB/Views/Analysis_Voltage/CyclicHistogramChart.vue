@@ -96,7 +96,7 @@ export default {
       let traces = [];
 
       const z_min_max = arrayMinMax(
-        this.cyclicHistogramData.map((x) => x.count)
+        this.cyclicHistogramData.map((x) => x[3])
       );
 
       const z_min = z_min_max[0];
@@ -138,14 +138,14 @@ export default {
 
       phases.forEach((phase) => {
         let points_filtered = this.cyclicHistogramData.filter(
-          (x) => x.phase == phase
+          (x) => x[0] == phase
         );
         let phase_number = phase + 1;
 
         let new_trace = {
-          x: points_filtered.map((x) => x.sample),
-          y: points_filtered.map((x) => x.voltage_bin),
-          z: points_filtered.map((x) => x.count),
+          x: points_filtered.map((x) => x[1]),
+          y: points_filtered.map((x) => x[2]),
+          z: points_filtered.map((x) => x[3]),
           name: "Phase " + phase_number,
           type: "heatmap",
           coloraxis: "coloraxis",

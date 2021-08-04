@@ -359,11 +359,11 @@ json AnalyzerSoftCyclicHistogram::GetCurrentCyclicHistogram()
                 uint64_t count = cumulativeCount[i][j][k];
                 if (count != 0)
                 {
-                    json point = json::object();
-                    point["phase"] = i;
-                    point["sample"] = j;
-                    point["voltage_bin"] = k;
-                    point["count"] = count;
+                    json point = json::array();
+                    point.push_back(i); // Phase
+                    point.push_back(j); // Sample
+                    point.push_back(k); // Voltage Bin
+                    point.push_back(count); // Count
 
                     result["points"].push_back(point);
                 }
