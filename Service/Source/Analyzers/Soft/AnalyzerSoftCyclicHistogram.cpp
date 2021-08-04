@@ -1,12 +1,12 @@
 #include "AnalyzerSoftCyclicHistogram.h"
+#include "ConfigFile.h"
 #include <chrono>
 #include <fstream>
 
-AnalyzerSoftCyclicHistogram::AnalyzerSoftCyclicHistogram(const string &analyzer_schema, uint32_t maxAmplitude, size_t binCount)
+AnalyzerSoftCyclicHistogram::AnalyzerSoftCyclicHistogram(const string &analyzer_schema)
 {
-    this->voltageFilterMode = CyclicHistogramFilterMode::None;
-    this->maxAmplitude = maxAmplitude;
-    this->binCount = binCount;
+    this->pVoltageFilterMode = CyclicHistogramFilterMode::None;
+
     // Setup database structure
     DB = new Database(analyzer_schema);
     DB->ExecResource("SQL/Database_CyclicHistogram.sql");
@@ -26,8 +26,49 @@ AnalyzerSoftCyclicHistogram::~AnalyzerSoftCyclicHistogram()
     DB = NULL;
 }
 
+void AnalyzerSoftCyclicHistogram::Config(const json &config)
+{
+    pEnabled = false;
+    pMaxAmplitude = 120 * 1.7;
+    pBinCount = 512;
+
+    if (config == NULL)
+        return;
+
+    if (config.contains("Enabled") && config["Enabled"].is_boolean())
+        pEnabled = config["Enabled"];
+    if (config.contains("MaxAmplitude") && config["MaxAmplitude"].is_number())
+        pMaxAmplitude = config["MaxAmplitude"];
+    if (config.contains("BinCount") && config["BinCount"].is_number_unsigned())
+        pBinCount = config["BinCount"];
+}
+
+json AnalyzerSoftCyclicHistogram::CheckConfig(const json &config)
+{
+    json ConfigOUT = json::object();
+
+    ConfigOUT["Enabled"] = false;
+    ConfigOUT["MaxAmplitude"] = 120 * 1.7;
+    ConfigOUT["BinCount"] = 512;
+
+    if (config != NULL && config.is_object())
+    {
+        if (config.contains("Enabled") && config["Enabled"].is_boolean())
+            ConfigOUT["Enabled"] = config["Enabled"];
+        if (config.contains("MaxAmplitude") && config["MaxAmplitude"].is_number())
+            ConfigOUT["MaxAmplitude"] = config["MaxAmplitude"];
+        if (config.contains("BinCount") && config["BinCount"].is_number_unsigned())
+            ConfigOUT["BinCount"] = config["BinCount"];
+    }
+
+    return ConfigOUT;
+}
+
 void AnalyzerSoftCyclicHistogram::AddPoints(AnalyzerSoftBlock *inputBlock, int sampleRate)
 {
+    if (!pEnabled)
+        return;
+
     int nominalFrequency = (int)inputBlock->NominalFrequency();
     float nominalVoltage = inputBlock->NominalVoltage();
     uint16_t numSamples = inputBlock->Samples();
@@ -122,7 +163,7 @@ void AnalyzerSoftCyclicHistogram::AddPoints(AnalyzerSoftBlock *inputBlock, int s
                 int sampleIdx = i - cycleStartIdx;
                 float voltageNew = (m * (i + cycleXDiff)) + b;
 
-                if (this->voltageFilterMode == CyclicHistogramFilterMode::Ideal)
+                if (this->pVoltageFilterMode == CyclicHistogramFilterMode::Ideal)
                 {
                     // LogFile::Warning("sampleIdx: %d, numNominalSamplesPerCycle: %d", sampleIdx, numNominalSamplesPerCycle);
                     float t = (float)sampleIdx / (float)numNominalSamplesPerCycle;
@@ -136,10 +177,10 @@ void AnalyzerSoftCyclicHistogram::AddPoints(AnalyzerSoftBlock *inputBlock, int s
                 }
 
                 // Don't attempt to add to cumulative count if the voltage is clipped
-                if (abs(voltageNew) <= maxAmplitude)
+                if (abs(voltageNew) <= pMaxAmplitude)
                 {
                     // Convert voltage measurement into a discrete bin number (i.e. quantization)
-                    uint32_t binIndex = ((voltageNew + maxAmplitude) / (2 * maxAmplitude)) * (binCount - 1);
+                    uint32_t binIndex = ((voltageNew + pMaxAmplitude) / (2 * pMaxAmplitude)) * (pBinCount - 1);
 
                     if (sampleIdx < numNominalSamplesPerCycle)
                     {
@@ -255,7 +296,7 @@ void AnalyzerSoftCyclicHistogram::ResizeCumulativeCount(uint8_t phaseNumber, siz
     LogFile::Debug(message.c_str());
 
     // Resize vector
-    cumulativeCount[phaseNumber].resize(newSize, vector<uint64_t>(binCount));
+    cumulativeCount[phaseNumber].resize(newSize, vector<uint64_t>(pBinCount));
 }
 
 json AnalyzerSoftCyclicHistogram::GetCyclicHistogramForEvent(uint64_t eventStartTime)

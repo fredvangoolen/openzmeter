@@ -16,8 +16,10 @@ enum CyclicHistogramFilterMode
 class AnalyzerSoftCyclicHistogram final
 {
 public:
-    AnalyzerSoftCyclicHistogram(const string &analyzer_schema, uint32_t nominalVoltage, size_t voltageBinSize = 512);
+    AnalyzerSoftCyclicHistogram(const string &analyzer_schema);
     ~AnalyzerSoftCyclicHistogram();
+    void Config(const json &config);
+    static json CheckConfig(const json &config);
     void AddPoints(AnalyzerSoftBlock *inputBlock, int sampleRate);
     json GetCyclicHistogramForEvent(uint64_t eventStartTime);
     json GetCurrentCyclicHistogram();
@@ -27,11 +29,12 @@ public:
     void Clear();
 
 private:
-    CyclicHistogramFilterMode voltageFilterMode;
-    bool skippedFirstPointSet;
-    uint32_t maxAmplitude;
-    size_t binCount;
+    bool pEnabled = false;
+    CyclicHistogramFilterMode pVoltageFilterMode;
+    uint32_t pMaxAmplitude;
+    size_t pBinCount;
     Database *DB;
+    bool skippedFirstPointSet;
     uint64_t startTime;
     uint64_t endTime;
     vector<vector<vector<uint64_t>>> cumulativeCount; // Variable used for storing cyclic histogram cumulative counts

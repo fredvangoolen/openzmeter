@@ -63,6 +63,8 @@ AnalyzerSoft::AnalyzerSoft(const string &id, const Analyzer::AnalyzerMode mode, 
     [&](const vector<string> &series) { return pAccess->GetStatus(series); },
     [&](const vector<string> &series) { return GetSeriesNow(series); }
   );
+  pCyclicHistogram = new AnalyzerSoftCyclicHistogram(id); // Setup cyclic histogram manager
+  pJoltAlgorithm  = new AnalyzerSoftJoltAlgorithm(id); // Setup jolt manager
   if(pthread_create(&pThread, NULL, [](void *params) -> void* { ((AnalyzerSoft*)params)->Thread(); return NULL; }, this) != 0) {
     LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
     pThread = 0;
@@ -71,8 +73,6 @@ AnalyzerSoft::AnalyzerSoft(const string &id, const Analyzer::AnalyzerMode mode, 
     TaskPool::SetThreadProperties(pThread, TaskPool::ABOUTNORMAL);
   }
   Config(CheckConfig(ConfigFile::ReadConfig(optionPath), mode, false));
-  pCyclicHistogram = new AnalyzerSoftCyclicHistogram(id, (int)(pNominalVoltage * 1.7), 4096); // Setup cyclic histogram manager
-  pJoltAlgorithm  = new AnalyzerSoftJoltAlgorithm(id); // Setup jolt manager
   LogFile::Info("AnalyzerSoft with serial '%s' started", pSerial.c_str());
 }
 AnalyzerSoft::~AnalyzerSoft() {
@@ -86,6 +86,8 @@ AnalyzerSoft::~AnalyzerSoft() {
     delete pPendingBlocks.front();
     pPendingBlocks.pop_front();
   }
+  delete pCyclicHistogram;
+  delete pJoltAlgorithm;
   delete pSync;
   delete pAlarms;
   delete pMQTT;
@@ -139,6 +141,7 @@ json AnalyzerSoft::CheckConfig(const json &config, const Analyzer::AnalyzerMode 
   ConfigOUT["Tags"] = json::object();
   ConfigOUT["Sync"] = AnalyzerSoftSync::CheckConfig(json::object());
   ConfigOUT["MQTT"] = AnalyzerSoftMQTT::CheckConfig(json::object());
+  ConfigOUT["CyclicHistogram"] = AnalyzerSoftCyclicHistogram::CheckConfig(json::object());
   ConfigOUT["Save200MS"] = false;
   ConfigOUT["EventsEnabled"] = false;
   ConfigOUT["AlarmsEnabled"] = false;
@@ -168,6 +171,7 @@ json AnalyzerSoft::CheckConfig(const json &config, const Analyzer::AnalyzerMode 
   }
   if(config.contains("Sync")) ConfigOUT["Sync"] = AnalyzerSoftSync::CheckConfig(config["Sync"]);
   if(config.contains("MQTT")) ConfigOUT["MQTT"] = AnalyzerSoftMQTT::CheckConfig(config["MQTT"]);
+  if(config.contains("CyclicHistogram")) ConfigOUT["CyclicHistogram"] = AnalyzerSoftCyclicHistogram::CheckConfig(config["CyclicHistogram"]);
   if(config.contains("Save200MS") && config["Save200MS"].is_boolean()) ConfigOUT["Save200MS"] = config["Save200MS"];
   if(config.contains("EventsEnabled") && config["EventsEnabled"].is_boolean()) ConfigOUT["EventsEnabled"] = config["EventsEnabled"];
   if(config.contains("AlarmsEnabled") && config["AlarmsEnabled"].is_boolean()) ConfigOUT["AlarmsEnabled"] = config["AlarmsEnabled"];
@@ -190,6 +194,7 @@ void AnalyzerSoft::Config(const json &options) {
   pEvents->Config(options["EventsEnabled"], pNominalVoltage, pNominalFrequency);
   pSync->Config(options["Sync"]);
   pMQTT->Config(options);
+  pCyclicHistogram->Config(options["CyclicHistogram"]);
   pthread_mutex_unlock(&pMutex);
 }
 void AnalyzerSoft::Thread() {
