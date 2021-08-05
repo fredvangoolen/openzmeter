@@ -177,17 +177,13 @@ void AnalyzerSoftCyclicHistogram::AddPoints(AnalyzerSoftBlock *inputBlock, int s
             {
                 int sampleIdx = i - cycleStartIdx;
                 float voltageNew = (m * (i + cycleXDiff)) + b;
-
+                inputBlock->VoltageChannels();
                 if (this->pVoltageFilterMode == CyclicHistogramFilterMode::Ideal)
                 {
-                    // LogFile::Warning("sampleIdx: %d, numNominalSamplesPerCycle: %d", sampleIdx, numNominalSamplesPerCycle);
                     float t = (float)sampleIdx / (float)numNominalSamplesPerCycle;
 
-                    float idealVoltage = nominalVoltage * sqrt(2) * sin(2 * M_PI * t);
-                    // LogFile::Warning("t: %f | Inner: %f | Ideal Voltage: %f", t, inner, idealVoltage);
-                    // LogFile::Warning("Ideal Voltage: %d", idealVoltage);
-                    // Subtract out the ideal waveform
-                    LogFile::Warning("Voltage: %f, Ideal Voltage: %f, Diff: %f", voltageNew, idealVoltage, voltageNew - idealVoltage);
+                    float idealVoltage = nominalVoltage * sqrt(2) * sin(2 * M_PI * t - (2 * M_PI * phaseNumber / numVoltageChannels));
+                    // LogFile::Warning("Voltage: %f, Ideal Voltage: %f, Diff: %f", voltageNew, idealVoltage, voltageNew - idealVoltage);
                     voltageNew = voltageNew - idealVoltage;
                 }
 
