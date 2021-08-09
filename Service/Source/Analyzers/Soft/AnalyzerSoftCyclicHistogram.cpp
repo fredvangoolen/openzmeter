@@ -9,6 +9,7 @@ AnalyzerSoftCyclicHistogram::AnalyzerSoftCyclicHistogram(const string &analyzer_
     DB = new Database(analyzer_schema);
     DB->ExecResource("SQL/Database_CyclicHistogram.sql");
 
+    nominalSamplesSaved = false;
     skippedFirstPointSet = false;
     startTime = 0;
     endTime = 0;
@@ -177,7 +178,7 @@ void AnalyzerSoftCyclicHistogram::AddPoints(AnalyzerSoftBlock *inputBlock, int s
             {
                 int sampleIdx = i - cycleStartIdx;
                 float voltageNew = (m * (i + cycleXDiff)) + b;
-                inputBlock->VoltageChannels();
+
                 if (this->pVoltageFilterMode == CyclicHistogramFilterMode::Ideal)
                 {
                     float t = (float)sampleIdx / (float)numNominalSamplesPerCycle;
@@ -185,6 +186,24 @@ void AnalyzerSoftCyclicHistogram::AddPoints(AnalyzerSoftBlock *inputBlock, int s
                     float idealVoltage = nominalVoltage * sqrt(2) * sin(2 * M_PI * t - (2 * M_PI * phaseNumber / numVoltageChannels));
                     // LogFile::Warning("Voltage: %f, Ideal Voltage: %f, Diff: %f", voltageNew, idealVoltage, voltageNew - idealVoltage);
                     voltageNew = voltageNew - idealVoltage;
+                }
+                else if (this->pVoltageFilterMode == CyclicHistogramFilterMode::Nominal)
+                {
+                    if (!nominalSamplesSaved)
+                    {
+                        if (sampleIdx < numNominalSamplesPerCycle)
+                        {
+                            // LogFile::Warning("[CH] Saving Phase %u, Sample %i, Voltage %f", phaseNumber, sampleIdx, voltageNew);
+                            nominalSamples[phaseNumber][sampleIdx] += voltageNew;
+                            nominalSamplesCount[phaseNumber][sampleIdx] += 1;
+                        }
+                        continue;
+                    }
+                    else
+                    {
+                        // Apply the nominal voltage filter
+                        voltageNew = voltageNew - nominalSamples[phaseNumber][sampleIdx];
+                    }
                 }
 
                 // Don't attempt to add to cumulative count if the voltage is clipped
@@ -197,12 +216,27 @@ void AnalyzerSoftCyclicHistogram::AddPoints(AnalyzerSoftBlock *inputBlock, int s
                     {
                         if (phaseNumber == 0 && sampleIdx == 0)
                             continue;
+
                         // Perform the incremental count update
                         cumulativeCount[phaseNumber][sampleIdx][binIndex] += 1;
                     }
                 }
             }
         }
+    }
+
+    if (pVoltageFilterMode == CyclicHistogramFilterMode::Nominal && !nominalSamplesSaved)
+    {
+        // Compute the average for each sample
+        for (uint8_t phaseNumber = 0; phaseNumber < numVoltageChannels; phaseNumber++)
+        {
+            for (uint64_t i = 0; i < nominalSamples[phaseNumber].size(); i++)
+            {
+                nominalSamples[phaseNumber][i] = nominalSamples[phaseNumber][i] / nominalSamplesCount[phaseNumber][i];
+            }
+        }
+
+        nominalSamplesSaved = true;
     }
 }
 
@@ -290,6 +324,9 @@ void AnalyzerSoftCyclicHistogram::Clear()
     startTime = 0;
     endTime = 0;
     cumulativeCount = vector<vector<vector<uint64_t>>>();
+    nominalSamples = vector<vector<float>>();
+    nominalSamplesCount = vector<vector<uint64_t>>();
+    nominalSamplesSaved = false;
 }
 
 void AnalyzerSoftCyclicHistogram::ResizePhaseNumber(uint8_t numPhases)
@@ -299,6 +336,10 @@ void AnalyzerSoftCyclicHistogram::ResizePhaseNumber(uint8_t numPhases)
 
     // Resize outer vector
     cumulativeCount.resize(numPhases);
+
+    // Resize nominal filter vectors
+    nominalSamples.resize(numPhases);
+    nominalSamplesCount.resize(numPhases);
 }
 
 void AnalyzerSoftCyclicHistogram::ResizeCumulativeCount(uint8_t phaseNumber, size_t newSize)
@@ -308,6 +349,9 @@ void AnalyzerSoftCyclicHistogram::ResizeCumulativeCount(uint8_t phaseNumber, siz
 
     // Resize vector
     cumulativeCount[phaseNumber].resize(newSize, vector<uint64_t>(pBinCount));
+
+    nominalSamples[phaseNumber].resize(newSize, 0);
+    nominalSamplesCount[phaseNumber].resize(newSize, 0);
 }
 
 json AnalyzerSoftCyclicHistogram::GetCyclicHistogramForEvent(uint64_t eventStartTime)

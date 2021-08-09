@@ -5,6 +5,7 @@
 #include "Database.h"
 #include "AnalyzerSoftBlock.h"
 #include <stdlib.h>
+#include <vector>
 
 enum CyclicHistogramFilterMode
 {
@@ -38,6 +39,9 @@ private:
     bool skippedFirstPointSet;
     uint64_t startTime;
     uint64_t endTime;
+    bool nominalSamplesSaved;
+    vector<vector<float>> nominalSamples;             // Variable used for storing nominal samples (for filtering)
+    vector<vector<uint64_t>> nominalSamplesCount;          // Used for averaging nominal samples
     vector<vector<vector<uint64_t>>> cumulativeCount; // Variable used for storing cyclic histogram cumulative counts
     void ResizePhaseNumber(uint8_t numPhases);
     void ResizeCumulativeCount(uint8_t phaseNumber, size_t newSize);
