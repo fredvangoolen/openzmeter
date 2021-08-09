@@ -1,13 +1,12 @@
 #Executable related components
 EXECUTABLE_TARGET = Tmp/Firmware
-EXECUTABLE_SOURCE = Main.c System.c USB.c
-LIBSPEC=-L /usr/lib/gcc/arm-none-eabi/5.4.1/armv6-m
-CFLAGS += -Wall -std=c99 -mcpu=cortex-m4 -mthumb -march=armv6-m -mfloat-abi=soft -mlong-calls -g -O2 -fstack-usage
-LDFLAGS += -T CMSIS/stm32f303xb.ld -nostdlib -Wl,--cref -Wl,-Map=$(EXECUTABLE_TARGET:%=%.map)
+EXECUTABLE_SOURCE = $(shell find . -name "*.c" ! -type d -print)
+CFLAGS += -D_GNU_SOURCE
+CFLAGS += -ggdb -Wall -Og -flto -std=c99 -Warray-bounds -mcpu=cortex-m4 -mthumb -mlittle-endian -mthumb-interwork -mfloat-abi=softfp -mfpu=fpv4-sp-d16 -fstack-usage -fsingle-precision-constant
+LDFLAGS += -g -T CMSIS/stm32f303xb.ld -flto -nostdlib -lc -Wl,-Map=$(EXECUTABLE_TARGET:%=%.map)
 
 CFLAGS += -I CMSIS
 CC=arm-none-eabi-gcc
-LD=arm-none-eabi-ld
 EXECUTABLE_OBJS	+= $(EXECUTABLE_SOURCE:%=Tmp/%.o)
 #=======================================================================================================================
 default: $(EXECUTABLE_TARGET)
@@ -17,11 +16,16 @@ clean:
 
 $(EXECUTABLE_TARGET): $(EXECUTABLE_OBJS)
 	@echo "Linking target" $(TARGET_EXEC)
-	@$(CC) $(EXECUTABLE_OBJS) $(LIBSPEC) -o $(EXECUTABLE_TARGET) $(LDFLAGS)
-	@arm-none-eabi-objcopy -O binary $(EXECUTABLE_TARGET) Tmp/Image.bin
-	@arm-none-eabi-size $(EXECUTABLE_TARGET)
+	@$(CC) $(CFLAGS) $(EXECUTABLE_OBJS) -o $(EXECUTABLE_TARGET) $(LDFLAGS)
+	@arm-none-eabi-size -A $(EXECUTABLE_TARGET)
+	@arm-none-eabi-objdump -S -x $(EXECUTABLE_TARGET) > Tmp/Firmware.lst
 
 Tmp/%.c.o: %.c
+	@mkdir -p $(dir $@)
+	@echo "Building" $@
+	$(CC) $(CFLAGS) -c $< -o $@
+
+Tmp/%.cpp.o: %.cpp
 	@mkdir -p $(dir $@)
 	@echo "Building" $@
 	$(CC) $(CFLAGS) -c $< -o $@

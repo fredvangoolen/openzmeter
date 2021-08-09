@@ -218,7 +218,7 @@ void *BluetoothManager::Thread(void *params) {
   SendBoolBT(DBus, "Powered", false);
   string MAC = GetMacBT(DBus);
   MAC.erase(std::remove(MAC.begin(), MAC.end(), ':'), MAC.end());
-  string NetName = "openZmeter_" + MAC.substr(8);
+  if(MAC.length > 8) NetName = "openZmeter_" + MAC.substr(8);
   SendStringBT(DBus, "Alias", NetName.c_str());
   SendBoolBT(DBus, "Powered", true);
   SendBoolBT(DBus, "Discoverable", true);

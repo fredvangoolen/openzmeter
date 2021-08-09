@@ -1,4 +1,4 @@
-18605512758087892
+18608768948809892
 Battery
 BatteryHolder_Bulgin_BX0036_1xC
 Bulgin Battery Holder, BX0036, Battery Type C (https://www.bulgin.com/products/pub/media/bulgin/data/Battery_holders.pdf)
@@ -50683,6 +50683,20 @@ Footprints
 Converter_DCDC_muRata_CRE1xxxxxx3C_THT
 Isolated 1W single output DC/DC, http://power.murata.com/data/power/ncl/kdc_cre1.pdf
 Isolated 1W single output DC/DC
+0
+4
+4
+Footprints
+Crystal_SMD_3215-2Pin_3.2x1.5mm
+SMD Crystal FC-135 https://support.epson.biz/td/api/doc_check.php?dl=brief_FC-135R_en.pdf
+SMD SMT Crystal
+0
+2
+2
+Footprints
+Crystal_SMD_3225-4Pin_3.2x2.5mm
+SMD Crystal SERIES SMD3225/4 http://www.txccrystal.com/images/pdf/7m-accuracy.pdf, 3.2x2.5mm^2 package
+SMD SMT crystal
 0
 4
 4
