@@ -30,8 +30,12 @@ json AnalyzerSoftCyclicHistogram::GetConfig()
     json result = json::object();
 
     result["Enabled"] = pEnabled;
-    result["MaxAmplitude"] = pMaxAmplitude;
-    result["BinCount"] = pBinCount;
+    result["VoltageMaxAmplitude"] = pVoltageMaxAmplitude;
+    result["CurrentMaxAmplitude"] = pCurrentMaxAmplitude;
+    result["VoltageFilterMode"] = pVoltageFilterMode;
+    result["CurrentFilterMode"] = pCurrentFilterMode;
+    result["VoltageBinCount"] = pVoltageBinCount;
+    result["CurrentBinCount"] = pCurrentBinCount;
 
     return result;
 }
@@ -39,9 +43,12 @@ json AnalyzerSoftCyclicHistogram::GetConfig()
 void AnalyzerSoftCyclicHistogram::SetConfig(const json &config)
 {
     pEnabled = false;
-    pVoltageFilterMode = CyclicHistogramFilterMode::None;
-    pMaxAmplitude = 120 * 1.7;
-    pBinCount = 512;
+    pVoltageFilterMode = CyclicHistogramVoltageFilterMode::VOLTAGE_FILTER_NONE;
+    pCurrentFilterMode = CyclicHistogramCurrentFilterMode::CURRENT_FILTER_NONE;
+    pVoltageMaxAmplitude = 120 * 1.7;
+    pCurrentMaxAmplitude = 20 * 1.7;
+    pVoltageBinCount = 512;
+    pCurrentBinCount = 512;
 
     if (config == NULL)
         return;
@@ -50,10 +57,16 @@ void AnalyzerSoftCyclicHistogram::SetConfig(const json &config)
         pEnabled = config["Enabled"];
     if (config.contains("VoltageFilterMode") && config["VoltageFilterMode"].is_number_unsigned())
         pVoltageFilterMode = config["VoltageFilterMode"];
-    if (config.contains("MaxAmplitude") && config["MaxAmplitude"].is_number())
-        pMaxAmplitude = config["MaxAmplitude"];
-    if (config.contains("BinCount") && config["BinCount"].is_number_unsigned())
-        pBinCount = config["BinCount"];
+    if (config.contains("CurrentFilterMode") && config["CurrentFilterMode"].is_number_unsigned())
+        pCurrentFilterMode = config["CurrentFilterMode"];
+    if (config.contains("VoltageMaxAmplitude") && config["VoltageMaxAmplitude"].is_number())
+        pVoltageMaxAmplitude = config["VoltageMaxAmplitude"];
+    if (config.contains("CurrentMaxAmplitude") && config["CurrentMaxAmplitude"].is_number())
+        pCurrentMaxAmplitude = config["CurrentMaxAmplitude"];
+    if (config.contains("VoltageBinCount") && config["VoltageBinCount"].is_number_unsigned())
+        pVoltageBinCount = config["VoltageBinCount"];
+    if (config.contains("CurrentBinCount") && config["CurrentBinCount"].is_number_unsigned())
+        pCurrentBinCount = config["CurrentBinCount"];
 }
 
 json AnalyzerSoftCyclicHistogram::CheckConfig(const json &config)
@@ -61,9 +74,12 @@ json AnalyzerSoftCyclicHistogram::CheckConfig(const json &config)
     json ConfigOUT = json::object();
 
     ConfigOUT["Enabled"] = false;
-    ConfigOUT["VoltageFilterMode"] = CyclicHistogramFilterMode::None;
-    ConfigOUT["MaxAmplitude"] = 120 * 1.7;
-    ConfigOUT["BinCount"] = 512;
+    ConfigOUT["VoltageFilterMode"] = CyclicHistogramVoltageFilterMode::VOLTAGE_FILTER_NONE;
+    ConfigOUT["CurrentFilterMode"] = CyclicHistogramCurrentFilterMode::CURRENT_FILTER_NONE;
+    ConfigOUT["VoltageMaxAmplitude"] = 120 * 1.7;
+    ConfigOUT["CurrentMaxAmplitude"] = 20 * 1.7;
+    ConfigOUT["VoltageBinCount"] = 512;
+    ConfigOUT["CurrentBinCount"] = 512;
 
     if (config != NULL && config.is_object())
     {
@@ -71,10 +87,16 @@ json AnalyzerSoftCyclicHistogram::CheckConfig(const json &config)
             ConfigOUT["Enabled"] = config["Enabled"];
         if (config.contains("VoltageFilterMode") && config["VoltageFilterMode"].is_number_unsigned())
             ConfigOUT["VoltageFilterMode"] = config["VoltageFilterMode"];
-        if (config.contains("MaxAmplitude") && config["MaxAmplitude"].is_number())
-            ConfigOUT["MaxAmplitude"] = config["MaxAmplitude"];
-        if (config.contains("BinCount") && config["BinCount"].is_number_unsigned())
-            ConfigOUT["BinCount"] = config["BinCount"];
+        if (config.contains("CurrentFilterMode") && config["CurrentFilterMode"].is_number_unsigned())
+            ConfigOUT["CurrentFilterMode"] = config["CurrentFilterMode"];
+        if (config.contains("VoltageMaxAmplitude") && config["VoltageMaxAmplitude"].is_number())
+            ConfigOUT["VoltageMaxAmplitude"] = config["VoltageMaxAmplitude"];
+        if (config.contains("CurrentMaxAmplitude") && config["CurrentMaxAmplitude"].is_number())
+            ConfigOUT["CurrentMaxAmplitude"] = config["CurrentMaxAmplitude"];
+        if (config.contains("VoltageBinCount") && config["VoltageBinCount"].is_number_unsigned())
+            ConfigOUT["VoltageBinCount"] = config["VoltageBinCount"];
+        if (config.contains("CurrentBinCount") && config["CurrentBinCount"].is_number_unsigned())
+            ConfigOUT["CurrentBinCount"] = config["CurrentBinCount"];
     }
 
     return ConfigOUT;
@@ -89,6 +111,7 @@ void AnalyzerSoftCyclicHistogram::AddPoints(AnalyzerSoftBlock *inputBlock, int s
     float nominalVoltage = inputBlock->NominalVoltage();
     uint16_t numSamples = inputBlock->Samples();
     uint8_t numVoltageChannels = inputBlock->VoltageChannels();
+    uint8_t numCurrentChannels = inputBlock->CurrentChannels();
     int numNominalSamplesPerCycle = sampleRate / nominalFrequency;
 
     // Log the current time as the end time for this histogram
@@ -108,21 +131,8 @@ void AnalyzerSoftCyclicHistogram::AddPoints(AnalyzerSoftBlock *inputBlock, int s
         return;
     }
 
-    // Check if vector is large enough for number of phases
-    if (numVoltageChannels > cumulativeCount.size())
-    {
-        ResizePhaseNumber(numVoltageChannels);
-    }
-
-    // Check if inner vectors are large enough to hold individual phase's samples
-    for (uint8_t phaseNumber = 0; phaseNumber < numVoltageChannels; phaseNumber++)
-    {
-        if ((size_t)numNominalSamplesPerCycle > cumulativeCount[phaseNumber].size())
-        {
-            // Resize the cumulative count array to fit all data
-            ResizeCumulativeCount(phaseNumber, numNominalSamplesPerCycle);
-        }
-    }
+    ResizeVoltageHistogram(numVoltageChannels, numNominalSamplesPerCycle);
+    ResizeCurrentHistogram(numCurrentChannels, numNominalSamplesPerCycle);
 
     bool foundFirstCycle = false;
     uint32_t cycleStartIdx = 0;
@@ -134,31 +144,6 @@ void AnalyzerSoftCyclicHistogram::AddPoints(AnalyzerSoftBlock *inputBlock, int s
         {
             float voltage_current = inputBlock->VoltageSample(phaseNumber, i);
             float voltage_next = inputBlock->VoltageSample(phaseNumber, i + 1);
-
-            // Look ahead at the next sample. If it also has a value of 0, then don't include any additional samples for this phase (to prevent any discontinuous jumps).
-            /*
-            if ((phaseNumber == 0) && (voltage_current == 0.0) && (voltage_next == 0.0))
-            {
-                LogFile::Warning("[CH] Skipping future data points due to multiple 0 samples.\n");
-                LogFile::Warning((to_string(phaseNumber) + "\n").c_str());
-                LogFile::Warning((to_string(maxSamplesPerPhase) + "\n").c_str());
-                LogFile::Warning((to_string(usableSamplesPerPhase) + "\n").c_str());
-                LogFile::Warning((to_string(i) + " > " + to_string(voltage_current) + "\n").c_str());
-                LogFile::Warning((to_string(i + 1) + " > " + to_string(voltage_next) + "\n").c_str());
-                return;
-            }
-            else if (abs((voltage_next - voltage_current) > 10))
-            {
-                // Don't record rapid changes in voltage (i.e. discontinuous, unrealistic jumps in samples)
-                LogFile::Warning("[CH] Skipping future data points due to discontinuous jump in samples.\n");
-                LogFile::Warning((to_string(phaseNumber) + "\n").c_str());
-                LogFile::Warning((to_string(arrBlockSize) + "\n").c_str());
-                LogFile::Warning((to_string(abs((voltage_next - voltage_current) / voltage_current)) + "\n").c_str());
-                LogFile::Warning((to_string(i) + " > " + to_string(voltage_current) + "\n").c_str());
-                LogFile::Warning((to_string(i + 1) + " > " + to_string(voltage_next) + "\n").c_str());
-                return;
-            }
-            */
 
             float m = voltage_next - voltage_current;
             float b = voltage_current - (m * i); // b = y - (m * x)
@@ -179,38 +164,36 @@ void AnalyzerSoftCyclicHistogram::AddPoints(AnalyzerSoftBlock *inputBlock, int s
                 int sampleIdx = i - cycleStartIdx;
                 float voltageNew = (m * (i + cycleXDiff)) + b;
 
-                if (this->pVoltageFilterMode == CyclicHistogramFilterMode::Ideal)
+                if (this->pVoltageFilterMode == CyclicHistogramVoltageFilterMode::VOLTAGE_FILTER_IDEAL)
                 {
                     float t = (float)sampleIdx / (float)numNominalSamplesPerCycle;
 
                     float idealVoltage = nominalVoltage * sqrt(2) * sin(2 * M_PI * t - (2 * M_PI * phaseNumber / numVoltageChannels));
-                    // LogFile::Warning("Voltage: %f, Ideal Voltage: %f, Diff: %f", voltageNew, idealVoltage, voltageNew - idealVoltage);
                     voltageNew = voltageNew - idealVoltage;
                 }
-                else if (this->pVoltageFilterMode == CyclicHistogramFilterMode::Nominal)
+                else if (this->pVoltageFilterMode == CyclicHistogramVoltageFilterMode::VOLTAGE_FILTER_NOMINAL)
                 {
                     if (!nominalSamplesSaved)
                     {
                         if (sampleIdx < numNominalSamplesPerCycle)
                         {
-                            // LogFile::Warning("[CH] Saving Phase %u, Sample %i, Voltage %f", phaseNumber, sampleIdx, voltageNew);
-                            nominalSamples[phaseNumber][sampleIdx] += voltageNew;
-                            nominalSamplesCount[phaseNumber][sampleIdx] += 1;
+                            nomVoltageSamples[phaseNumber][sampleIdx] += voltageNew;
+                            nomVoltageSamplesCount[phaseNumber][sampleIdx] += 1;
                         }
                         continue;
                     }
                     else
                     {
                         // Apply the nominal voltage filter
-                        voltageNew = voltageNew - nominalSamples[phaseNumber][sampleIdx];
+                        voltageNew = voltageNew - nomVoltageSamples[phaseNumber][sampleIdx];
                     }
                 }
 
                 // Don't attempt to add to cumulative count if the voltage is clipped
-                if (abs(voltageNew) <= pMaxAmplitude)
+                if (abs(voltageNew) <= pVoltageMaxAmplitude)
                 {
                     // Convert voltage measurement into a discrete bin number (i.e. quantization)
-                    uint32_t binIndex = ((voltageNew + pMaxAmplitude) / (2 * pMaxAmplitude)) * (pBinCount - 1);
+                    uint32_t binIndex = ((voltageNew + pVoltageMaxAmplitude) / (2 * pVoltageMaxAmplitude)) * (pVoltageBinCount - 1);
 
                     if (sampleIdx < numNominalSamplesPerCycle)
                     {
@@ -218,21 +201,21 @@ void AnalyzerSoftCyclicHistogram::AddPoints(AnalyzerSoftBlock *inputBlock, int s
                             continue;
 
                         // Perform the incremental count update
-                        cumulativeCount[phaseNumber][sampleIdx][binIndex] += 1;
+                        voltageHistogram[phaseNumber][sampleIdx][binIndex] += 1;
                     }
                 }
             }
         }
     }
 
-    if (pVoltageFilterMode == CyclicHistogramFilterMode::Nominal && !nominalSamplesSaved)
+    if (pVoltageFilterMode == CyclicHistogramVoltageFilterMode::VOLTAGE_FILTER_NOMINAL && !nominalSamplesSaved)
     {
         // Compute the average for each sample
         for (uint8_t phaseNumber = 0; phaseNumber < numVoltageChannels; phaseNumber++)
         {
-            for (uint64_t i = 0; i < nominalSamples[phaseNumber].size(); i++)
+            for (uint64_t i = 0; i < nomVoltageSamples[phaseNumber].size(); i++)
             {
-                nominalSamples[phaseNumber][i] = nominalSamples[phaseNumber][i] / nominalSamplesCount[phaseNumber][i];
+                nomVoltageSamples[phaseNumber][i] = nomVoltageSamples[phaseNumber][i] / nomVoltageSamplesCount[phaseNumber][i];
             }
         }
 
@@ -246,13 +229,13 @@ void AnalyzerSoftCyclicHistogram::WriteToDisk()
     outputFile.open("cyclichistogram.txt", std::ios::out);
     outputFile << "phase,sample,voltage_bin,count" << endl;
 
-    for (size_t i = 0; i < cumulativeCount.size(); i++)
+    for (size_t i = 0; i < voltageHistogram.size(); i++)
     {
-        for (size_t j = 0; j < cumulativeCount[i].size(); j++)
+        for (size_t j = 0; j < voltageHistogram[i].size(); j++)
         {
-            for (size_t k = 0; k < cumulativeCount[i][j].size(); k++)
+            for (size_t k = 0; k < voltageHistogram[i][j].size(); k++)
             {
-                uint64_t value = cumulativeCount[i][j][k];
+                uint64_t value = voltageHistogram[i][j][k];
                 if (value != 0)
                 {
                     outputFile << i << "," << j << "," << k << "," << value << endl;
@@ -289,13 +272,13 @@ void AnalyzerSoftCyclicHistogram::WriteToDatabase(uint64_t eventStartTime)
         bool shouldExec = false;
         sql_points += "INSERT INTO cychist_point (cychist_id, phase, x, y, count) VALUES ";
 
-        for (size_t i = 0; i < cumulativeCount.size(); i++)
+        for (size_t i = 0; i < voltageHistogram.size(); i++)
         {
-            for (size_t j = 0; j < cumulativeCount[i].size(); j++)
+            for (size_t j = 0; j < voltageHistogram[i].size(); j++)
             {
-                for (size_t k = 0; k < cumulativeCount[i][j].size(); k++)
+                for (size_t k = 0; k < voltageHistogram[i][j].size(); k++)
                 {
-                    uint64_t value = cumulativeCount[i][j][k];
+                    uint64_t value = voltageHistogram[i][j][k];
                     if (value != 0)
                     {
                         sql_points += "(" + DB->Bind(cychist_id) + "," + DB->Bind(i) + "," + DB->Bind(j) + "," + DB->Bind(k) + "," + DB->Bind(value) + "),";
@@ -323,35 +306,64 @@ void AnalyzerSoftCyclicHistogram::Clear()
 {
     startTime = 0;
     endTime = 0;
-    cumulativeCount = vector<vector<vector<uint64_t>>>();
-    nominalSamples = vector<vector<float>>();
-    nominalSamplesCount = vector<vector<uint64_t>>();
+    voltageHistogram = vector<vector<vector<uint64_t>>>();
+    nomVoltageSamples = vector<vector<float>>();
+    nomVoltageSamplesCount = vector<vector<uint64_t>>();
     nominalSamplesSaved = false;
 }
 
-void AnalyzerSoftCyclicHistogram::ResizePhaseNumber(uint8_t numPhases)
+void AnalyzerSoftCyclicHistogram::ResizeVoltageHistogram(uint8_t numVoltageChannels, size_t numSamples)
 {
-    string message = "[CH] Resizing to accomodate " + to_string(numPhases) + " phases.\n";
-    LogFile::Debug(message.c_str());
+    // Check if vector is large enough for number of phases
+    if (numVoltageChannels > voltageHistogram.size())
+        voltageHistogram.resize(numVoltageChannels);
 
-    // Resize outer vector
-    cumulativeCount.resize(numPhases);
+    if (numVoltageChannels > nomVoltageSamples.size())
+        nomVoltageSamples.resize(numVoltageChannels);
 
-    // Resize nominal filter vectors
-    nominalSamples.resize(numPhases);
-    nominalSamplesCount.resize(numPhases);
+    if (numVoltageChannels > nomVoltageSamplesCount.size())
+        nomVoltageSamplesCount.resize(numVoltageChannels);
+
+    // Check if inner vectors are large enough to hold individual phase's samples
+    for (uint8_t i = 0; i < numVoltageChannels; i++)
+    {
+        // Resize the cumulative count array to fit all data
+        if (numSamples > voltageHistogram[i].size())
+            voltageHistogram[i].resize(numSamples, vector<uint64_t>(pVoltageBinCount));
+
+        if (numSamples > nomVoltageSamples[i].size())
+            nomVoltageSamples[i].resize(numSamples, 0);
+
+        if (numSamples > nomVoltageSamplesCount[i].size())
+            nomVoltageSamplesCount[i].resize(numSamples, 0);
+    }
 }
 
-void AnalyzerSoftCyclicHistogram::ResizeCumulativeCount(uint8_t phaseNumber, size_t newSize)
+void AnalyzerSoftCyclicHistogram::ResizeCurrentHistogram(uint8_t numCurrentChannels, size_t numSamples)
 {
-    string message = "[CH] Resizing array from " + to_string(cumulativeCount[phaseNumber].size()) + " to " + to_string(newSize) + "\n";
-    LogFile::Debug(message.c_str());
+    // Check if vector is large enough for number of channels
+    if (numCurrentChannels > currentHistogram.size())
+        currentHistogram.resize(numCurrentChannels);
 
-    // Resize vector
-    cumulativeCount[phaseNumber].resize(newSize, vector<uint64_t>(pBinCount));
+    if (numCurrentChannels > nomCurrentSamples.size())
+        nomCurrentSamples.resize(numCurrentChannels);
 
-    nominalSamples[phaseNumber].resize(newSize, 0);
-    nominalSamplesCount[phaseNumber].resize(newSize, 0);
+    if (numCurrentChannels > nomCurrentSamplesCount.size())
+        nomCurrentSamplesCount.resize(numCurrentChannels);
+
+    // Check if inner vectors are large enough to hold individual channel's samples
+    for (uint8_t i = 0; i < numCurrentChannels; i++)
+    {
+        // Resize the cumulative count array to fit all data
+        if (numSamples > currentHistogram[i].size())
+            currentHistogram[i].resize(numSamples, vector<uint64_t>(pCurrentBinCount));
+
+        if (numSamples > nomCurrentSamples[i].size())
+            nomCurrentSamples[i].resize(numSamples, 0);
+
+        if (numSamples > nomCurrentSamplesCount[i].size())
+            nomCurrentSamplesCount[i].resize(numSamples, 0);
+    }
 }
 
 json AnalyzerSoftCyclicHistogram::GetCyclicHistogramForEvent(uint64_t eventStartTime)
@@ -403,24 +415,25 @@ json AnalyzerSoftCyclicHistogram::GetCurrentCyclicHistogram()
     result["starttime"] = startTime;
     result["endtime"] = endTime;
 
-    result["points"] = json::array();
+    result["voltagePoints"] = json::object();
+    result["voltagePoints"]["channel"] = json::array();
+    result["voltagePoints"]["x"] = json::array();
+    result["voltagePoints"]["y"] = json::array();
+    result["voltagePoints"]["z"] = json::array();
 
-    for (size_t i = 0; i < cumulativeCount.size(); i++)
+    for (size_t i = 0; i < voltageHistogram.size(); i++)
     {
-        for (size_t j = 0; j < cumulativeCount[i].size(); j++)
+        for (size_t j = 0; j < voltageHistogram[i].size(); j++)
         {
-            for (size_t k = 0; k < cumulativeCount[i][j].size(); k++)
+            for (size_t k = 0; k < voltageHistogram[i][j].size(); k++)
             {
-                uint64_t count = cumulativeCount[i][j][k];
+                uint64_t count = voltageHistogram[i][j][k];
                 if (count != 0)
                 {
-                    json point = json::array();
-                    point.push_back(i);     // Phase
-                    point.push_back(j);     // Sample
-                    point.push_back(k);     // Voltage Bin
-                    point.push_back(count); // Count
-
-                    result["points"].push_back(point);
+                    result["voltagePoints"]["channel"].push_back(i);
+                    result["voltagePoints"]["x"].push_back(j);
+                    result["voltagePoints"]["y"].push_back(k);
+                    result["voltagePoints"]["z"].push_back(count);
                 }
             }
         }

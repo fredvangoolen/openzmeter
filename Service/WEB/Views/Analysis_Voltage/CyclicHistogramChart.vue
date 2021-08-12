@@ -44,6 +44,29 @@ const arrayMinMax = (arr) =>
     [Number.POSITIVE_INFINITY, Number.NEGATIVE_INFINITY]
   );
 
+const sparseToDenseArray = (x, y, z, numRows, numColumns) => {
+  if (x.length != y.length || x.length != z.length || y.length != z.length)
+    return null;
+
+  console.log("Creating a " + numRows + "x" + numColumns + " array.");
+  let result = Array(numColumns)
+    .fill()
+    .map(() => Array(numRows).fill(null));
+
+  let numElements = x.length;
+
+  for (let i = 0; i < numElements; i++) {
+    const x_current = x[i];
+    const y_current = y[i];
+    const z_current = z[i];
+
+    if (x_current < numRows && y_current < numColumns)
+      result[y_current][x_current] = z_current;
+  }
+
+  return result;
+};
+
 export default {
   props: { analyzer: Object, id: "string" },
   created: function () {
@@ -70,8 +93,8 @@ export default {
       }).then((config_result) => {
         if (config_result.status == 200) {
           config_result.json().then((config) => {
-            this.maxAmplitude = config["MaxAmplitude"];
-            this.binCount = config["BinCount"];
+            this.maxAmplitude = config["VoltageMaxAmplitude"];
+            this.binCount = config["VoltageBinCount"];
 
             if (config["Enabled"]) {
               fetch("getCyclicHistogramData", {
@@ -87,7 +110,7 @@ export default {
               }).then((result) => {
                 if (result.status == 200) {
                   result.json().then((data) => {
-                    this.cyclicHistogramData = data.points;
+                    this.cyclicHistogramData = data.voltagePoints;
 
                     this.starttime = moment(data.starttime);
                     this.starttime_str = this.starttime.format(
@@ -125,7 +148,7 @@ export default {
 
       let traces = [];
 
-      const z_min_max = arrayMinMax(this.cyclicHistogramData.map((x) => x[3]));
+      const z_min_max = arrayMinMax(this.cyclicHistogramData.z);
 
       const z_min = z_min_max[0];
       const z_max = z_min_max[1];
@@ -162,19 +185,49 @@ export default {
         ];
       }
 
-      let phases = [0, 1, 2];
+      const channels = this.cyclicHistogramData.channel
+        .filter((v, i, a) => a.indexOf(v) === i)
+        .sort();
 
-      phases.forEach((phase) => {
-        let points_filtered = this.cyclicHistogramData.filter(
-          (x) => x[0] == phase
+      channels.forEach((channel) => {
+        const x_filtered = this.cyclicHistogramData.x.filter(
+          (d, idx) => this.cyclicHistogramData.channel[idx] == channel
         );
-        let phase_number = phase + 1;
+        const y_filtered = this.cyclicHistogramData.y.filter(
+          (d, idx) => this.cyclicHistogramData.channel[idx] == channel
+        );
+        const z_filtered = this.cyclicHistogramData.z.filter(
+          (d, idx) => this.cyclicHistogramData.channel[idx] == channel
+        );
+
+        const xArray = Array.from(
+          Array(arrayMinMax(this.cyclicHistogramData.x)[1] + 2).keys()
+        );
+        const yArray = Array.from(Array(this.binCount + 1).keys());
+        const zArray = sparseToDenseArray(
+          x_filtered,
+          y_filtered,
+          z_filtered,
+          arrayMinMax(this.cyclicHistogramData.x)[1] + 1,
+          this.binCount
+        );
+
+        const yArrayCorrected = yArray.map((y) => {
+          return this.maxAmplitude * ((2 * y) / (this.binCount - 1) - 1);
+        });
+
+        console.log(xArray);
+        console.log(yArray);
+        console.log(yArrayCorrected);
+        console.log(zArray);
+
+        let channel_number = channel + 1;
 
         let new_trace = {
-          x: points_filtered.map((x) => x[1]),
-          y: points_filtered.map((x) => x[2]),
-          z: points_filtered.map((x) => x[3]),
-          name: "Phase " + phase_number,
+          x: xArray,
+          y: yArrayCorrected,
+          z: zArray,
+          name: "Phase " + channel_number,
           type: "heatmap",
           coloraxis: "coloraxis",
           showlegend: true,
@@ -184,7 +237,7 @@ export default {
           hoverongaps: false,
         };
 
-        if (phase != 0) {
+        if (channel != 0) {
           new_trace["visible"] = "legendonly";
         }
 
@@ -195,7 +248,10 @@ export default {
         height: 600,
         title: { text: "Cyclic Histogram" },
         xaxis: { title: "Sample Number" },
-        yaxis: { title: "Voltage Bin Number", range: [0, this.binCount] },
+        yaxis: {
+          title: "Amplitude (Volts)",
+          range: [-1 * this.maxAmplitude, this.maxAmplitude],
+        },
         legend: {
           orientation: "h",
           x: 0.1,

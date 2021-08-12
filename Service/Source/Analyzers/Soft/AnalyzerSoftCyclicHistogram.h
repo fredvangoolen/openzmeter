@@ -7,11 +7,17 @@
 #include <stdlib.h>
 #include <vector>
 
-enum CyclicHistogramFilterMode
+enum CyclicHistogramVoltageFilterMode
 {
-    None = 0,
-    Ideal = 1,
-    Nominal = 2
+    VOLTAGE_FILTER_NONE = 0,
+    VOLTAGE_FILTER_NOMINAL = 1,
+    VOLTAGE_FILTER_IDEAL = 2
+};
+
+enum CyclicHistogramCurrentFilterMode
+{
+    CURRENT_FILTER_NONE = 0,
+    CURRENT_FILTER_NOMINAL = 1
 };
 
 class AnalyzerSoftCyclicHistogram final
@@ -32,17 +38,23 @@ public:
 
 private:
     bool pEnabled = false;
-    CyclicHistogramFilterMode pVoltageFilterMode;
-    uint32_t pMaxAmplitude;
-    size_t pBinCount;
+    CyclicHistogramVoltageFilterMode pVoltageFilterMode;
+    CyclicHistogramCurrentFilterMode pCurrentFilterMode;
+    uint32_t pVoltageMaxAmplitude;
+    uint32_t pCurrentMaxAmplitude;
+    size_t pVoltageBinCount;
+    size_t pCurrentBinCount;
     Database *DB;
     bool skippedFirstPointSet;
     uint64_t startTime;
     uint64_t endTime;
     bool nominalSamplesSaved;
-    vector<vector<float>> nominalSamples;             // Variable used for storing nominal samples (for filtering)
-    vector<vector<uint64_t>> nominalSamplesCount;          // Used for averaging nominal samples
-    vector<vector<vector<uint64_t>>> cumulativeCount; // Variable used for storing cyclic histogram cumulative counts
-    void ResizePhaseNumber(uint8_t numPhases);
-    void ResizeCumulativeCount(uint8_t phaseNumber, size_t newSize);
+    vector<vector<float>> nomVoltageSamples;           // Variable used for storing nominal samples (for filtering)
+    vector<vector<float>> nomCurrentSamples;           // Variable used for storing nominal samples (for filtering)
+    vector<vector<uint64_t>> nomVoltageSamplesCount;   // Used for averaging nominal samples
+    vector<vector<uint64_t>> nomCurrentSamplesCount;   // Used for averaging nominal samples
+    vector<vector<vector<uint64_t>>> voltageHistogram; // Variable used for storing cyclic histogram voltage cumulative counts
+    vector<vector<vector<uint64_t>>> currentHistogram; // Variable used for storing cyclic histogram voltage cumulative counts
+    void ResizeVoltageHistogram(uint8_t numVoltageChannels, size_t numSamples);
+    void ResizeCurrentHistogram(uint8_t numCurrentChannels, size_t numSamples);
 };
