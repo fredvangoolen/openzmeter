@@ -2,7 +2,7 @@
 EXECUTABLE_TARGET = Tmp/Firmware
 EXECUTABLE_SOURCE = $(shell find . -name "*.c" ! -type d -print)
 CFLAGS += -D_GNU_SOURCE
-CFLAGS += -ggdb -Wall -Og -flto -std=c99 -Warray-bounds -mcpu=cortex-m4 -mthumb -mlittle-endian -mthumb-interwork -mfloat-abi=softfp -mfpu=fpv4-sp-d16 -fstack-usage -fsingle-precision-constant
+CFLAGS += -ggdb -Wall -O2 -std=c99 -flto -mcpu=cortex-m4 -mthumb -mthumb-interwork -mfloat-abi=softfp -mfpu=fpv4-sp-d16 -fstack-usage -fsingle-precision-constant -fno-exceptions --specs=nosys.specs
 LDFLAGS += -g -T CMSIS/stm32f303xb.ld -flto -nostdlib -lc -Wl,-Map=$(EXECUTABLE_TARGET:%=%.map)
 
 CFLAGS += -I CMSIS

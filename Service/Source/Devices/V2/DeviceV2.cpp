@@ -360,9 +360,9 @@ void *DeviceV2::Thread() {
   uint64_t     LastTime       = 0;
   USBTransfer *SignalTransfer = new USBTransfer(this, 2);
   USBTransfer *Transfers[DEVICEV2_TRANSFERS];
-  for(uint8_t n = 0; n < DEVICEV2_TRANSFERS; n++) Transfers[n] = new USBTransfer(this, 8192);
+  for(uint8_t n = 0; n < DEVICEV2_TRANSFERS; n++) Transfers[n] = new USBTransfer(this, 512);
   while((pTerminate == false) || (pSubmittedTransfers > 0)) {
-    struct timeval tv = { 0, 10000 };
+    struct timeval tv = { .tv_sec = 1, .tv_usec = 0 };
     int Result = libusb_handle_events_timeout_completed(pContext, &tv, NULL);
     if(Result < 0) LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, libusb_error_name(Result));
     if(pTerminate == true) continue;
@@ -544,6 +544,7 @@ void DeviceV2::ReadCallback(struct libusb_transfer *transfer) {
         }
       }
     }
+
     pthread_mutex_unlock(&pConfigLock);
   }
   if((pTerminate == false) && (transfer->endpoint == DEVICEV2_ENDPOINT_IN)) {

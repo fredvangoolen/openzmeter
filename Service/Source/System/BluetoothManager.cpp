@@ -34,9 +34,6 @@ in_addr          BluetoothManager::pIP;
 BluetoothManager::BluetoothManager() {
 #ifdef OPENWRT
   LogFile::Info("Starting BluetoothManager...");
-  HTTPServer::RegisterDoc("Bluetooth", "API/Bluetooth/Bluetooth.json");
-  HTTPServer::RegisterCallback("getBluetooth", GetBluetoothCallback, "API/Bluetooth/GetBluetooth.json");
-  HTTPServer::RegisterCallback("setBluetooth", SetBluetoothCallback, "API/Bluetooth/SetBluetooth.json");
   json Config = ConfigFile::ReadConfig("/Bluetooth");
   bool Enabled = true;
   if(Config.is_object() == true) {
@@ -81,6 +78,9 @@ BluetoothManager::BluetoothManager() {
     }
   }
   MessageLoop::RegisterListener("Bluetooth_Toogle", ToggleEnable);
+  HTTPServer::RegisterDoc("Bluetooth", "API/Bluetooth/Bluetooth.json");
+  HTTPServer::RegisterCallback("getBluetooth", GetBluetoothCallback, "API/Bluetooth/GetBluetooth.json");
+  HTTPServer::RegisterCallback("setBluetooth", SetBluetoothCallback, "API/Bluetooth/SetBluetooth.json");
   LogFile::Info("BluetoothManager started (Interface: 'br-%s' - IP: %s - Mask: %s)", pInterface.c_str(), IPText.c_str(), MaskText.c_str());
 #endif
 }
@@ -216,9 +216,9 @@ void *BluetoothManager::Thread(void *params) {
     dbus_message_unref(Msg);
   }
   SendBoolBT(DBus, "Powered", false);
-  string MAC = GetMacBT(DBus);
+  string NetName = "", MAC = GetMacBT(DBus);
   MAC.erase(std::remove(MAC.begin(), MAC.end(), ':'), MAC.end());
-  if(MAC.length > 8) NetName = "openZmeter_" + MAC.substr(8);
+  if(MAC.length() > 8) NetName = "openZmeter_" + MAC.substr(8);
   SendStringBT(DBus, "Alias", NetName.c_str());
   SendBoolBT(DBus, "Powered", true);
   SendBoolBT(DBus, "Discoverable", true);

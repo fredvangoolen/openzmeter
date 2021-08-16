@@ -187,29 +187,13 @@
 //  GPIOF->BSRR |= ((Read >> 14) & 0x0001) ? GPIO_BSRR_BS_1 : GPIO_BSRR_BR_1;
 //  TIM3->CR1 |= TIM_CR1_CEN;
 //}
-USB_Response USB_SetConfiguration(uint8_t cfg) {
-//  switch(cfg) {
-//    case 0:
-//      USB_DeconfigEP(SEND_EP);
-//      USB_RegisterEP(SEND_EP, 0);
-//      USB_DeconfigEP(RECV_EP);
-//      USB_RegisterEP(RECV_EP, 0);
-//      return USB_ACK;
-//    case 1:
-//      USB_ConfigEP(SEND_EP, USB_EPTYPE_BULK | USB_EPTYPE_DBLBUF, 64);
-//      USB_RegisterEP(SEND_EP, USB_HandleEP1_TX);
-//      USB_ConfigEP(RECV_EP, USB_EPTYPE_BULK, 2);
-//      USB_RegisterEP(RECV_EP, USB_HandleEP2_RX);
-//      return USB_ACK;
-//    default:
-      return USB_FAIL;
-//  }
-}
+
 
 
 // Prepare device to run after wakeup or power up ----------------------------------------------------------------------
 void Main() {
   Sys_Init();
+  USB_Init();
   ADC_Init();
   RTC_Init();
   DS1307_Init();
@@ -278,7 +262,6 @@ void Main() {
 //  USB_Init();
   //NVIC_EnableIRQ(USB_IRQn);
   //NVIC_SetPriority(USB_IRQn, 1);
-//  USB_Enable(true);
 //  USB_Connect(true);
 //  ButtonStatus.Action = CLICK;
 }

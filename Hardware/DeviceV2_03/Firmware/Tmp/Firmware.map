@@ -5,17 +5,11 @@ Archive member included to satisfy reference by file (symbol)
 /usr/lib/gcc/arm-none-eabi/7.3.1/../../../arm-none-eabi/lib/thumb/v7e-m/fpv4-sp/softfp/libc.a(lib_a-strtok_r.o)
                               /usr/lib/gcc/arm-none-eabi/7.3.1/../../../arm-none-eabi/lib/thumb/v7e-m/fpv4-sp/softfp/libc.a(lib_a-strsep.o) (__strtok_r)
 /usr/lib/gcc/arm-none-eabi/7.3.1/../../../arm-none-eabi/lib/thumb/v7e-m/fpv4-sp/softfp/libc.a(lib_a-memcmp.o)
-                              /tmp/ccCMnKAv.ltrans0.ltrans.o (memcmp)
+                              /tmp/cckassse.ltrans0.ltrans.o (memcmp)
 /usr/lib/gcc/arm-none-eabi/7.3.1/../../../arm-none-eabi/lib/thumb/v7e-m/fpv4-sp/softfp/libc.a(lib_a-memset.o)
-                              /tmp/ccCMnKAv.ltrans0.ltrans.o (memset)
+                              /tmp/cckassse.ltrans0.ltrans.o (memset)
 /usr/lib/gcc/arm-none-eabi/7.3.1/../../../arm-none-eabi/lib/thumb/v7e-m/fpv4-sp/softfp/libc.a(lib_a-strlen.o)
-                              /tmp/ccCMnKAv.ltrans0.ltrans.o (strlen)
-
-Allocating common symbols
-Common symbol       size              file
-
-USB_Device          0x34              Tmp/./USB.c.o (symbol from plugin)
-USB_Buffer          0x20              Tmp/./USB.c.o (symbol from plugin)
+                              /tmp/cckassse.ltrans0.ltrans.o (strlen)
 
 Memory Configuration
 
@@ -27,55 +21,58 @@ ccm              0x0000000010000000 0x0000000000002000 xrw
 
 Linker script and memory map
 
-LOAD /tmp/ccCMnKAv.ltrans0.ltrans.o
+LOAD /tmp/cckassse.ltrans0.ltrans.o
 LOAD /usr/lib/gcc/arm-none-eabi/7.3.1/../../../arm-none-eabi/lib/thumb/v7e-m/fpv4-sp/softfp/libc.a
                 0x0000000010002000                STACK_END = (ORIGIN (ccm) + LENGTH (ccm))
 
-.text           0x0000000008000000      0xe68
+.text           0x0000000008000000     0x1664
  *(.vectors)
- .vectors       0x0000000008000000      0x194 /tmp/ccCMnKAv.ltrans0.ltrans.o
+ .vectors       0x0000000008000000      0x194 /tmp/cckassse.ltrans0.ltrans.o
                 0x0000000008000000                Vectors
  *(.text)
- .text          0x0000000008000194      0xa7c /tmp/ccCMnKAv.ltrans0.ltrans.o
- .text          0x0000000008000c10        0xc /usr/lib/gcc/arm-none-eabi/7.3.1/../../../arm-none-eabi/lib/thumb/v7e-m/fpv4-sp/softfp/libc.a(lib_a-strsep.o)
-                0x0000000008000c10                strsep
- .text          0x0000000008000c1c       0x6c /usr/lib/gcc/arm-none-eabi/7.3.1/../../../arm-none-eabi/lib/thumb/v7e-m/fpv4-sp/softfp/libc.a(lib_a-strtok_r.o)
-                0x0000000008000c1c                __strtok_r
-                0x0000000008000c80                strtok_r
- .text          0x0000000008000c88       0x64 /usr/lib/gcc/arm-none-eabi/7.3.1/../../../arm-none-eabi/lib/thumb/v7e-m/fpv4-sp/softfp/libc.a(lib_a-memcmp.o)
-                0x0000000008000c88                memcmp
- .text          0x0000000008000cec       0x94 /usr/lib/gcc/arm-none-eabi/7.3.1/../../../arm-none-eabi/lib/thumb/v7e-m/fpv4-sp/softfp/libc.a(lib_a-memset.o)
-                0x0000000008000cec                memset
- .text          0x0000000008000d80       0xdc /usr/lib/gcc/arm-none-eabi/7.3.1/../../../arm-none-eabi/lib/thumb/v7e-m/fpv4-sp/softfp/libc.a(lib_a-strlen.o)
-                0x0000000008000d80                strlen
+ .text          0x0000000008000194     0x11c8 /tmp/cckassse.ltrans0.ltrans.o
+                0x0000000008001310                HardFault_HandlerC
+ .text          0x000000000800135c        0xc /usr/lib/gcc/arm-none-eabi/7.3.1/../../../arm-none-eabi/lib/thumb/v7e-m/fpv4-sp/softfp/libc.a(lib_a-strsep.o)
+                0x000000000800135c                strsep
+ .text          0x0000000008001368       0x6c /usr/lib/gcc/arm-none-eabi/7.3.1/../../../arm-none-eabi/lib/thumb/v7e-m/fpv4-sp/softfp/libc.a(lib_a-strtok_r.o)
+                0x0000000008001368                __strtok_r
+                0x00000000080013cc                strtok_r
+ .text          0x00000000080013d4       0x64 /usr/lib/gcc/arm-none-eabi/7.3.1/../../../arm-none-eabi/lib/thumb/v7e-m/fpv4-sp/softfp/libc.a(lib_a-memcmp.o)
+                0x00000000080013d4                memcmp
+ .text          0x0000000008001438       0x94 /usr/lib/gcc/arm-none-eabi/7.3.1/../../../arm-none-eabi/lib/thumb/v7e-m/fpv4-sp/softfp/libc.a(lib_a-memset.o)
+                0x0000000008001438                memset
+ *fill*         0x00000000080014cc       0x34 
+ .text          0x0000000008001500       0xdc /usr/lib/gcc/arm-none-eabi/7.3.1/../../../arm-none-eabi/lib/thumb/v7e-m/fpv4-sp/softfp/libc.a(lib_a-strlen.o)
+                0x0000000008001500                strlen
  *(.rodata .rodata.*)
+ .rodata        0x00000000080015dc       0x7c /tmp/cckassse.ltrans0.ltrans.o
  .rodata.str1.4
-                0x0000000008000e5c        0xc /tmp/ccCMnKAv.ltrans0.ltrans.o
+                0x0000000008001658        0xc /tmp/cckassse.ltrans0.ltrans.o
                                           0xb (size before relaxing)
 
-.glue_7         0x0000000008000e68        0x0
- .glue_7        0x0000000008000e68        0x0 linker stubs
+.glue_7         0x0000000008001664        0x0
+ .glue_7        0x0000000008001664        0x0 linker stubs
 
-.glue_7t        0x0000000008000e68        0x0
- .glue_7t       0x0000000008000e68        0x0 linker stubs
+.glue_7t        0x0000000008001664        0x0
+ .glue_7t       0x0000000008001664        0x0 linker stubs
 
-.vfp11_veneer   0x0000000008000e68        0x0
- .vfp11_veneer  0x0000000008000e68        0x0 linker stubs
+.vfp11_veneer   0x0000000008001664        0x0
+ .vfp11_veneer  0x0000000008001664        0x0 linker stubs
 
-.v4_bx          0x0000000008000e68        0x0
- .v4_bx         0x0000000008000e68        0x0 linker stubs
+.v4_bx          0x0000000008001664        0x0
+ .v4_bx         0x0000000008001664        0x0 linker stubs
 
-.iplt           0x0000000008000e68        0x0
- .iplt          0x0000000008000e68        0x0 /usr/lib/gcc/arm-none-eabi/7.3.1/../../../arm-none-eabi/lib/thumb/v7e-m/fpv4-sp/softfp/libc.a(lib_a-strsep.o)
+.iplt           0x0000000008001664        0x0
+ .iplt          0x0000000008001664        0x0 /usr/lib/gcc/arm-none-eabi/7.3.1/../../../arm-none-eabi/lib/thumb/v7e-m/fpv4-sp/softfp/libc.a(lib_a-strsep.o)
 
-.rel.dyn        0x0000000008000e68        0x0
- .rel.iplt      0x0000000008000e68        0x0 /usr/lib/gcc/arm-none-eabi/7.3.1/../../../arm-none-eabi/lib/thumb/v7e-m/fpv4-sp/softfp/libc.a(lib_a-strsep.o)
+.rel.dyn        0x0000000008001664        0x0
+ .rel.iplt      0x0000000008001664        0x0 /usr/lib/gcc/arm-none-eabi/7.3.1/../../../arm-none-eabi/lib/thumb/v7e-m/fpv4-sp/softfp/libc.a(lib_a-strsep.o)
 
-.data           0x0000000020000000        0x0 load address 0x0000000008000e68
-                0x0000000008000e68                INIT_DATA_VALUES = LOADADDR (.data)
+.data           0x0000000020000000        0x0 load address 0x0000000008001664
+                0x0000000008001664                INIT_DATA_VALUES = LOADADDR (.data)
                 0x0000000020000000                INIT_DATA_START = .
  *(.data)
- .data          0x0000000020000000        0x0 /tmp/ccCMnKAv.ltrans0.ltrans.o
+ .data          0x0000000020000000        0x0 /tmp/cckassse.ltrans0.ltrans.o
  .data          0x0000000020000000        0x0 /usr/lib/gcc/arm-none-eabi/7.3.1/../../../arm-none-eabi/lib/thumb/v7e-m/fpv4-sp/softfp/libc.a(lib_a-strsep.o)
  .data          0x0000000020000000        0x0 /usr/lib/gcc/arm-none-eabi/7.3.1/../../../arm-none-eabi/lib/thumb/v7e-m/fpv4-sp/softfp/libc.a(lib_a-strtok_r.o)
  .data          0x0000000020000000        0x0 /usr/lib/gcc/arm-none-eabi/7.3.1/../../../arm-none-eabi/lib/thumb/v7e-m/fpv4-sp/softfp/libc.a(lib_a-memcmp.o)
@@ -83,13 +80,13 @@ LOAD /usr/lib/gcc/arm-none-eabi/7.3.1/../../../arm-none-eabi/lib/thumb/v7e-m/fpv
  .data          0x0000000020000000        0x0 /usr/lib/gcc/arm-none-eabi/7.3.1/../../../arm-none-eabi/lib/thumb/v7e-m/fpv4-sp/softfp/libc.a(lib_a-strlen.o)
                 0x0000000020000000                INIT_DATA_END = .
 
-.igot.plt       0x0000000020000000        0x0 load address 0x0000000008000e68
+.igot.plt       0x0000000020000000        0x0 load address 0x0000000008001664
  .igot.plt      0x0000000020000000        0x0 /usr/lib/gcc/arm-none-eabi/7.3.1/../../../arm-none-eabi/lib/thumb/v7e-m/fpv4-sp/softfp/libc.a(lib_a-strsep.o)
 
-.bss            0x0000000020000000      0x254 load address 0x0000000008000e68
+.bss            0x0000000020000000      0x254 load address 0x0000000008001664
                 0x0000000020000000                BSS_START = .
  *(.bss)
- .bss           0x0000000020000000      0x254 /tmp/ccCMnKAv.ltrans0.ltrans.o
+ .bss           0x0000000020000000      0x254 /tmp/cckassse.ltrans0.ltrans.o
  .bss           0x0000000020000254        0x0 /usr/lib/gcc/arm-none-eabi/7.3.1/../../../arm-none-eabi/lib/thumb/v7e-m/fpv4-sp/softfp/libc.a(lib_a-strsep.o)
  .bss           0x0000000020000254        0x0 /usr/lib/gcc/arm-none-eabi/7.3.1/../../../arm-none-eabi/lib/thumb/v7e-m/fpv4-sp/softfp/libc.a(lib_a-strtok_r.o)
  .bss           0x0000000020000254        0x0 /usr/lib/gcc/arm-none-eabi/7.3.1/../../../arm-none-eabi/lib/thumb/v7e-m/fpv4-sp/softfp/libc.a(lib_a-memcmp.o)
@@ -97,39 +94,39 @@ LOAD /usr/lib/gcc/arm-none-eabi/7.3.1/../../../arm-none-eabi/lib/thumb/v7e-m/fpv
  .bss           0x0000000020000254        0x0 /usr/lib/gcc/arm-none-eabi/7.3.1/../../../arm-none-eabi/lib/thumb/v7e-m/fpv4-sp/softfp/libc.a(lib_a-strlen.o)
                 0x0000000020000254                BSS_END = .
 
-.ccm            0x0000000010000000       0x41
+.ccm            0x0000000010000000       0xb1
                 0x0000000010000000                CCM_START = .
  *(.ccm)
- .ccm           0x0000000010000000       0x41 /tmp/ccCMnKAv.ltrans0.ltrans.o
-                0x0000000010000041                CCM_END = .
+ .ccm           0x0000000010000000       0xb1 /tmp/cckassse.ltrans0.ltrans.o
+                0x00000000100000b1                CCM_END = .
 OUTPUT(Tmp/Firmware elf32-littlearm)
 
-.debug_info     0x0000000000000000     0x4057
- .debug_info    0x0000000000000000     0x1678 /tmp/ccCMnKAv.ltrans0.ltrans.o
- .debug_info    0x0000000000001678      0x8f0 /usr/lib/gcc/arm-none-eabi/7.3.1/../../../arm-none-eabi/lib/thumb/v7e-m/fpv4-sp/softfp/libc.a(lib_a-strsep.o)
- .debug_info    0x0000000000001f68      0x98a /usr/lib/gcc/arm-none-eabi/7.3.1/../../../arm-none-eabi/lib/thumb/v7e-m/fpv4-sp/softfp/libc.a(lib_a-strtok_r.o)
- .debug_info    0x00000000000028f2      0x91d /usr/lib/gcc/arm-none-eabi/7.3.1/../../../arm-none-eabi/lib/thumb/v7e-m/fpv4-sp/softfp/libc.a(lib_a-memcmp.o)
- .debug_info    0x000000000000320f      0xe22 /usr/lib/gcc/arm-none-eabi/7.3.1/../../../arm-none-eabi/lib/thumb/v7e-m/fpv4-sp/softfp/libc.a(lib_a-memset.o)
- .debug_info    0x0000000000004031       0x26 /usr/lib/gcc/arm-none-eabi/7.3.1/../../../arm-none-eabi/lib/thumb/v7e-m/fpv4-sp/softfp/libc.a(lib_a-strlen.o)
+.debug_info     0x0000000000000000     0x4db4
+ .debug_info    0x0000000000000000     0x23d5 /tmp/cckassse.ltrans0.ltrans.o
+ .debug_info    0x00000000000023d5      0x8f0 /usr/lib/gcc/arm-none-eabi/7.3.1/../../../arm-none-eabi/lib/thumb/v7e-m/fpv4-sp/softfp/libc.a(lib_a-strsep.o)
+ .debug_info    0x0000000000002cc5      0x98a /usr/lib/gcc/arm-none-eabi/7.3.1/../../../arm-none-eabi/lib/thumb/v7e-m/fpv4-sp/softfp/libc.a(lib_a-strtok_r.o)
+ .debug_info    0x000000000000364f      0x91d /usr/lib/gcc/arm-none-eabi/7.3.1/../../../arm-none-eabi/lib/thumb/v7e-m/fpv4-sp/softfp/libc.a(lib_a-memcmp.o)
+ .debug_info    0x0000000000003f6c      0xe22 /usr/lib/gcc/arm-none-eabi/7.3.1/../../../arm-none-eabi/lib/thumb/v7e-m/fpv4-sp/softfp/libc.a(lib_a-memset.o)
+ .debug_info    0x0000000000004d8e       0x26 /usr/lib/gcc/arm-none-eabi/7.3.1/../../../arm-none-eabi/lib/thumb/v7e-m/fpv4-sp/softfp/libc.a(lib_a-strlen.o)
 
-.debug_abbrev   0x0000000000000000      0xae7
- .debug_abbrev  0x0000000000000000      0x32c /tmp/ccCMnKAv.ltrans0.ltrans.o
- .debug_abbrev  0x000000000000032c      0x1d4 /usr/lib/gcc/arm-none-eabi/7.3.1/../../../arm-none-eabi/lib/thumb/v7e-m/fpv4-sp/softfp/libc.a(lib_a-strsep.o)
- .debug_abbrev  0x0000000000000500      0x238 /usr/lib/gcc/arm-none-eabi/7.3.1/../../../arm-none-eabi/lib/thumb/v7e-m/fpv4-sp/softfp/libc.a(lib_a-strtok_r.o)
- .debug_abbrev  0x0000000000000738      0x1bd /usr/lib/gcc/arm-none-eabi/7.3.1/../../../arm-none-eabi/lib/thumb/v7e-m/fpv4-sp/softfp/libc.a(lib_a-memcmp.o)
- .debug_abbrev  0x00000000000008f5      0x1de /usr/lib/gcc/arm-none-eabi/7.3.1/../../../arm-none-eabi/lib/thumb/v7e-m/fpv4-sp/softfp/libc.a(lib_a-memset.o)
- .debug_abbrev  0x0000000000000ad3       0x14 /usr/lib/gcc/arm-none-eabi/7.3.1/../../../arm-none-eabi/lib/thumb/v7e-m/fpv4-sp/softfp/libc.a(lib_a-strlen.o)
+.debug_abbrev   0x0000000000000000      0xde1
+ .debug_abbrev  0x0000000000000000      0x626 /tmp/cckassse.ltrans0.ltrans.o
+ .debug_abbrev  0x0000000000000626      0x1d4 /usr/lib/gcc/arm-none-eabi/7.3.1/../../../arm-none-eabi/lib/thumb/v7e-m/fpv4-sp/softfp/libc.a(lib_a-strsep.o)
+ .debug_abbrev  0x00000000000007fa      0x238 /usr/lib/gcc/arm-none-eabi/7.3.1/../../../arm-none-eabi/lib/thumb/v7e-m/fpv4-sp/softfp/libc.a(lib_a-strtok_r.o)
+ .debug_abbrev  0x0000000000000a32      0x1bd /usr/lib/gcc/arm-none-eabi/7.3.1/../../../arm-none-eabi/lib/thumb/v7e-m/fpv4-sp/softfp/libc.a(lib_a-memcmp.o)
+ .debug_abbrev  0x0000000000000bef      0x1de /usr/lib/gcc/arm-none-eabi/7.3.1/../../../arm-none-eabi/lib/thumb/v7e-m/fpv4-sp/softfp/libc.a(lib_a-memset.o)
+ .debug_abbrev  0x0000000000000dcd       0x14 /usr/lib/gcc/arm-none-eabi/7.3.1/../../../arm-none-eabi/lib/thumb/v7e-m/fpv4-sp/softfp/libc.a(lib_a-strlen.o)
 
-.debug_loc      0x0000000000000000      0xb6d
- .debug_loc     0x0000000000000000      0x635 /tmp/ccCMnKAv.ltrans0.ltrans.o
- .debug_loc     0x0000000000000635       0x4d /usr/lib/gcc/arm-none-eabi/7.3.1/../../../arm-none-eabi/lib/thumb/v7e-m/fpv4-sp/softfp/libc.a(lib_a-strsep.o)
- .debug_loc     0x0000000000000682      0x21f /usr/lib/gcc/arm-none-eabi/7.3.1/../../../arm-none-eabi/lib/thumb/v7e-m/fpv4-sp/softfp/libc.a(lib_a-strtok_r.o)
- .debug_loc     0x00000000000008a1      0x157 /usr/lib/gcc/arm-none-eabi/7.3.1/../../../arm-none-eabi/lib/thumb/v7e-m/fpv4-sp/softfp/libc.a(lib_a-memcmp.o)
- .debug_loc     0x00000000000009f8      0x175 /usr/lib/gcc/arm-none-eabi/7.3.1/../../../arm-none-eabi/lib/thumb/v7e-m/fpv4-sp/softfp/libc.a(lib_a-memset.o)
+.debug_loc      0x0000000000000000     0x1623
+ .debug_loc     0x0000000000000000     0x10eb /tmp/cckassse.ltrans0.ltrans.o
+ .debug_loc     0x00000000000010eb       0x4d /usr/lib/gcc/arm-none-eabi/7.3.1/../../../arm-none-eabi/lib/thumb/v7e-m/fpv4-sp/softfp/libc.a(lib_a-strsep.o)
+ .debug_loc     0x0000000000001138      0x21f /usr/lib/gcc/arm-none-eabi/7.3.1/../../../arm-none-eabi/lib/thumb/v7e-m/fpv4-sp/softfp/libc.a(lib_a-strtok_r.o)
+ .debug_loc     0x0000000000001357      0x157 /usr/lib/gcc/arm-none-eabi/7.3.1/../../../arm-none-eabi/lib/thumb/v7e-m/fpv4-sp/softfp/libc.a(lib_a-memcmp.o)
+ .debug_loc     0x00000000000014ae      0x175 /usr/lib/gcc/arm-none-eabi/7.3.1/../../../arm-none-eabi/lib/thumb/v7e-m/fpv4-sp/softfp/libc.a(lib_a-memset.o)
 
 .debug_aranges  0x0000000000000000       0xc0
  .debug_aranges
-                0x0000000000000000       0x20 /tmp/ccCMnKAv.ltrans0.ltrans.o
+                0x0000000000000000       0x20 /tmp/cckassse.ltrans0.ltrans.o
  .debug_aranges
                 0x0000000000000020       0x20 /usr/lib/gcc/arm-none-eabi/7.3.1/../../../arm-none-eabi/lib/thumb/v7e-m/fpv4-sp/softfp/libc.a(lib_a-strsep.o)
  .debug_aranges
@@ -141,32 +138,32 @@ OUTPUT(Tmp/Firmware elf32-littlearm)
  .debug_aranges
                 0x00000000000000a0       0x20 /usr/lib/gcc/arm-none-eabi/7.3.1/../../../arm-none-eabi/lib/thumb/v7e-m/fpv4-sp/softfp/libc.a(lib_a-strlen.o)
 
-.debug_ranges   0x0000000000000000       0x18
- .debug_ranges  0x0000000000000000       0x18 /tmp/ccCMnKAv.ltrans0.ltrans.o
+.debug_ranges   0x0000000000000000      0x5f0
+ .debug_ranges  0x0000000000000000      0x5f0 /tmp/cckassse.ltrans0.ltrans.o
 
-.debug_line     0x0000000000000000      0x957
- .debug_line    0x0000000000000000      0x31e /tmp/ccCMnKAv.ltrans0.ltrans.o
- .debug_line    0x000000000000031e      0x122 /usr/lib/gcc/arm-none-eabi/7.3.1/../../../arm-none-eabi/lib/thumb/v7e-m/fpv4-sp/softfp/libc.a(lib_a-strsep.o)
- .debug_line    0x0000000000000440      0x15d /usr/lib/gcc/arm-none-eabi/7.3.1/../../../arm-none-eabi/lib/thumb/v7e-m/fpv4-sp/softfp/libc.a(lib_a-strtok_r.o)
- .debug_line    0x000000000000059d      0x144 /usr/lib/gcc/arm-none-eabi/7.3.1/../../../arm-none-eabi/lib/thumb/v7e-m/fpv4-sp/softfp/libc.a(lib_a-memcmp.o)
- .debug_line    0x00000000000006e1      0x1c4 /usr/lib/gcc/arm-none-eabi/7.3.1/../../../arm-none-eabi/lib/thumb/v7e-m/fpv4-sp/softfp/libc.a(lib_a-memset.o)
- .debug_line    0x00000000000008a5       0xb2 /usr/lib/gcc/arm-none-eabi/7.3.1/../../../arm-none-eabi/lib/thumb/v7e-m/fpv4-sp/softfp/libc.a(lib_a-strlen.o)
+.debug_line     0x0000000000000000      0xd80
+ .debug_line    0x0000000000000000      0x747 /tmp/cckassse.ltrans0.ltrans.o
+ .debug_line    0x0000000000000747      0x122 /usr/lib/gcc/arm-none-eabi/7.3.1/../../../arm-none-eabi/lib/thumb/v7e-m/fpv4-sp/softfp/libc.a(lib_a-strsep.o)
+ .debug_line    0x0000000000000869      0x15d /usr/lib/gcc/arm-none-eabi/7.3.1/../../../arm-none-eabi/lib/thumb/v7e-m/fpv4-sp/softfp/libc.a(lib_a-strtok_r.o)
+ .debug_line    0x00000000000009c6      0x144 /usr/lib/gcc/arm-none-eabi/7.3.1/../../../arm-none-eabi/lib/thumb/v7e-m/fpv4-sp/softfp/libc.a(lib_a-memcmp.o)
+ .debug_line    0x0000000000000b0a      0x1c4 /usr/lib/gcc/arm-none-eabi/7.3.1/../../../arm-none-eabi/lib/thumb/v7e-m/fpv4-sp/softfp/libc.a(lib_a-memset.o)
+ .debug_line    0x0000000000000cce       0xb2 /usr/lib/gcc/arm-none-eabi/7.3.1/../../../arm-none-eabi/lib/thumb/v7e-m/fpv4-sp/softfp/libc.a(lib_a-strlen.o)
 
-.debug_str      0x0000000000000000     0x158d
- .debug_str     0x0000000000000000      0xbeb /tmp/ccCMnKAv.ltrans0.ltrans.o
-                                        0xc8b (size before relaxing)
- .debug_str     0x0000000000000beb      0x597 /usr/lib/gcc/arm-none-eabi/7.3.1/../../../arm-none-eabi/lib/thumb/v7e-m/fpv4-sp/softfp/libc.a(lib_a-strsep.o)
+.debug_str      0x0000000000000000     0x1925
+ .debug_str     0x0000000000000000      0xf8a /tmp/cckassse.ltrans0.ltrans.o
+                                       0x106c (size before relaxing)
+ .debug_str     0x0000000000000f8a      0x597 /usr/lib/gcc/arm-none-eabi/7.3.1/../../../arm-none-eabi/lib/thumb/v7e-m/fpv4-sp/softfp/libc.a(lib_a-strsep.o)
                                         0x5fd (size before relaxing)
- .debug_str     0x0000000000001182       0x5d /usr/lib/gcc/arm-none-eabi/7.3.1/../../../arm-none-eabi/lib/thumb/v7e-m/fpv4-sp/softfp/libc.a(lib_a-strtok_r.o)
+ .debug_str     0x0000000000001521       0x5d /usr/lib/gcc/arm-none-eabi/7.3.1/../../../arm-none-eabi/lib/thumb/v7e-m/fpv4-sp/softfp/libc.a(lib_a-strtok_r.o)
                                         0x61a (size before relaxing)
- .debug_str     0x00000000000011df       0x3e /usr/lib/gcc/arm-none-eabi/7.3.1/../../../arm-none-eabi/lib/thumb/v7e-m/fpv4-sp/softfp/libc.a(lib_a-memcmp.o)
+ .debug_str     0x000000000000157e       0x37 /usr/lib/gcc/arm-none-eabi/7.3.1/../../../arm-none-eabi/lib/thumb/v7e-m/fpv4-sp/softfp/libc.a(lib_a-memcmp.o)
                                         0x5e8 (size before relaxing)
- .debug_str     0x000000000000121d      0x2c0 /usr/lib/gcc/arm-none-eabi/7.3.1/../../../arm-none-eabi/lib/thumb/v7e-m/fpv4-sp/softfp/libc.a(lib_a-memset.o)
+ .debug_str     0x00000000000015b5      0x2c0 /usr/lib/gcc/arm-none-eabi/7.3.1/../../../arm-none-eabi/lib/thumb/v7e-m/fpv4-sp/softfp/libc.a(lib_a-memset.o)
                                         0x911 (size before relaxing)
- .debug_str     0x00000000000014dd       0xb0 /usr/lib/gcc/arm-none-eabi/7.3.1/../../../arm-none-eabi/lib/thumb/v7e-m/fpv4-sp/softfp/libc.a(lib_a-strlen.o)
+ .debug_str     0x0000000000001875       0xb0 /usr/lib/gcc/arm-none-eabi/7.3.1/../../../arm-none-eabi/lib/thumb/v7e-m/fpv4-sp/softfp/libc.a(lib_a-strlen.o)
 
 .comment        0x0000000000000000       0xae
- .comment       0x0000000000000000       0x57 /tmp/ccCMnKAv.ltrans0.ltrans.o
+ .comment       0x0000000000000000       0x57 /tmp/cckassse.ltrans0.ltrans.o
                                          0x58 (size before relaxing)
  .comment       0x0000000000000057       0x57 /usr/lib/gcc/arm-none-eabi/7.3.1/../../../arm-none-eabi/lib/thumb/v7e-m/fpv4-sp/softfp/libc.a(lib_a-strsep.o)
                                          0x58 (size before relaxing)
@@ -177,7 +174,7 @@ OUTPUT(Tmp/Firmware elf32-littlearm)
 .ARM.attributes
                 0x0000000000000000       0x35
  .ARM.attributes
-                0x0000000000000000       0x35 /tmp/ccCMnKAv.ltrans0.ltrans.o
+                0x0000000000000000       0x35 /tmp/cckassse.ltrans0.ltrans.o
  .ARM.attributes
                 0x0000000000000035       0x32 /usr/lib/gcc/arm-none-eabi/7.3.1/../../../arm-none-eabi/lib/thumb/v7e-m/fpv4-sp/softfp/libc.a(lib_a-strsep.o)
  .ARM.attributes
@@ -189,9 +186,9 @@ OUTPUT(Tmp/Firmware elf32-littlearm)
  .ARM.attributes
                 0x00000000000000fd       0x20 /usr/lib/gcc/arm-none-eabi/7.3.1/../../../arm-none-eabi/lib/thumb/v7e-m/fpv4-sp/softfp/libc.a(lib_a-strlen.o)
 
-.debug_frame    0x0000000000000000      0x270
- .debug_frame   0x0000000000000000      0x198 /tmp/ccCMnKAv.ltrans0.ltrans.o
- .debug_frame   0x0000000000000198       0x20 /usr/lib/gcc/arm-none-eabi/7.3.1/../../../arm-none-eabi/lib/thumb/v7e-m/fpv4-sp/softfp/libc.a(lib_a-strsep.o)
- .debug_frame   0x00000000000001b8       0x48 /usr/lib/gcc/arm-none-eabi/7.3.1/../../../arm-none-eabi/lib/thumb/v7e-m/fpv4-sp/softfp/libc.a(lib_a-strtok_r.o)
- .debug_frame   0x0000000000000200       0x38 /usr/lib/gcc/arm-none-eabi/7.3.1/../../../arm-none-eabi/lib/thumb/v7e-m/fpv4-sp/softfp/libc.a(lib_a-memcmp.o)
- .debug_frame   0x0000000000000238       0x38 /usr/lib/gcc/arm-none-eabi/7.3.1/../../../arm-none-eabi/lib/thumb/v7e-m/fpv4-sp/softfp/libc.a(lib_a-memset.o)
+.debug_frame    0x0000000000000000      0x330
+ .debug_frame   0x0000000000000000      0x258 /tmp/cckassse.ltrans0.ltrans.o
+ .debug_frame   0x0000000000000258       0x20 /usr/lib/gcc/arm-none-eabi/7.3.1/../../../arm-none-eabi/lib/thumb/v7e-m/fpv4-sp/softfp/libc.a(lib_a-strsep.o)
+ .debug_frame   0x0000000000000278       0x48 /usr/lib/gcc/arm-none-eabi/7.3.1/../../../arm-none-eabi/lib/thumb/v7e-m/fpv4-sp/softfp/libc.a(lib_a-strtok_r.o)
+ .debug_frame   0x00000000000002c0       0x38 /usr/lib/gcc/arm-none-eabi/7.3.1/../../../arm-none-eabi/lib/thumb/v7e-m/fpv4-sp/softfp/libc.a(lib_a-memcmp.o)
+ .debug_frame   0x00000000000002f8       0x38 /usr/lib/gcc/arm-none-eabi/7.3.1/../../../arm-none-eabi/lib/thumb/v7e-m/fpv4-sp/softfp/libc.a(lib_a-memset.o)

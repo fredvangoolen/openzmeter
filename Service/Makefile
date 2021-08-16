@@ -1,3 +1,8 @@
+#Fill date and version if not provided
+BUILD_DATE   ?= $(shell date +%Y%m%d.%H%M)
+BUILD_BRANCH ?= "custom"
+BUILD_ARCH   ?= "unknown"
+
 #Default build dir
 TARGET = $(notdir $(CONFIG))
 
@@ -21,11 +26,6 @@ LDFLAGS += -lpq -lz -lpthread -lm -lssl -lcrypto -lusb-1.0 -luuid -l:libfftw3f.a
 EXECUTABLE_SOURCE += $(shell find Libs/cctz -name "*.cpp" ! -type d -print)
 EXECUTABLE_SOURCE += $(shell find Libs/muParser -name "*.cpp" ! -type d -print)
 EXECUTABLE_SOURCE += $(shell find Libs/mqtt-c -name "*.c" ! -type d -print)
-
-#Fill date and version if not provided
-BUILD_DATE   ?= $(shell date +%Y%m%d.%H%M)
-BUILD_BRANCH ?= "custom"
-BUILD_ARCH   ?= "unknown"
 
 #Default flags and programs
 CC  ?= gcc
@@ -55,7 +55,7 @@ endif
 ifeq ($(DEBUG), true)
 	CFLAGS += -O0 -g -ggdb3
 else
-	CFLAGS   += -Os -flto -fwhole-program
+	CFLAGS   += -O3 -flto -fwhole-program
 	LDFLAGS  += -flto
 endif
 ifeq ($(OS_TARGET), OPENWRT)

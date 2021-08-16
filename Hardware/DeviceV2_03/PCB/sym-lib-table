@@ -2,4 +2,5 @@
   (lib (name 3Phase-rescue)(type Legacy)(uri ${KIPRJMOD}/3Phase-rescue.lib)(options "")(descr ""))
   (lib (name Components)(type Legacy)(uri ${KIPRJMOD}/Components.lib)(options "")(descr ""))
   (lib (name shared)(type Legacy)(uri ${KIPRJMOD}/shared.lib)(options "")(descr ""))
+  (lib (name Symbols)(type Legacy)(uri /home/edu/Proyectos/openZmeter_private/Hardware/DeviceV3_00/PCB/Symbols.lib)(options "")(descr ""))
 )

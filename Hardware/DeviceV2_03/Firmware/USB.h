@@ -18,15 +18,15 @@
 #include <stdbool.h>
 #include <stdint.h>
 //Defines ----------------------------------------------------------------------
-#define USB_EVENT_RESET     0   /* Reset.*/
-#define usbd_evt_sof        1   /**<\brief Start of frame.*/
-#define usbd_evt_susp       2   /**<\brief Suspend.*/
-#define usbd_evt_wkup       3   /**<\brief Wakeup.*/
+//#define USB_EVENT_RESET     0   /* Reset.*/
+//#define usbd_evt_sof        1   /**<\brief Start of frame.*/
+//#define usbd_evt_susp       2   /**<\brief Suspend.*/
+//#define usbd_evt_wkup       3   /**<\brief Wakeup.*/
 #define USB_EVENT_TX        4   /**<\brief Data packet transmitted*/
 #define USB_EVENT_RX        5   /**<\brief Data packet received.*/
-#define usbd_evt_epsetup    6   /**<\brief Setup packet received.*/
-#define usbd_evt_error      7   /**<\brief Data error.*/
-#define usbd_evt_count      8
+#define USB_EVENT_SETUP    6   /**<\brief Setup packet received.*/
+//#define usbd_evt_error      7   /**<\brief Data error.*/
+//#define usbd_evt_count      8
 
 /* USB device machine states */
 typedef enum {
@@ -54,67 +54,17 @@ typedef enum {
 } USB_Response;
 
 /* Represents generic USB control request */
-typedef struct {
-  uint8_t     bmRequestType;  /**<\brief This bitmapped field identifies the characteristics of the specific request.*/
-  uint8_t     bRequest;       /**<\brief This field specifies the particular request.*/
-  uint16_t    wValue;         /**<\brief It is used to pass a parameter to the device, specific to the request.*/
-  uint16_t    wIndex;         /**<\brief It is used to pass a parameter to the device, specific to the request.*/
-  uint16_t    wLength;        /**<\brief This field specifies the length of the data transferred during the second phase of the control transfer.*/
-  uint8_t     data[];         /**<\brief Data payload.*/
-} USB_ControlRequest_t;
 
 /** USB device status data.*/
-typedef struct {
-  void        *data_buf;      /**<\brief Pointer to data buffer used for control requests.*/
-  void        *data_ptr;      /**<\brief Pointer to current data for control request.*/
-  uint16_t    data_count;     /**<\brief Count remained data for control request.*/
-  uint16_t    data_maxsize;   /**<\brief Size of the data buffer for control requests.*/
-  uint8_t     ep0size;        /**<\brief Size of the control endpoint.*/
-  uint8_t     device_cfg;     /**<\brief Current device configuration number.*/
-  uint8_t     device_state;   /**<\brief Current \ref usbd_machine_state.*/
-  uint8_t     control_state;  /**<\brief Current \ref usbd_ctl_state.*/
-} USB_Status_t;
 
-typedef void (*USB_Event_Callback_t)(uint8_t event);
-typedef void (*USB_Request_Callback_t)(USB_ControlRequest_t *req);
 
-/* Represents a USB device data */
-typedef struct {
-  USB_Request_Callback_t Complete_Callback;
-  USB_Event_Callback_t   Endpoint[8];
-  volatile USB_Status_t  Status;
-} USB_Device_t;
 
-typedef struct {
-  uint16_t addr;
-  uint16_t cnt;
-} PMA_Record_t;
 
-typedef union {
-  struct {
-    PMA_Record_t tx;
-    PMA_Record_t rx;
-  };
-  struct {
-    PMA_Record_t tx0;
-    PMA_Record_t tx1;
-  };
-  struct {
-    PMA_Record_t rx0;
-    PMA_Record_t rx1;
-  };
-} PMA_Table_t;
+
+
+
+
  // Functions -----------------------------------------------------------------------------------------------------------
-void         USB_Init();
-uint8_t      USB_Connect(bool connect);
-void         USB_Enable(bool enable);
-void         USB_RegisterEP(uint8_t ep, USB_Event_Callback_t callback);
-bool         USB_ConfigEP(uint8_t ep, uint8_t eptype, uint16_t epsize);
-void         USB_DeconfigEP(uint8_t ep);
-int32_t      USB_ReadEP(uint8_t ep, void *buf, uint16_t blen);
-int32_t      USB_WriteEP(uint8_t ep, void *buf, uint16_t blen);
-USB_Response USB_HandleEP0_Class(USB_ControlRequest_t *req, USB_Request_Callback_t *callback);
-USB_Response USB_SetConfiguration (uint8_t cfg);
 
 
 
@@ -175,7 +125,9 @@ USB_Response USB_SetConfiguration (uint8_t cfg);
 
 #define USB_EP_SWBUF_TX     USB_EP_DTOG_RX
 #define USB_EP_SWBUF_RX     USB_EP_DTOG_TX
+
 #define EP_TOGGLE_SET(epr, bits, mask) *(epr) = (*(epr) ^ (bits)) & (USB_EPREG_MASK | (mask))
+
 #define EP_TX_STALL(epr)    EP_TOGGLE_SET((epr), USB_EP_TX_STALL,                   USB_EPTX_STAT)
 #define EP_RX_STALL(epr)    EP_TOGGLE_SET((epr), USB_EP_RX_STALL,                   USB_EPRX_STAT)
 #define EP_TX_UNSTALL(epr)  EP_TOGGLE_SET((epr), USB_EP_TX_NAK,                     USB_EPTX_STAT | USB_EP_DTOG_TX)
@@ -184,14 +136,15 @@ USB_Response USB_SetConfiguration (uint8_t cfg);
 #define EP_DRX_UNSTALL(epr) EP_TOGGLE_SET((epr), USB_EP_RX_VALID | USB_EP_SWBUF_RX, USB_EPRX_STAT | USB_EP_DTOG_RX | USB_EP_SWBUF_RX)
 #define EP_TX_VALID(epr)    EP_TOGGLE_SET((epr), USB_EP_TX_VALID,                   USB_EPTX_STAT)
 #define EP_RX_VALID(epr)    EP_TOGGLE_SET((epr), USB_EP_RX_VALID,                   USB_EPRX_STAT)
-#define STATUS_VAL(x)   (USBD_HW_BC | (x))
+
+#define STATUS_VAL(x)       (x)
 
 #define USB_EPDIR_IN                0x00    /**<\brief Host-to-device endpoint direction.*/
 #define USB_EPDIR_OUT               0x80    /**<\brief Device-to-host endpoint direction.*/
 #define USB_EPTYPE_CONTROL          0x00    /**<\brief Control endpoint.*/
-#define USB_EPTYPE_ISOCHRONUS       0x01    /**<\brief Isochronous endpoint.*/
+//#define USB_EPTYPE_ISOCHRONUS       0x01    /**<\brief Isochronous endpoint.*/
 #define USB_EPTYPE_BULK             0x02    /**<\brief Bbulk endpoint.*/
-#define USB_EPTYPE_INTERRUPT        0x03    /**<\brief Interrupt endpoint.*/
+//#define USB_EPTYPE_INTERRUPT        0x03    /**<\brief Interrupt endpoint.*/
 #define USB_EPATTR_NO_SYNC          0x00    /**<\brief No synchronization.*/
 #define USB_EPATTR_ASYNC            0x04    /**<\brief Asynchronous endpoint.*/
 #define USB_EPATTR_ADAPTIVE         0x08    /**<\brief Adaptive endpoint.*/
@@ -278,4 +231,4 @@ USB_Response USB_SetConfiguration (uint8_t cfg);
 
 
 
-extern USB_Device_t USB_Device;
+//extern USB_Device_t USB_Device;
