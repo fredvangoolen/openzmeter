@@ -1,3 +1,0 @@
-(sym_lib_table
-  (lib (name 3Phase)(type Legacy)(uri ${KIPRJMOD}/3Phase.lib)(options "")(descr ""))
-)
