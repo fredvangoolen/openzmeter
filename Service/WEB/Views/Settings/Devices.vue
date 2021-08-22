@@ -17,6 +17,7 @@
     <device-v1 v-if="Driver=='DeviceV1'" :settings="Settings" @close="LoadTable"></device-v1>
     <device-v2 v-if="Driver=='DeviceV2'" :settings="Settings" @close="LoadTable"></device-v2>
     <device-v3 v-if="Driver=='DeviceV3'" :settings="Settings" @close="LoadTable"></device-v3>
+    <device-v4></device-v4>
     <device-remote v-if="Driver=='DeviceRemote'" :settings="Settings" @close="LoadTable"></device-remote>
   </div>
 </template>
@@ -26,6 +27,7 @@
   import DeviceV1 from './Devices/V1.vue';
   import DeviceV2 from './Devices/V2.vue';
   import DeviceV3 from './Devices/V3.vue';
+  import DeviceV4 from './Devices/V4.vue';
   import DeviceRemote from './Devices/Remote.vue';
   export default {
     data() {
@@ -77,7 +79,7 @@
     mounted: function () {
       this.LoadTable();
     },
-    components: { DeviceVirtual, DeviceV1, DeviceV2, DeviceV3, DeviceRemote }
+    components: { DeviceVirtual, DeviceV1, DeviceV2, DeviceV3, DeviceV4, DeviceRemote }
   }
 </script>
 

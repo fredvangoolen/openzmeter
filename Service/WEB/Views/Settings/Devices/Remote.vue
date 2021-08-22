@@ -102,23 +102,20 @@
   .rounded {
     border-radius: 4px !important;
   }
-  @media screen and (min-width: 600px) {
-    .table >>> th:nth-child(2) {
-      width: 120px;
-    }
-    .table >>> th:nth-child(3) {
-      width: 100px;
-      text-align: right;
-    }
-    .table >>> td:nth-child(3) {
-      text-align: right;
-    }
-    .table >>> th:nth-child(4) {
-      width: 62px;
-    }
-    .table >>> td:nth-child(4) {
-      text-align: right;
-    }
+  .table >>> th:nth-child(2) {
+    width: 120px;
   }
-
+  .table >>> th:nth-child(3) {
+    width: 100px;
+    text-align: right;
+  }
+  .table >>> td:nth-child(3) {
+    text-align: right;
+  }
+  .table >>> th:nth-child(4) {
+    width: 62px;
+  }
+  .table >>> td:nth-child(4) {
+    text-align: right;
+  }
 </style>
