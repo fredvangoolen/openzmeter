@@ -137,6 +137,7 @@ void AnalyzerSoftCyclicHistogram::AddPoints(AnalyzerSoftBlock *inputBlock, int s
     bool foundFirstCycle = false;
     uint32_t cycleStartIdx = 0;
     float cycleXDiff = 0;
+
     // Find the index of each zero-crossing instance (from - to +)
     for (uint16_t i = 0; i < (numSamples - 1); i++)
     {
@@ -204,6 +205,14 @@ void AnalyzerSoftCyclicHistogram::AddPoints(AnalyzerSoftBlock *inputBlock, int s
                         voltageHistogram[phaseNumber][sampleIdx][binIndex] += 1;
                     }
                 }
+            }
+
+            // Current CH
+            float current_sample = inputBlock->CurrentSample(phaseNumber, i);
+            if (abs(current_sample) <= pCurrentMaxAmplitude)
+            {
+                uint32_t binIndex = ((current_sample + pCurrentMaxAmplitude) / (2 * pCurrentMaxAmplitude)) * (pCurrentBinCount - 1);
+                currentHistogram[phaseNumber][i % numNominalSamplesPerCycle][binIndex] += 1;
             }
         }
     }
@@ -366,7 +375,7 @@ void AnalyzerSoftCyclicHistogram::ResizeCurrentHistogram(uint8_t numCurrentChann
     }
 }
 
-json AnalyzerSoftCyclicHistogram::GetCyclicHistogramForEvent(uint64_t eventStartTime)
+json AnalyzerSoftCyclicHistogram::GetCyclicHistogramForEvent(string eventStartTime)
 {
     json result = json::object();
 
@@ -385,55 +394,89 @@ json AnalyzerSoftCyclicHistogram::GetCyclicHistogramForEvent(uint64_t eventStart
         json points = json::parse(DB->ResultString("points"));
 
         json points_id = points["id"];
-        json points_phase = points["phase"];
+        json points_channel = points["phase"];
         json points_sample = points["sample"];
         json points_voltage_bin = points["voltage_bin"];
         json points_count = points["count"];
 
-        result["points"] = json::array();
+        // Add voltage CH data
+        result["voltagePoints"] = json::object();
+        result["voltagePoints"]["channel"] = json::array();
+        result["voltagePoints"]["x"] = json::array();
+        result["voltagePoints"]["y"] = json::array();
+        result["voltagePoints"]["z"] = json::array();
+
         for (size_t i = 0; i < points_id.size(); i++)
         {
-            json new_point = json::object();
 
-            new_point["id"] = points_id[i];
-            new_point["phase"] = points_phase[i];
-            new_point["sample"] = points_sample[i];
-            new_point["voltage_bin"] = points_voltage_bin[i];
-            new_point["count"] = points_count[i];
+            result["voltagePoints"]["channel"].push_back(points_channel[i]);
+            result["voltagePoints"]["x"].push_back(points_sample[i]);
+            result["voltagePoints"]["y"].push_back(points_voltage_bin[i]);
+            result["voltagePoints"]["z"].push_back(points_count[i]);
 
-            result["points"].push_back(new_point);
         }
     }
 
     return result;
 }
 
-json AnalyzerSoftCyclicHistogram::GetCurrentCyclicHistogram()
+json AnalyzerSoftCyclicHistogram::GetCurrentCyclicHistogram(string mode)
 {
     json result = json::object();
 
     result["starttime"] = startTime;
     result["endtime"] = endTime;
 
-    result["voltagePoints"] = json::object();
-    result["voltagePoints"]["channel"] = json::array();
-    result["voltagePoints"]["x"] = json::array();
-    result["voltagePoints"]["y"] = json::array();
-    result["voltagePoints"]["z"] = json::array();
-
-    for (size_t i = 0; i < voltageHistogram.size(); i++)
+    if (mode == "voltage")
     {
-        for (size_t j = 0; j < voltageHistogram[i].size(); j++)
+        // Add voltage CH data
+        result["voltagePoints"] = json::object();
+        result["voltagePoints"]["channel"] = json::array();
+        result["voltagePoints"]["x"] = json::array();
+        result["voltagePoints"]["y"] = json::array();
+        result["voltagePoints"]["z"] = json::array();
+
+        for (size_t i = 0; i < voltageHistogram.size(); i++)
         {
-            for (size_t k = 0; k < voltageHistogram[i][j].size(); k++)
+            for (size_t j = 0; j < voltageHistogram[i].size(); j++)
             {
-                uint64_t count = voltageHistogram[i][j][k];
-                if (count != 0)
+                for (size_t k = 0; k < voltageHistogram[i][j].size(); k++)
                 {
-                    result["voltagePoints"]["channel"].push_back(i);
-                    result["voltagePoints"]["x"].push_back(j);
-                    result["voltagePoints"]["y"].push_back(k);
-                    result["voltagePoints"]["z"].push_back(count);
+                    uint64_t count = voltageHistogram[i][j][k];
+                    if (count != 0)
+                    {
+                        result["voltagePoints"]["channel"].push_back(i);
+                        result["voltagePoints"]["x"].push_back(j);
+                        result["voltagePoints"]["y"].push_back(k);
+                        result["voltagePoints"]["z"].push_back(count);
+                    }
+                }
+            }
+        }
+    }
+    else if (mode == "current")
+    {
+        // Add current CH data
+        result["currentPoints"] = json::object();
+        result["currentPoints"]["channel"] = json::array();
+        result["currentPoints"]["x"] = json::array();
+        result["currentPoints"]["y"] = json::array();
+        result["currentPoints"]["z"] = json::array();
+
+        for (size_t i = 0; i < currentHistogram.size(); i++)
+        {
+            for (size_t j = 0; j < currentHistogram[i].size(); j++)
+            {
+                for (size_t k = 0; k < currentHistogram[i][j].size(); k++)
+                {
+                    uint64_t count = currentHistogram[i][j][k];
+                    if (count != 0)
+                    {
+                        result["currentPoints"]["channel"].push_back(i);
+                        result["currentPoints"]["x"].push_back(j);
+                        result["currentPoints"]["y"].push_back(k);
+                        result["currentPoints"]["z"].push_back(count);
+                    }
                 }
             }
         }

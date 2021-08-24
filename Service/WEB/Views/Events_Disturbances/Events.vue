@@ -146,16 +146,29 @@
       },
       CyclicHistogram: function(evt){
         this.ShowSpinner = true;
-        this.$http.post('getCyclicHistogram', { ID: evt.id, Analyzer: this.analyzer.Analyzer }).then(
-          (result) => {
-            this.ShowSpinner = false;
-            this.$router.push({name: 'CyclicHistogram' , params: {id: evt.id}});
+
+        fetch("getCyclicHistogramData", {
+          method: "POST",
+          body: JSON.stringify({
+            ID: String(evt.StartTime),
+            Analyzer: this.analyzer.Analyzer,
+            Mode: 'voltage',
+          }),
+          headers: {
+            Accept: "application/json",
+            "Content-Type": "application/json",
           },
-          (fail) => {
+        }).then((result) => {
+          if (result.status == 200) {
+            result.json().then((data) => {
+              this.ShowSpinner = false;
+              this.$router.push({name: 'CyclicHistogram' , params: {id: evt.StartTime, mode: "voltage"}});
+            });
+          } else {
             this.ShowSpinner = false;
             alert("Event samples are not avaliable now. Maybe event is still running or deleted.");
           }
-        );
+        });
 
         this.Event = evt;
         this.View = 'About';

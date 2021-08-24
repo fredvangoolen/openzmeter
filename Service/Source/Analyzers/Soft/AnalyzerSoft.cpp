@@ -449,17 +449,21 @@ void AnalyzerSoft::GetCyclicHistogramData(HTTPRequest &req)
 {
   if(pAccess->TestUser(AnalyzerAccess::READ, req.UserName()) == false) return req.Error("", HTTP_FORBIDDEN);
 
-  uint64_t ID = 0;
+  string ID = "";
+  string mode = "";
 
   if (req.Params().contains("ID"))
     ID = req.Params()["ID"];
 
+  if (req.Params().contains("Mode"))
+    mode = req.Params()["Mode"];
+
   json result = json::object();
 
-  if (ID == 0)
+  if (ID == "")
   {
     // Fetch current (in-memory) cyclic histogram data
-    result = pCyclicHistogram->GetCurrentCyclicHistogram();
+    result = pCyclicHistogram->GetCurrentCyclicHistogram(mode);
   }
   else
   {

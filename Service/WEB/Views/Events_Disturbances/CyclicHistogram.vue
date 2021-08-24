@@ -17,7 +17,7 @@
 
 <script>
 import * as oZm from "JS/openZmeter.js";
-import CyclicHistogramChart from "../Analysis_Voltage/CyclicHistogramChart.vue";
+import CyclicHistogramChart from "../Analysis_CyclicHistogram/CyclicHistogramChart.vue";
 export default {
   props: { id: "string", analyzer: Object },
   created: function() {

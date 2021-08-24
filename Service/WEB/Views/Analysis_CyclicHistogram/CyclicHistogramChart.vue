@@ -29,6 +29,20 @@
       >
         Clear Chart
       </button>
+      <button
+        type="button"
+        class="btn btn-primary"
+        @click="DownloadCyclicHistogram(true)"
+      >
+        Download (sparse)
+      </button>
+      <button
+        type="button"
+        class="btn btn-primary"
+        @click="DownloadCyclicHistogram(false)"
+      >
+        Download (dense)
+      </button>
     </div>
   </div>
 </template>
@@ -44,14 +58,20 @@ const arrayMinMax = (arr) =>
     [Number.POSITIVE_INFINITY, Number.NEGATIVE_INFINITY]
   );
 
-const sparseToDenseArray = (x, y, z, numRows, numColumns) => {
+const sparseToDenseArray = (
+  x,
+  y,
+  z,
+  numRows,
+  numColumns,
+  emptyFillValue = null
+) => {
   if (x.length != y.length || x.length != z.length || y.length != z.length)
     return null;
 
-  console.log("Creating a " + numRows + "x" + numColumns + " array.");
   let result = Array(numColumns)
     .fill()
-    .map(() => Array(numRows).fill(null));
+    .map(() => Array(numRows).fill(emptyFillValue));
 
   let numElements = x.length;
 
@@ -68,9 +88,21 @@ const sparseToDenseArray = (x, y, z, numRows, numColumns) => {
 };
 
 export default {
-  props: { analyzer: Object, id: "string" },
+  props: {
+    analyzer: Object,
+    id: String,
+    mode: {
+      type: String,
+      default: "voltage",
+      validator: function (value) {
+        return ["voltage", "current"].indexOf(value) !== -1;
+      },
+    },
+  },
   created: function () {
-    this.event_id = this.$route.params.id;
+    if (this.$route.params.id != null)
+      this.event_id = String(this.$route.params.id);
+    else this.event_id = undefined;
     this.timer = setInterval(this.UpdateCyclicHistogramTimes, 5000);
     this.UpdateCyclicHistogramData();
   },
@@ -93,8 +125,15 @@ export default {
       }).then((config_result) => {
         if (config_result.status == 200) {
           config_result.json().then((config) => {
-            this.maxAmplitude = config["VoltageMaxAmplitude"];
-            this.binCount = config["VoltageBinCount"];
+            if (this.mode == "voltage") {
+              this.maxAmplitude = config["VoltageMaxAmplitude"];
+              this.binCount = config["VoltageBinCount"];
+            } else if (this.mode == "current") {
+              this.maxAmplitude = config["CurrentMaxAmplitude"];
+              this.binCount = config["CurrentBinCount"];
+            } else {
+              return;
+            }
 
             if (config["Enabled"]) {
               fetch("getCyclicHistogramData", {
@@ -102,6 +141,7 @@ export default {
                 body: JSON.stringify({
                   ID: this.event_id,
                   Analyzer: this.analyzer.Analyzer,
+                  Mode: this.mode,
                 }),
                 headers: {
                   Accept: "application/json",
@@ -110,7 +150,13 @@ export default {
               }).then((result) => {
                 if (result.status == 200) {
                   result.json().then((data) => {
-                    this.cyclicHistogramData = data.voltagePoints;
+                    if (this.mode == "voltage") {
+                      this.cyclicHistogramData = data.voltagePoints;
+                    } else if (this.mode == "current") {
+                      this.cyclicHistogramData = data.currentPoints;
+                    } else {
+                      return;
+                    }
 
                     this.starttime = moment(data.starttime);
                     this.starttime_str = this.starttime.format(
@@ -123,7 +169,7 @@ export default {
                     );
 
                     if (this.event_id != null) {
-                      this.event_starttime = moment(this.event_id);
+                      this.event_starttime = moment(Number(this.event_id));
                       this.event_starttime_str = this.event_starttime.format(
                         "dddd, MMM D, YYYY hh:mm:ss.SSS"
                       );
@@ -216,11 +262,6 @@ export default {
           return this.maxAmplitude * ((2 * y) / (this.binCount - 1) - 1);
         });
 
-        console.log(xArray);
-        console.log(yArray);
-        console.log(yArrayCorrected);
-        console.log(zArray);
-
         let channel_number = channel + 1;
 
         let new_trace = {
@@ -244,12 +285,19 @@ export default {
         traces.push(new_trace);
       });
 
+      let title = "Amplitude";
+      if (this.mode == "voltage") {
+        title = "Amplitude (Volts)";
+      } else if (this.mode == "current") {
+        title = "Amplitude (Amps)";
+      }
+
       let layout = {
         height: 600,
         title: { text: "Cyclic Histogram" },
         xaxis: { title: "Sample Number" },
         yaxis: {
-          title: "Amplitude (Volts)",
+          title: title,
           range: [-1 * this.maxAmplitude, this.maxAmplitude],
         },
         legend: {
@@ -280,6 +328,74 @@ export default {
 
       if (this.event_id != null) {
         this.event_starttime_ago_str = this.event_starttime.fromNow();
+      }
+    },
+    DownloadCyclicHistogram(sparseArray) {
+      if (this.cyclicHistogramData != null) {
+        if (sparseArray) {
+          let csvContent = "data:text/csv;charset=utf-8,";
+          csvContent += "channel,sample,voltage_bin,count\n";
+
+          const numElements = this.cyclicHistogramData.channel.length;
+          for (let i = 0; i < numElements; i++) {
+            const channel = this.cyclicHistogramData.channel[i];
+            const x = this.cyclicHistogramData.x[i];
+            const y = this.cyclicHistogramData.y[i];
+            const z = this.cyclicHistogramData.z[i];
+
+            csvContent += `${channel},${x},${y},${z}\n`;
+          }
+
+          let encodedUri = encodeURI(csvContent);
+          let link = document.createElement("a");
+          link.setAttribute("href", encodedUri);
+          link.setAttribute("download", "cyclichistogram_sparse.csv");
+          document.body.appendChild(link); // Required for FF
+
+          link.click(); // This will download the cyclic histogram file
+        } else {
+          const channels = this.cyclicHistogramData.channel
+            .filter((v, i, a) => a.indexOf(v) === i)
+            .sort();
+
+          channels.forEach((channel) => {
+            let csvContent = "data:text/csv;charset=utf-8,";
+
+            const x_filtered = this.cyclicHistogramData.x.filter(
+              (d, idx) => this.cyclicHistogramData.channel[idx] == channel
+            );
+            const y_filtered = this.cyclicHistogramData.y.filter(
+              (d, idx) => this.cyclicHistogramData.channel[idx] == channel
+            );
+            const z_filtered = this.cyclicHistogramData.z.filter(
+              (d, idx) => this.cyclicHistogramData.channel[idx] == channel
+            );
+
+            const zArray = sparseToDenseArray(
+              x_filtered,
+              y_filtered,
+              z_filtered,
+              arrayMinMax(this.cyclicHistogramData.x)[1] + 1,
+              this.binCount,
+              0
+            );
+
+            for (let i = zArray.length - 1; i >= 0; i--) {
+              const row = zArray[i];
+              csvContent += row.join(",") + "\n";
+            }
+
+            let encodedUri = encodeURI(csvContent);
+            let link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", "cyclichistogram_dense.csv");
+            document.body.appendChild(link); // Required for FF
+
+            link.click(); // This will download the cyclic histogram file
+          });
+        }
+      } else {
+        alert("Cyclic histogram data is not available.");
       }
     },
     ClearCyclicHistogramData() {

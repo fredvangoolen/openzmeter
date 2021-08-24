@@ -29,8 +29,8 @@ public:
     void SetConfig(const json &config);
     static json CheckConfig(const json &config);
     void AddPoints(AnalyzerSoftBlock *inputBlock, int sampleRate);
-    json GetCyclicHistogramForEvent(uint64_t eventStartTime);
-    json GetCurrentCyclicHistogram();
+    json GetCyclicHistogramForEvent(string eventStartTime);
+    json GetCurrentCyclicHistogram(string mode);
     void WriteToDisk();
     void WriteToDatabase();
     void WriteToDatabase(uint64_t eventStartTime);

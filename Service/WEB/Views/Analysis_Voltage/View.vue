@@ -38,7 +38,7 @@
         <parameters v-if="ActiveTab=='Parameters'" :data="TransferCubism.Data" :dataNow="TransferNow.Data" :analyzer="analyzer" :paused.sync="Paused"></parameters>
         <phasors v-if="ActiveTab=='Phasors'" :data="TransferNow.Data" :analyzer="analyzer" :paused.sync="Paused"></phasors>
         <events v-if="ActiveTab=='Events'" :analyzer="analyzer" :events="TransferEvents.Data" @eventschanged="UpdateEvents" :pagesize="10"></events>
-        <cyclic-histogram-chart v-if="ActiveTab=='Cyclic Histogram'" :analyzer="analyzer"></cyclic-histogram-chart>
+        <cyclic-histogram-chart v-if="ActiveTab=='Cyclic Histogram'" :analyzer="analyzer" mode="voltage"></cyclic-histogram-chart>
         <jolt-chart v-if="ActiveTab=='Jolt'" :analyzer="analyzer" :range="Range"></jolt-chart>
       </div>
     </div>
@@ -61,7 +61,7 @@
   import Waveform from './Waveform.vue';
   import Events from '../Events_Disturbances/Events.vue';
   import Phasors from './Phasors.vue';
-  import CyclicHistogramChart from './CyclicHistogramChart.vue';
+  import CyclicHistogramChart from '../Analysis_CyclicHistogram/CyclicHistogramChart.vue';
   import JoltChart from './JoltChart.vue';
   export default {
     props: { analyzer: { type: Object } },
