@@ -413,7 +413,6 @@ json AnalyzerSoftCyclicHistogram::GetCyclicHistogramForEvent(string eventStartTi
             result["voltagePoints"]["x"].push_back(points_sample[i]);
             result["voltagePoints"]["y"].push_back(points_voltage_bin[i]);
             result["voltagePoints"]["z"].push_back(points_count[i]);
-
         }
     }
 
@@ -422,6 +421,11 @@ json AnalyzerSoftCyclicHistogram::GetCyclicHistogramForEvent(string eventStartTi
 
 json AnalyzerSoftCyclicHistogram::GetCurrentCyclicHistogram(string mode)
 {
+
+    this->WriteToDatabase(0);
+    this->Clear();
+    return NULL;
+
     json result = json::object();
 
     result["starttime"] = startTime;
