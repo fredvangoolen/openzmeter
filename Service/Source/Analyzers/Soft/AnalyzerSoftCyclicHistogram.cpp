@@ -377,8 +377,8 @@ void AnalyzerSoftCyclicHistogram::ResizeCurrentHistogram(uint8_t numCurrentChann
 
 json AnalyzerSoftCyclicHistogram::GetCyclicHistogramForEvent(string eventStartTime)
 {
-    LogFile::Warning("Writing to database...");
-    this->WriteToDatabase(0);
+    LogFile::Warning("Writing to database 1631726922323...");
+    this->WriteToDatabase(1631726922323);
     this->Clear();
     return NULL;
 
