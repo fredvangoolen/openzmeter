@@ -210,8 +210,8 @@ void AnalyzerSoftEvents::Events_Func(const AnalyzerSoftBlock *block, const uint6
 
         if (pCyclicHistogram != NULL)
         {
-          pCyclicHistogram->WriteToDatabase(pEvent->Start);
-          pCyclicHistogram->Clear();
+          //pCyclicHistogram->WriteToDatabase(pEvent->Start);
+          //pCyclicHistogram->Clear();
         }
       } else if(pEvent->Type == EVT_INTERRUPTION) {
         for(uint8_t n = 0; n < pVoltageChannels; n++) pEvent->PeakValue[n] = fmin(pEvent->PeakValue[n], Cycle[n]);
