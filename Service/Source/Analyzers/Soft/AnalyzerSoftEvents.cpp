@@ -205,15 +205,14 @@ void AnalyzerSoftEvents::Events_Func(const AnalyzerSoftBlock *block, const uint6
         pEvent->Start = timestamp + (uint32_t)((Pos * 1000) / pSamplerate);
         Database DB(pSerial);
         DB.ExecSentenceNoResult("INSERT INTO events(changetime, starttime, evttype, samplerate, reference, peak, change, notes, duration, size_raw, size_rms) VALUES (" + DB.Bind(Tools::GetTime64()) + ", " + DB.Bind(pEvent->Start) + ", " + DB.Bind(Type) + ", " + DB.Bind(pSamplerate) + ", " + DB.Bind(pEvent->Reference, pVoltageChannels) + ", " + DB.Bind(pEvent->PeakValue, pVoltageChannels) + ", " + DB.Bind(pEvent->ChangeValue, pVoltageChannels) + ", '', 0, " + DB.Bind(pPrevSamplesLen) + ", " + DB.Bind(pPrevCyclesLen) + ")");
+        SaveSamples(pEvent->Start, SAMPLES_RMS, pPrevCyclesLen + 1);
+        SaveSamples(pEvent->Start, SAMPLES_RAW, pPrevSamplesLen);
 
         if (pCyclicHistogram != NULL)
         {
           pCyclicHistogram->WriteToDatabase(pEvent->Start);
           pCyclicHistogram->Clear();
         }
-
-        SaveSamples(pEvent->Start, SAMPLES_RMS, pPrevCyclesLen + 1);
-        SaveSamples(pEvent->Start, SAMPLES_RAW, pPrevSamplesLen);
       } else if(pEvent->Type == EVT_INTERRUPTION) {
         for(uint8_t n = 0; n < pVoltageChannels; n++) pEvent->PeakValue[n] = fmin(pEvent->PeakValue[n], Cycle[n]);
       } else if(pEvent->Type == EVT_DIP) {
