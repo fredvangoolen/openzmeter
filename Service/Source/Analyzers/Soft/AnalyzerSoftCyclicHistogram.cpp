@@ -377,11 +377,6 @@ void AnalyzerSoftCyclicHistogram::ResizeCurrentHistogram(uint8_t numCurrentChann
 
 json AnalyzerSoftCyclicHistogram::GetCyclicHistogramForEvent(string eventStartTime)
 {
-    LogFile::Warning("Writing to database 1631726922323...");
-    this->WriteToDatabase(1631726922323);
-    this->Clear();
-    return NULL;
-
     json result = json::object();
 
     DB->ExecSentenceAsyncResult("SELECT id, event_id, starttime, endtime FROM cychist WHERE event_id = " + DB->Bind(eventStartTime));
