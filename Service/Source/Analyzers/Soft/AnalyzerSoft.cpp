@@ -137,8 +137,8 @@ json AnalyzerSoft::CheckConfig(const json &config, const Analyzer::AnalyzerMode 
   ConfigOUT["Tags"] = json::object();
   ConfigOUT["Sync"] = AnalyzerSoftSync::CheckConfig(json::object());
   ConfigOUT["MQTT"] = AnalyzerSoftMQTT::CheckConfig(json::object());
+  ConfigOUT["Events"] = AnalyzerSoftEvents::CheckConfig(json::object());
   ConfigOUT["Save200MS"] = false;
-  ConfigOUT["EventsEnabled"] = false;
   ConfigOUT["AlarmsEnabled"] = false;
   ConfigOUT["Alarms"] = json::array();
   ConfigOUT["Rates"] = json::array();
@@ -166,8 +166,8 @@ json AnalyzerSoft::CheckConfig(const json &config, const Analyzer::AnalyzerMode 
   }
   if(config.contains("Sync")) ConfigOUT["Sync"] = AnalyzerSoftSync::CheckConfig(config["Sync"]);
   if(config.contains("MQTT")) ConfigOUT["MQTT"] = AnalyzerSoftMQTT::CheckConfig(config["MQTT"]);
+  if(config.contains("Events")) ConfigOUT["Events"] = AnalyzerSoftEvents::CheckConfig(config["Events"]);
   if(config.contains("Save200MS") && config["Save200MS"].is_boolean()) ConfigOUT["Save200MS"] = config["Save200MS"];
-  if(config.contains("EventsEnabled") && config["EventsEnabled"].is_boolean()) ConfigOUT["EventsEnabled"] = config["EventsEnabled"];
   if(config.contains("AlarmsEnabled") && config["AlarmsEnabled"].is_boolean()) ConfigOUT["AlarmsEnabled"] = config["AlarmsEnabled"];
   if(config.contains("Alarms") && config["Alarms"].is_array()) ConfigOUT["Alarms"] = AnalyzerSoftAlarms::CheckConfig(config["Alarms"]);
   if(config.contains("Rates") && config["Rates"].is_array()) ConfigOUT["Rates"] = AnalyzerRates::CheckConfig(config["Rates"], except);
@@ -185,7 +185,7 @@ void AnalyzerSoft::Config(const json &options) {
   pAggreg1H->Config(pNominalVoltage, pNominalFrequency);
   pRates->Config(options["TimeZone"], options["Rates"]);
   pAlarms->Config(options["AlarmsEnabled"], options["TimeZone"], options["Alarms"], pNominalVoltage, pNominalFrequency);
-  pEvents->Config(options["EventsEnabled"], pNominalVoltage, pNominalFrequency);
+  pEvents->Config(options["Events"], pNominalVoltage, pNominalFrequency);
   pSync->Config(options["Sync"]);
   pMQTT->Config(options);
   pthread_mutex_unlock(&pMutex);
@@ -205,7 +205,7 @@ void AnalyzerSoft::Thread() {
     pAggreg200MS->Reset();
     pAggreg200MS->setTimestamp(pWorkingBlock->Timestamp());
     pFFTs->Run(pWorkingBlock, (pWorkingBlock->NominalFrequency() == 0.0) ? 0 : (pWorkingBlock->NominalFrequency() == 50.0) ? 10 : 12);
-    pEvents->Run(pWorkingBlock, pAggreg200MS->Timestamp());
+    pEvents->Run(pWorkingBlock);
     pAggreg200MS->setFrequency(pFrequency->Frequency(pWorkingBlock));
     for(uint8_t j = 0; j < pVoltageChannels; j++) {
       float Voltage     = 0.0;

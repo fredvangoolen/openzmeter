@@ -83,6 +83,11 @@ table.dataTable thead .sorting:after {
   margin-bottom: 0px;
 }
 
+.tooltip-inner {
+  max-width: 350px;
+  background-color: #333;
+}
+
 /* latin */
 @font-face {
   font-family: 'Titillium Web';
