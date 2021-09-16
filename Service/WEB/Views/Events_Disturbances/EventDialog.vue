@@ -52,7 +52,7 @@
         Opt.axes.x.pixelsPerLabel = 25;
         for(var i = 0; i < this.event.Samples.length; i++) {
           Opt.file.push([Opt.file.length].concat(this.event.Samples[i]));
-          if((this.event.Samples.length == (4 * this.event.Length)) && (i == (2 * this.event.Length))) {
+          if((this.event.Samples.length == (4 * this.event.Length)) && (i == (2 * this.event.Length - 1))) {
             Gap = Math.round(this.event.Length * 0.1);
             for(var n = 0; n < Gap; n++) Opt.file.push([Opt.file.length].concat(new Array(this.event.Samples[0].length).fill(null)));
           }
@@ -69,9 +69,6 @@
         };
         Opt.axes.x.valueFormatter = (x) => { return Opt.axes.x.axisLabelFormatter(x) + ' ms'; };
         Opt.underlayCallback = (canvas, area, g) => {
-//          var StartCount = this.event.Length;
-//          var EndCount = this.GraphOptions.file.length - this.event.Post_Samples[0].length;
-//          var EventWidth = this.event.Inner_Samples[0].length;
           //Start and end lines
           canvas.save();
           canvas.setLineDash([3, 2]);

@@ -24,7 +24,7 @@ using namespace std;
 // ---------------------------------------------------------------------------------------------------------------------
 class AnalyzerSoftEvents final : public AnalyzerEvents {
   private :
-    enum EventType { EVT_SWELL, EVT_DIP, EVT_INTERRUPTION, EVT_RVC };
+    enum EventType { EVT_NONE, EVT_SWELL, EVT_DIP, EVT_INTERRUPTION, EVT_RVC };
     enum EventSamples { SAMPLES_RAW, SAMPLES_RMS };
     typedef struct {
       EventType      Type;                      //Running event type
@@ -35,12 +35,11 @@ class AnalyzerSoftEvents final : public AnalyzerEvents {
       float          ChangeValue[3];            //diference voltage of event
       uint32_t       CyclesDuration;            //Event duration in samples
     } Event_t;
-  private :
-    static constexpr float Event_RVC        =  5.0;   //Variation in % to start a RVC event
-    static constexpr float Event_DIP_SWELL  = 10.0;   //Variation in % to start a dip/swell event
-    static constexpr float Event_INT        = 90.0;   //Variation in % to start a interruption
-    static constexpr float Event_Hysteresis =  2.0;   //Hysteresis in % to end and event
-    static constexpr float Event_RAW_Time   =  0.2;   //Time in seconds before and after event to store RAW samples
+    typedef struct {
+      bool  Enabled;
+      float Threshold;
+      float Hysteresis;
+    } Levels_t;
   private :
     const float      pSamplerate;               //Input samplerate
     const uint8_t    pVoltageChannels;          //Input channels
@@ -50,28 +49,33 @@ class AnalyzerSoftEvents final : public AnalyzerEvents {
     float            pNominalFrequency;         //Nominal frequency
     bool             pEnabled;                  //Events detection enabled
     TaskPool::Task   pTask;                     //Working thread
+    Levels_t         pRVC;                      //RVC event config
+    Levels_t         pDip;                      //Dip event config
+    Levels_t         pSwell;                    //Swell event config
+    Levels_t         pInterruption;             //Interruption event config
     Event_t         *pEvent;                    //Running event
     list<Event_t*>   pEvents;                   //Close pending events
     bool             pPrevStationary;           //Steady state flag
     uint16_t         pPrevSamplesLen;           //Previous samples count
     uint16_t         pPrevSamplesPos;           //Previous samples write pos
     float           *pPrevSamples;              //Previous samples
+    uint16_t         pPrevCyclesSaveLen;        //Previous cycles to save
+    uint16_t         pPrevCyclesAvgLen;         //Previous cycles for RVC calc
     uint16_t         pPrevCyclesLen;            //Previous cycles count
     uint16_t         pPrevCyclesPos;            //Previous cycles write pos
     float           *pPrevCycles;               //Previous cycles
     bool             pHaveEvent;                //Flag to block event
   private :
-    Event_t *InitEvent();
-    void     Events_Func(const AnalyzerSoftBlock *block, const uint64_t timestamp);
-    bool     FindRunningEvent(const uint32_t mask) const;
+    void     Events_Func(const AnalyzerSoftBlock *block);
     float    CalcChange(const float in, const float reference) const;
     string   EventTypeToString(const EventType type) const;
-    void     SaveSamples(const uint64_t &start, const uint8_t type, const uint16_t len);
+  public :
+    static json CheckConfig(const json &config);
   public :
     AnalyzerSoftEvents(const string &serial, const Analyzer::AnalyzerMode mode, const float samplerate);
     ~AnalyzerSoftEvents();
-    void Config(const bool enabled, const float nominalVoltage, const float nominalFreq);
-    void Run(const AnalyzerSoftBlock *block, const uint64_t timestamp);
+    void Config(const json &config, const float nominalVoltage, const float nominalFreq);
+    void Run(const AnalyzerSoftBlock *block);
     bool Wait();
 };
 // ---------------------------------------------------------------------------------------------------------------------

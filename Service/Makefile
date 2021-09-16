@@ -1,22 +1,22 @@
 #Fill date and version if not provided
-BUILD_DATE   ?= $(shell date +%Y%m%d.%H%M)
+BUILD_DATE   := $(shell date +%Y%m%d.%H%M)
 BUILD_BRANCH ?= "custom"
 BUILD_ARCH   ?= "unknown"
 
 #Default build dir
-TARGET = $(notdir $(CONFIG))
+TARGET := $(notdir $(CONFIG))
 
 #WEB related components
-WEB_TARGET = Tmp/openZmeter.js
-WEB_SOURCE = $(shell find WEB -type f ! -path "WEB/node_modules/*")
+WEB_TARGET := Tmp/openZmeter.js
+WEB_SOURCE := $(shell find WEB -type f ! -path "WEB/node_modules/*")
 
 #Resources related components
-RESOURCES_TARGET = Tmp/$(TARGET)/ResourceFiles.o
-RESOURCES_SOURCE = $(shell find Resources ! -type d -print | sort)
+RESOURCES_TARGET := Tmp/$(TARGET)/ResourceFiles.o
+RESOURCES_SOURCE := $(shell find Resources ! -type d -print | sort)
 
 #Executable related components
-EXECUTABLE_TARGET = Tmp/$(TARGET)/openZmeter
-EXECUTABLE_SOURCE = $(shell find Source -name "*.cpp" ! -type d -print)
+EXECUTABLE_TARGET := Tmp/$(TARGET)/openZmeter
+EXECUTABLE_SOURCE := $(shell find Source -name "*.cpp" ! -type d -print)
 CFLAGS  += -DCPPHTTPLIB_USE_POLL -DCPPHTTPLIB_ZLIB_SUPPORT -DCPPHTTPLIB_OPENSSL_SUPPORT -D__BUILD_DATE__="\"$(BUILD_DATE)\"" -D__BUILD_BRANCH__="\"$(BUILD_BRANCH)\"" -D__BUILD_ARCH__="\"$(BUILD_ARCH)\"" \
            -I Source -I Source/Devices -I Source/Analyzers -I Source/Analyzers/Soft -I Source/Analyzers/Remote -I Source/Tariffs -I Source/Database -I Source/HTTPServer -I Source/System -I Source/Tools -I Libs -I Libs/mqtt-c -I Libs/cpp-httplib -I Libs/nlohmann \
 					 -fsingle-precision-constant -Wno-psabi -Wall
@@ -32,8 +32,8 @@ CC  ?= gcc
 LD  ?= ld
 
 #Objects and depends
-EXECUTABLE_OBJS	 = $(EXECUTABLE_SOURCE:%=Tmp/$(TARGET)/%.o)
-DEPENDS          = $(EXECUTABLE_OBJS:%.o=%.d)
+EXECUTABLE_OBJS	 := $(EXECUTABLE_SOURCE:%=Tmp/$(TARGET)/%.o)
+DEPENDS          := $(EXECUTABLE_OBJS:%.o=%.d)
 #=======================================================================================================================
 default: READCONFIG $(EXECUTABLE_TARGET)
 

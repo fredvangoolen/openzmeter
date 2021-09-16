@@ -30,9 +30,9 @@
         Columns: [
           {name: 'User', title: 'User name' },
           {name: 'Name', title: 'Name' },
-          {name: 'TimeZone', title: 'Time zone' },
-          {name: 'Email', title: 'E-Mail' },
-          {name: '__slot:actions', title: '' }
+          {name: 'TimeZone', title: 'Time zone', titleClass: 'text-center', dataClass: 'text-center' },
+          {name: 'Email', title: 'E-Mail', titleClass: 'text-center', dataClass: 'text-center' },
+          {name: '__slot:actions', title: '', width: '96px', dataClass: 'text-right' }
         ]
       };
     },
@@ -95,26 +95,5 @@
     display: inline-block;
     font-size: 20px;
     line-height: 22px;
-  }
-  @media screen and (min-width: 600px) {
-    .table >>> th:nth-child(3) {
-      text-align: center;
-    }
-    .table >>> th:nth-child(4) {
-      text-align: center;
-    }
-    .table >>> td:nth-child(3) {
-      text-align: center;
-    }
-    .table >>> td:nth-child(4) {
-      text-align: center;
-    }
-    .table >>> th:nth-child(5) {
-      width: 120px;
-      text-align: center;
-    }
-    .table >>> td:nth-child(5) {
-      text-align: center;
-    }
   }
 </style>

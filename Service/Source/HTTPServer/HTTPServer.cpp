@@ -53,7 +53,7 @@ HTTPServer::HTTPServer() {
   set_payload_max_length(0x800000);
   set_read_timeout(120);
   set_write_timeout(120);
-  set_keep_alive_max_count(1);
+  set_keep_alive_max_count(100);
   new_task_queue = [] { return new HTTPRequestPool(); };
   Config = json::object();
   if(Logo != pLogoImg) Config["Logo"] = Logo;
