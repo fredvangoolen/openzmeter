@@ -18,6 +18,7 @@ import 'CSS/openZmeter.css';
 //Other tools ----------------------------------------------------------------------------------------------------------
 import { blur } from 'auto-blur';
 addEventListener('click', evt => blur(evt));
+$("body").tooltip( { html: true, placement: 'auto', container: 'body', selector: '[data-toggle="tooltip"]' });
 //OZM tools ------------------------------------------------------------------------------------------------------------
 import openZmeter from 'JS/openZmeter.js';
 Vue.use(openZmeter);

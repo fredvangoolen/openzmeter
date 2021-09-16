@@ -17,7 +17,7 @@
     <device-v1 v-if="Driver=='DeviceV1'" :settings="Settings" @close="LoadTable"></device-v1>
     <device-v2 v-if="Driver=='DeviceV2'" :settings="Settings" @close="LoadTable"></device-v2>
     <device-v3 v-if="Driver=='DeviceV3'" :settings="Settings" @close="LoadTable"></device-v3>
-    <device-v4></device-v4>
+    <device-v4 v-if="Driver=='DeviceV4'" ></device-v4>
     <device-remote v-if="Driver=='DeviceRemote'" :settings="Settings" @close="LoadTable"></device-remote>
   </div>
 </template>

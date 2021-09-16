@@ -138,15 +138,15 @@ void *DeviceVirtual::Thread() {
     if((TimeI * pSampleRate / 1000) > GeneratedSamples) {
       Voltage[0] = (pFrequency > 0.0) ? pVoltage * M_SQRT2 * sin(Time) : pVoltage;
       Current[0] = (pFrequency > 0.0) ? pCurrent * M_SQRT2 * sin(Time + Phase) : pCurrent;
-//      if((TimeI >= 50000) && (TimeI < 60000)) {
-//        Voltage[0] = Voltage[0] * 1.12;
-//      } else if((TimeI >= 90000) && (TimeI < 100000)) {
-//        Voltage[0] = Voltage[0] * 0.88;
-//      } else if((TimeI >= 120000) && (TimeI < 121000)) {
-//        Voltage[0] = Voltage[0] * (0.94 + (TimeI - 120000) / 25000.0);
-//      } else if(TimeI >= 121000) {
-//        Voltage[0] = Voltage[0] * 0.98;
-//      }
+      if((TimeI >= 50000) && (TimeI < 60000)) {
+        Voltage[0] = Voltage[0] * 1.12;
+      } else if((TimeI >= 90000) && (TimeI < 100000)) {
+        Voltage[0] = Voltage[0] * 0.88;
+      } else if((TimeI >= 120000) && (TimeI < 121000)) {
+        Voltage[0] = Voltage[0] * (0.94 + (TimeI - 120000) / 25000.0);
+      } else if(TimeI >= 121000) {
+        Voltage[0] = Voltage[0] * 0.98;
+      }
       if((pMode == Analyzer::PHASE3) || (pMode == Analyzer::PHASE3N)) {
         Voltage[1] = (pFrequency > 0.0) ? pVoltage * M_SQRT2 * sin(Time - 120.0 * M_PI / 180.0) : pVoltage;
         Current[1] = (pFrequency > 0.0) ? pCurrent * M_SQRT2 * sin(Time + Phase - 120.0 * M_PI / 180.0) : pCurrent;
