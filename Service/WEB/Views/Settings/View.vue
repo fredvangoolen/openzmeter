@@ -1,10 +1,10 @@
 <template>
-  <div class="row">
-    <div class="col-lg-12"><devices></devices></div>
-    <div class="col-lg-12"><tariffs></tariffs></div>
-    <div class="col-lg-12"><connectivity></connectivity></div>
-    <div class="col-lg-12"><users></users></div>
-  </div>
+  <q-page>
+    <devices class="q-mb-sm"></devices>
+    <q-card class="q-mb-sm"><tariffs></tariffs></q-card>
+    <q-card class="q-mb-sm"><connectivity></connectivity></q-card>
+    <q-card class="q-mb-sm"><users></users></q-card>
+  </q-page>
 </template>
 
 <script>

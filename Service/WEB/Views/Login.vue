@@ -8,10 +8,10 @@
           </div>
           <form id="login-form">
             <div class="col-xs-12">
-              <input type="text" class="form-control" v-model="UserName" placeholder="Username" required autofocus autocomplete="off" autocapitalize="off" autocorrect="off">
+              <q-input v-model="UserName" label="Username" required autofocus autocomplete="off" autocapitalize="off" autocorrect="off"></q-input>
             </div>
             <div class="col-xs-12">
-              <input type="password" class="form-control" placeholder="Password" v-model="Password" required>
+              <q-input type="password" class="form-control" placeholder="Password" v-model="Password" required></q-input>
             </div>
             <div class="col-xs-12">
               <button type="submit" class="btn btn-default btn-xs" @click="Login">Sign in</button>

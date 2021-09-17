@@ -1,13 +1,15 @@
 <template>
-  <div id="app" v-if="User!=null">
+  <q-layout id="app" v-if="User!=null">
     <div class="sidenav-overlay" :class="{ 'overlay-enabled': Expanded }" @mouseenter="CloseBar"></div>
     <topbar :analyzer="Analyzer" @expandmenu="ShowBar" :expanded="Expanded" :status="TransferStatus.Data"></topbar>
     <sidebar :analyzer.sync="Analyzer" :user.sync="User" @expandmenu="ShowBar" :expanded="Expanded" :status="TransferStatus.Data"></sidebar>
-    <router-view :analyzer="Analyzer" :user="User" id="contents"></router-view>
+    <router-view class="q-pa-xs" :analyzer="Analyzer" :user="User" id="contents"></router-view>
     <portal-target name="dialogs" :multiple="true"></portal-target>
     <offline v-if="NoNetwork"></offline>
-  </div>
-  <router-view v-else :user.sync="User"></router-view>
+  </q-layout>
+  <q-layout v-else>
+    <q-page-container :user.sync="User"></q-page-container>
+  </q-layout>
 </template>
 
 <script>

@@ -1,9 +1,7 @@
 <template>
-  <div class="panel panel-other">
-    <div class="panel-body">
-      <spinner v-if="ShowSpinner"></spinner>
-      <div class="col-xs-12" v-html="Content"></div>
-    </div>
+  <div>
+    <spinner v-if="ShowSpinner"></spinner>
+    <div v-html="Content"></div>
   </div>
 </template>
 

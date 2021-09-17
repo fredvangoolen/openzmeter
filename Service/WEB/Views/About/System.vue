@@ -1,11 +1,17 @@
 <template>
-  <div class="panel panel-other main-panel">
-    <div class="panel-heading clearfix">
-      <div class="header-text">{{ (LastUpdate==null) ? 'Loading data...' : 'Last update at ' + FormatDate(LastUpdate) }}</div>
+  <div>
+    <q-bar dense>
+      <div>{{ (LastUpdate==null) ? 'Loading data...' : 'Last update at ' + FormatDate(LastUpdate) }}</div>
+      <q-space></q-space>
       <div class="header-buttons">
         <toolbar-options storage="SystemOptions" :options="['Debug', 'Warning', 'Error', 'Info']" v-model="Options"></toolbar-options>
         <toolbar-pager :pageSize="20" :input="Messages" :output.sync="FilterMessages" :filtercols="['Message', 'Date']"></toolbar-pager>
       </div>
+    </q-bar>
+
+    <div class="panel-heading clearfix">
+
+
     </div>
     <div class="panel-body">
       <spinner v-if="ShowSpinner"></spinner>

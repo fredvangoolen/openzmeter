@@ -1,25 +1,27 @@
 <template>
-  <div class="panel panel-other" v-show="Enabled">
-    <div class="panel-heading">
-      <div class="huge-small header-text">Device manager</div>
-    </div>
-    <div class="panel-body">
-      <spinner v-if="ShowSpinner"></spinner>
-      <vuetable ref="table" :fields="Columns" :data="Devices" :api-mode="false" class="table small table-striped">
-        <template slot="actions" slot-scope="props">
-          <div class="btn-group" >
-            <button class="btn btn-xs btn-default" @click="Configure(props.rowData)">Configure</button>
-          </div>
-        </template>
-      </vuetable>
-    </div>
+  <q-card v-show="Enabled">
+    <q-toolbar-title class="bg-grey-9 text-white">
+      <div class="q-ml-sm">Device manager</div>
+    </q-toolbar-title>
+    <q-table :loading="ShowSpinner" :hide-bottom="true" dense :columns="Columns" row-key="name" :data="Devices" class="q-ma-xs" table-header-class="text-weight-bold">
+      <template v-slot:body-cell-enabled="props">
+        <q-td  :props="props">
+          <q-checkbox dense disabled v-model="props.row.Enabled"></q-checkbox>
+        </q-td>
+      </template>
+      <template v-slot:body-cell-actions="props">
+        <q-td  :props="props">
+          <q-btn size="xs" color="primary" @click="Configure(props.row)">Configure</q-btn>
+        </q-td>
+      </template>
+    </q-table>
     <device-virtual v-if="Driver=='DeviceVirtual'" :settings="Settings" @close="LoadTable"></device-virtual>
     <device-v1 v-if="Driver=='DeviceV1'" :settings="Settings" @close="LoadTable"></device-v1>
     <device-v2 v-if="Driver=='DeviceV2'" :settings="Settings" @close="LoadTable"></device-v2>
     <device-v3 v-if="Driver=='DeviceV3'" :settings="Settings" @close="LoadTable"></device-v3>
     <device-v4 v-if="Driver=='DeviceV4'" ></device-v4>
     <device-remote v-if="Driver=='DeviceRemote'" :settings="Settings" @close="LoadTable"></device-remote>
-  </div>
+  </q-card>
 </template>
 
 <script>
@@ -33,17 +35,16 @@
     data() {
       return { Devices: [], ShowSpinner: true, Driver: null, Settings: null, Enabled: false,
         Columns: [
-          {name: 'Driver', title: 'Driver'},
-          {name: 'Name', title: 'Name'},
-          {name: 'Serial', title: 'Serial'},
-          {name: 'Enabled', title: 'Enabled', callback: this.EnabledStatus},
-          {name: 'Analyzers', title: 'Analyzers'},
-          {name: '__slot:actions', title: ''}
+          {name: 'driver', label: 'Driver', field: row => row.Driver, align: 'center' },
+          {name: 'name', label: 'Name', field: row => row.Name, align: 'left' },
+          {name: 'serial', label: 'Serial', field: row => row.Serial, align: 'center'},
+          {name: 'enabled', label: 'Enabled', align: 'center' },
+          {name: 'analyzers', label: 'Analyzers', field: row => row.Analyzers, align: 'center' },
+          {name: 'actions', label: '' }
         ]
       };
     },
     methods: {
-      EnabledStatus: function(value) { return (value === true) ? '&#9635;' : '&#9633;'; },
       LoadTable: function (update) {
         this.Driver = null;
         if(update == false) return;
@@ -82,47 +83,3 @@
     components: { DeviceVirtual, DeviceV1, DeviceV2, DeviceV3, DeviceV4, DeviceRemote }
   }
 </script>
-
-<style scoped>
-  @media screen and (min-width: 600px) {
-    .table >>> th:nth-child(1) {
-      width: 60px;
-      text-align: center;
-    }
-    .table >>> td:nth-child(1) {
-      text-align: center;
-    }
-    .table >>> th:nth-child(3) {
-      width: 250px;
-      text-align: center;
-    }
-    .table >>> td:nth-child(3) {
-      text-align: center;
-    }
-    .table >>> th:nth-child(4) {
-      width: 20px;
-      text-align: center;
-    }
-    .table >>> td:nth-child(4) {
-      text-align: center;
-    }
-    .table >>> th:nth-child(5) {
-      width: 90px;
-      text-align: center;
-    }
-    .table >>> td:nth-child(5) {
-      text-align: center;
-    }
-    .table >>> th:nth-child(6) {
-      width: 80px;
-    }
-  }
-  .help {
-    font-size: 80%;
-  }
-  textarea {
-    resize: none;
-    font-family: 'Fira Code';
-    font-size: 12px;
-  }
-</style>

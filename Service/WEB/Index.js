@@ -8,17 +8,20 @@ Vue.use(VueResource);
 import PortalVue from 'portal-vue';
 Vue.use(PortalVue);
 import VueToast from 'vue-toast-notification';
-Vue.use(VueToast);
-//Main libs and style --------------------------------------------------------------------------------------------------
-import 'jquery';
-import 'bootstrap';
 import 'vue-toast-notification/dist/theme-sugar.css';
-import 'bootstrap/dist/css/bootstrap.css';
+Vue.use(VueToast);
+import Quasar from 'quasar';
+import 'quasar/dist/quasar.css';
+Vue.use(Quasar);
+//Main libs and style --------------------------------------------------------------------------------------------------
+//import 'jquery';
+//import 'bootstrap';
+//import 'bootstrap/dist/css/bootstrap.css';
+
 import 'CSS/openZmeter.css';
 //Other tools ----------------------------------------------------------------------------------------------------------
 import { blur } from 'auto-blur';
 addEventListener('click', evt => blur(evt));
-$("body").tooltip( { html: true, placement: 'auto', container: 'body', selector: '[data-toggle="tooltip"]' });
 //OZM tools ------------------------------------------------------------------------------------------------------------
 import openZmeter from 'JS/openZmeter.js';
 Vue.use(openZmeter);

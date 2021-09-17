@@ -1,9 +1,7 @@
 <template>
-  <div class="panel panel-other">
-    <div class="panel-body">
-      <spinner v-if="ShowSpinner"></spinner>
-      <rapi-doc ref="api" regular-font="Titillium Web" schema-description-expanded="true" mono-font="Fira Code" show-header="false" allow-server-selection="false" show-info="false" allow-authentication="false"></rapi-doc>
-    </div>
+  <div>
+    <spinner v-if="ShowSpinner"></spinner>
+    <rapi-doc ref="api" regular-font="Titillium Web" schema-description-expanded="true" mono-font="Fira Code" show-header="false" allow-server-selection="false" show-info="false" allow-authentication="false"></rapi-doc>
   </div>
 </template>
 

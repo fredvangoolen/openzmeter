@@ -4,9 +4,9 @@
       <template v-slot:header>
         <div class="pull-left"><h4 class="modal-title">Analyzers &raquo; Alarms and events</h4></div>
         <div class="pull-right btn-group">
-          <button type="button" class="btn btn-default btn-xs" @click="Save" data-toggle="tooltip" title="Save alarm and events config"><img :src="require('Imgs/diskette.png')"></button>
-          <button type="button" class="btn btn-default btn-xs" @click="Add" data-toggle="tooltip" title="Add new alarm"><img :src="require('Imgs/plus.png')"></button>
-          <button type="button" class="btn btn-default btn-xs" @click="$emit('close', null)" data-toggle="tooltip" title="Back"><img :src="require('Imgs/arrow_undo.png')"></button>
+          <button type="button" class="btn btn-default btn-xs" @click="Save" title="Save alarm and events config"><img :src="require('Imgs/diskette.png')"></button>
+          <button type="button" class="btn btn-default btn-xs" @click="Add" title="Add new alarm"><img :src="require('Imgs/plus.png')"></button>
+          <button type="button" class="btn btn-default btn-xs" @click="$emit('close', null)" title="Back"><img :src="require('Imgs/arrow_undo.png')"></button>
         </div>
       </template>
       <div class="row">
