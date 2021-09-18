@@ -3,7 +3,7 @@
     <q-toolbar-title class="bg-grey-9 text-white">
       <div class="q-ml-sm">Device manager</div>
     </q-toolbar-title>
-    <q-table :loading="ShowSpinner" :hide-bottom="true" dense :columns="Columns" row-key="name" :data="Devices" class="q-ma-xs" table-header-class="text-weight-bold">
+    <q-table :loading="ShowSpinner" :hide-bottom="true" dense :columns="Columns" row-key="name" :data="Devices" class="q-ma-xs">
       <template v-slot:body-cell-enabled="props">
         <q-td  :props="props">
           <q-checkbox dense disabled v-model="props.row.Enabled"></q-checkbox>

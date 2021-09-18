@@ -1,9 +1,11 @@
 <template>
-  <div class="panel panel-other">
-    <div class="panel-heading">
-      <div class="huge-small header-text">Connectivity</div>
-    </div>
-    <div class="panel-body">
+  <q-card>
+    <q-toolbar-title class="bg-grey-9 text-white">
+      <div class="q-ml-sm">Connectivity</div>
+    </q-toolbar-title>
+    <q-table :loading="ShowSpinner" :hide-bottom="true" dense :columns="Columns" row-key="name" :data="Modules" class="q-ma-xs">
+
+    </q-table>
       <vuetable ref="table" :fields="Columns" :data="Modules" :api-mode="false" class="table small table-striped">
         <template slot="actions" slot-scope="props">
           <div class="btn-group" >
@@ -11,16 +13,15 @@
           </div>
         </template>
       </vuetable>
-      <bluetooth :settings="Settings" v-if="View=='Bluetooth'" @close="Update"></bluetooth>
-      <wifi :settings="Settings" v-if="View=='Wifi'" @close="Update"></wifi>
-      <ethernet :settings="Settings" v-if="View=='Ethernet'" @close="Update"></ethernet>
-      <ntp :settings="Settings" v-if="View=='NTP'" @close="Update"></ntp>
-      <telegram :settings="Settings" v-if="View=='Telegram'" @close="Update"></telegram>
-      <modbus-tcp :settings="Settings" v-if="View=='ModbusTCP'" @close="Update"></modbus-tcp>
-      <vpn :settings="Settings" v-if="View=='OpenVPN'" @close="Update"></vpn>
-      <updates :settings="Settings" v-if="View=='Updates'" @close="Update"></updates>
-    </div>
-  </div>
+    <bluetooth :settings="Settings" v-if="View=='Bluetooth'" @close="Update"></bluetooth>
+    <wifi :settings="Settings" v-if="View=='Wifi'" @close="Update"></wifi>
+    <ethernet :settings="Settings" v-if="View=='Ethernet'" @close="Update"></ethernet>
+    <ntp :settings="Settings" v-if="View=='NTP'" @close="Update"></ntp>
+    <telegram :settings="Settings" v-if="View=='Telegram'" @close="Update"></telegram>
+    <modbus-tcp :settings="Settings" v-if="View=='ModbusTCP'" @close="Update"></modbus-tcp>
+    <vpn :settings="Settings" v-if="View=='OpenVPN'" @close="Update"></vpn>
+    <updates :settings="Settings" v-if="View=='Updates'" @close="Update"></updates>
+  </q-card>
 </template>
 
 <script>

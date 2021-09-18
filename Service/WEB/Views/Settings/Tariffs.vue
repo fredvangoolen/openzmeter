@@ -1,12 +1,13 @@
 <template>
-  <div class="panel panel-other" v-show="Enabled">
-    <div class="panel-heading clearfix">
-      <div class="huge-small pull-left">Tariffs</div>
+  <q-card>
+    <q-toolbar-title class="bg-grey-9 text-white">
+      <div class="q-ml-sm">Tariffs</div>
+
       <div class="pull-right btn-group">
         <button type="button" class="btn btn-default btn-xs" title="Add tariff" @click="Add"><img :src="require('Imgs/plus.png')"> Add</button>
       </div>
       <toolbar-pager class="pull-right" :pageSize="10" :input="Tariffs" :output.sync="FilterTariffs" :filtercols="['TimeZone', 'Name', 'StartDate', 'EndDate']"></toolbar-pager>
-    </div>
+    </q-toolbar-title>
     <div class="panel-body">
       <spinner v-if="ShowSpinner"></spinner>
       <div class="row">
@@ -36,7 +37,7 @@
     </div>
     <tariff v-if="ShowDialog" :tariff="Tariff" :source="SourceTariff" @close="LoadTariffs"></tariff>
     <esp-esios v-if="Module!=null && Module.Name=='ESP_ESIOS'" :settings="Module" @close="Module=null"></esp-esios>
-  </div>
+  </q-card>
 </template>
 
 <script>

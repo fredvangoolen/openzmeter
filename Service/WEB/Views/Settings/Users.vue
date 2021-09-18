@@ -1,12 +1,12 @@
 <template>
-  <div class="panel panel-other" v-show="Enabled">
-    <div class="panel-heading">
-      <div class="header">Users</div>
+  <q-card v-show="Enabled">
+    <q-toolbar-title class="bg-grey-9 text-white">
+      <div class="q-ml-sm">Users</div>
       <div class="pull-right btn-group">
         <button type="button" class="btn btn-default btn-xs" title="Add user" @click="Add"><img :src="require('Imgs/plus.png')"> Add</button>
       </div>
       <toolbar-pager class="pull-right" :pageSize="10" :input="Users" :output.sync="FilterUsers" :filtercols="['User', 'Name', 'TimeZone', 'Email']"></toolbar-pager>
-    </div>
+    </q-toolbar-title>
     <div class="panel-body">
       <spinner v-if="ShowSpinner"></spinner>
       <vuetable ref="table" :fields="Columns" :data="FilterUsers" :api-mode="false" class="table small table-striped">
@@ -19,7 +19,7 @@
       </vuetable>
     </div>
     <user-edit v-if="ShowDialog" :user="User" @close="LoadUsers"></user-edit>
-  </div>
+  </q-card>
 </template>
 
 <script>

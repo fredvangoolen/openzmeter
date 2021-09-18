@@ -1,7 +1,7 @@
 <template>
   <q-page>
     <devices class="q-mb-sm"></devices>
-    <q-card class="q-mb-sm"><tariffs></tariffs></q-card>
+    <tariffs class="q-mb-sm"></tariffs>
     <q-card class="q-mb-sm"><connectivity></connectivity></q-card>
     <q-card class="q-mb-sm"><users></users></q-card>
   </q-page>
