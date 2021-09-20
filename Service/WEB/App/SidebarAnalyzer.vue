@@ -92,7 +92,7 @@
       },
       SerieColors: function(serie) {
         if((this.analyzer.PhaseNames.length == 1) || (serie == 'Frequency')) return [this.SerieColor(serie)];
-        var Colors = [];
+        let Colors = [];
         Colors = ['#d9534f', '#5cb85c', '#318ce7'].slice(0, this.analyzer.PhaseNames.length);
         if((serie == 'Current') && (this.analyzer.NeutralName != null)) Colors.push('#333333');
         return Colors;
@@ -113,10 +113,10 @@
         return serie;
       },
       SerieNames: function(serie) {
-        var Result = [];
-        var Name = this.SerieName(serie);
+        let Result = [];
+        let Name = this.SerieName(serie);
         if((serie == 'Frequency') || (this.analyzer.PhaseNames.length == 1)) return [Name];
-        for(var n = 0; n < this.analyzer.PhaseNames.length; n++) Result.push(Name + ' (' + this.analyzer.PhaseNames[n] + ')');
+        for(let n = 0; n < this.analyzer.PhaseNames.length; n++) Result.push(Name + ' (' + this.analyzer.PhaseNames[n] + ')');
         if(((serie == 'Current') || (serie == 'Current_THD')) && (this.analyzer.NeutralName != null)) Result.push(Name + ' (' + this.analyzer.NeutralName + ')');
         return Result;
       },

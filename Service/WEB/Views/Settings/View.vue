@@ -2,8 +2,8 @@
   <q-page>
     <devices class="q-mb-sm"></devices>
     <tariffs class="q-mb-sm"></tariffs>
-    <q-card class="q-mb-sm"><connectivity></connectivity></q-card>
-    <q-card class="q-mb-sm"><users></users></q-card>
+    <connectivity class="q-mb-sm"></connectivity>
+    <users class="q-mb-sm"></users>
   </q-page>
 </template>
 

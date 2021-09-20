@@ -251,10 +251,10 @@
     },
     computed: {
       VarsPeriod: function() {
-        var Vars = [];
-        var Concepts = this.Tariff.Template.Periods[parseInt(this.ActivePeriod.substr(1)) - 1].Concepts;
+        let Vars = [];
+        let Concepts = this.Tariff.Template.Periods[parseInt(this.ActivePeriod.substr(1)) - 1].Concepts;
         Vars.push({ Name: 'Cost', Description: '<strong>[OUT]</strong> Estimated contribution to period cost', Value: null, Units: this.Tariff.Template.Currency});
-        for(var C = 0; C < Concepts.length; C++) {
+        for(let C = 0; C < Concepts.length; C++) {
           if(Concepts[C].Variable.length > 0) Vars.push({ Name: Concepts[C].Variable, Description: '<strong>[OUT]</strong> Defined in concepts', Value: null, Units: ''});
         }
         Vars.push({ Name: 'ActivePower', Description: 'Active power on evaluated period', Value: null, Units: 'W'});
@@ -267,7 +267,7 @@
         return Vars;
       },
       VarsMain: function() {
-        var Vars = [];
+        let Vars = [];
         Vars.push({ Name: 'Cost', Description: '<strong>[OUT]</strong> Estimated contribution to period cost', Value: null, Units: this.Tariff.Template.Currency});
         for(var C = 0; C < this.Tariff.Template.Concepts.length; C++) {
           if(this.Tariff.Template.Concepts[C].Variable.length > 0) Vars.push({ Name: this.Tariff.Template.Concepts[C].Variable, Description: '<strong>[OUT]</strong> Defined in concepts', Value: null, Units: ''});

@@ -1,54 +1,61 @@
 <template>
-  <dlg :loading="Loading">
-    <template v-slot:header>
-      <div class="pull-left"><h4 class="modal-title">Device &raquo; {{ Settings.Serial }}</h4></div>
-      <div class="pull-right btn-group">
-        <button type="button" class="btn btn-default btn-xs" @click="Save"><img :src="require('Imgs/diskette.png')"></button>
-        <button type="button" class="btn btn-default btn-xs" @click="$emit('close', false)"><img :src="require('Imgs/arrow_undo.png')"></button>
-      </div>
-      <toolbar-pager class="pull-right" :pageSize="10" :input="Settings.Analyzers" :output.sync="FilterAnalyzers" :filtercols="['User', 'Analyzer']"></toolbar-pager>
-    </template>
-    <div class="alert alert-danger text-center" style="margin-bottom: 5px; padding: 5px" v-if="Error!=null">{{ Error }}</div>
-    <div class="row">
-      <div class="col-xs-12">
-        <label class="control-label" style="line-height: 22px">Enabled</label>
-        <toggle class="float-right" onText="Yes" offText="No" v-model="Settings.Enabled"></toggle>
-        <div class="help">While enabled authorized user can connect to the service. Each new shared analyzer will be added to the analyzer list on first connection. Users an permissions on this machine will be applied.</div>
-        <hr style="margin: 5px 0px 5px 0px"/>
-      </div>
-      <div class="col-xs-12">
-        <div class="input-group input-group-xs">
-          <span class="input-group-addon">Analyzer</span>
-          <input type="text" class="form-control" v-model="NewAnalyzer">
-          <span class="input-group-btn"><button type="button" class="btn btn-default" @click="Add" :disabled="!CanAdd"><img :src="require('Imgs/plus.png')"></button></span>
+  <q-dialog :value="true" no-backdrop-dismiss @hide="$emit('close')">
+    <div>
+      <q-card>
+        <q-card-actions class="bg-grey-9 text-white">
+          <div class="text-h6">Device &raquo; {{ Settings.Serial }}</div>
+        </q-card-actions>
+        <q-separator></q-separator>
+        <q-list>
+          <q-item tag="label">
+            <q-item-section>
+              <q-item-label>Enabled</q-item-label>
+              <q-item-label caption>While enabled authorized analyzers can connect to the service. Each new shared analyzer will be added to the analyzer list on first connection. Users an permissions on this machine will be applied.</q-item-label>
+            </q-item-section>
+            <q-item-section avatar>
+              <q-toggle v-model="Settings.Enabled"></q-toggle>
+            </q-item-section>
+          </q-item>
+        </q-list>
+        <q-separator></q-separator>
+        <div class="row q-px-sm">
+          <q-input v-model="Filter" debounce="300" label="Add/Search analyzer" dense class="col-12">
+            <template v-slot:append>
+              <q-btn dense flat>Add</q-btn>
+            </template>
+          </q-input>
+          <q-table flat dense :columns="Columns" :data="Settings.Analyzers" :filter="Filter" row-key="serial" class="col-12">
+            <template v-slot:body-cell-actions="props">
+              <q-td :props="props">
+                <q-btn-group>
+                  <q-btn size="sm" icon="delete" dense @click="Delete(props.row.Analyzer)"><q-tooltip>Delete analyzer</q-tooltip></q-btn>
+                  <q-btn size="sm" icon="manage_accounts" dense @click="Delete(props.row.Analyzer)"><q-tooltip>Set analyzer owner</q-tooltip></q-btn>
+                </q-btn-group>
+              </q-td>
+            </template>
+          </q-table>
         </div>
-      </div>
+        <q-separator></q-separator>
+        <q-card-actions align="right" class="bg-grey-2">
+          <q-btn @click="Save">Save</q-btn>
+          <q-btn @click="$emit('close')">Cancel</q-btn>
+        </q-card-actions>
+      </q-card>
+      <q-inner-loading :showing="Loading"><q-spinner-dots size="50px" color="orange-10"></q-spinner-dots></q-inner-loading>
     </div>
-    <vuetable ref="table" :fields="Columns" :api-mode="false" :data="FilterAnalyzers" class="table small table-striped">
-      <template slot="actions" slot-scope="props">
-        <div class="btn-group">
-          <button type="button" class="btn btn-danger btn-xs" @click="Delete(props.rowData.Analyzer)">Delete</button>
-        </div>
-      </template>
-      <template slot="user" slot-scope="props">
-        <div class="input-group input-group-xs">
-          <input type="text" class="form-control rounded" v-model="props.rowData.User">
-        </div>
-      </template>
-    </vuetable>
-  </dlg>
+  </q-dialog>
 </template>
 
 <script>
   export default {
     props: { settings: Object },
     data() {
-      return { Loading: false, Settings: null, Error: null, NewAnalyzer: '', FilterAnalyzers: [],
+      return { Loading: false, Settings: null, Error: null, Filter: '',
         Columns: [
-          { name: 'Analyzer', title: 'Analyzer' },
-          { name: '__slot:user', title: 'Owner' },
-          { name: 'Size', title: 'Size', callback: this.BestUnitsBin },
-          { name: '__slot:actions', title: ''}
+          { name: 'analyzer', label: 'Analyzer', field: row => row.Analyzer, align: 'left' },
+          { name: 'user', label: 'Owner', field: row => row.User, align: 'left' },
+          { name: 'Size', label: 'Size', field: row => this.BestUnitsBin(row.Size) },
+          { name: 'actions', label: '' }
         ]
       };
     },
@@ -96,12 +103,6 @@
 </script>
 
 <style scoped>
-  .help {
-    font-size: 80%;
-  }
-  .rounded {
-    border-radius: 4px !important;
-  }
   .table >>> th:nth-child(2) {
     width: 120px;
   }

@@ -16,11 +16,13 @@
   import Topbar from './Topbar.vue';
   import Sidebar from './Sidebar.vue';
   import Offline from './Offline.vue';
+  import IconSet from 'quasar/icon-set/svg-material-icons';
   export default {
     data: function() {
       return { Analyzer: null, User: null, Expanded: false, CloseTimer: null, NoNetwork: false, TransferStatus: this.StatusTransfer(['Events', 'Alarms']) };
     },
     created: function() {
+      this.$q.iconSet.set(IconSet);
       window.EventBus.$on('UserUnathorized', () => {
         localStorage.setItem("UserName", undefined);
         this.$router.replace('Login');

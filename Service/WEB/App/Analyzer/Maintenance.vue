@@ -419,8 +419,8 @@
     },
     computed: {
       TotalSize: function() {
-        var TotalSize = 0;
-        for(var n in this.Storage) TotalSize += this.Storage[n];
+        let TotalSize = 0;
+        for(let n in this.Storage) TotalSize += this.Storage[n];
         return TotalSize;
       }
     },

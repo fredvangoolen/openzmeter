@@ -1,40 +1,34 @@
 <template>
   <q-card>
-    <q-toolbar-title class="bg-grey-9 text-white">
-      <div class="q-ml-sm">Tariffs</div>
-
-      <div class="pull-right btn-group">
-        <button type="button" class="btn btn-default btn-xs" title="Add tariff" @click="Add"><img :src="require('Imgs/plus.png')"> Add</button>
-      </div>
-      <toolbar-pager class="pull-right" :pageSize="10" :input="Tariffs" :output.sync="FilterTariffs" :filtercols="['TimeZone', 'Name', 'StartDate', 'EndDate']"></toolbar-pager>
-    </q-toolbar-title>
-    <div class="panel-body">
-      <spinner v-if="ShowSpinner"></spinner>
-      <div class="row">
-        <div class="col-sm-12">
-          <label class="control-label">Template definitions</label>
-          <vuetable :fields="ColumnsTariffs" :api-mode="false" :data="FilterTariffs" class="table small table-striped">
-            <template slot="actions" slot-scope="props">
-              <div class="btn-group">
-                <button class="btn btn-xs btn-default" @click="Edit(props.rowData)">Edit</button>
-                <button class="btn btn-xs btn-default" @click="Duplicate(props.rowData)" title="Duplicate tariff"><img :src="require('Imgs/page_copy.png')"></button>
-                <button class="btn btn-xs btn-danger" @click="Delete(props.rowData)">Delete</button>
-              </div>
-            </template>
-          </vuetable>
-        </div>
-        <div class="col-sm-12">
-          <label class="control-label">Price fetch modules</label>
-          <vuetable :fields="ColumnsModules" :api-mode="false" :data="Modules" class="table small table-striped modules">
-            <template slot="actions" slot-scope="props">
-              <div class="btn-group">
-                <button class="btn btn-xs btn-default" @click="Configure(props.rowData)">Configure</button>
-              </div>
-            </template>
-          </vuetable>
-        </div>
-      </div>
-    </div>
+    <q-toolbar class="bg-grey-9 text-white">
+      <q-toolbar-title>Tariffs</q-toolbar-title>
+      <q-input dense debounce="300" label="Search" color="grey-3" label-color="white" v-model="Filter" input-class="text-white"  class="q-mr-sm">
+         <template v-slot:prepend>
+            <q-icon name="search" color="white"></q-icon>
+          </template>
+      </q-input>
+      <q-btn  color="positive" @click="Add">Add</q-btn>
+    </q-toolbar>
+    <q-table :loading="ShowSpinner" dense :columns="ColumnsTariffs" :data="Tariffs" :filter="Filter" row-key="user" class="q-ma-xs" title="Template definitions">
+      <template v-slot:body-cell-actions="props">
+        <q-td :props="props">
+          <q-btn-group>
+            <q-btn size="sm" @click="Edit(props.row)">Edit</q-btn>
+            <q-separator vertical></q-separator>
+            <q-btn size="sm" @click="Duplicate(props.row)">Duplicate</q-btn>
+            <q-separator vertical></q-separator>
+            <q-btn size="sm" @click="Delete(props.row)">Delete</q-btn>
+          </q-btn-group>
+        </q-td>
+      </template>
+    </q-table>
+    <q-table :loading="ShowSpinner" dense :hide-bottom="true" :columns="ColumnsModules" :data="Modules" row-key="name" class="q-ma-xs" title="Price fetch modules">
+      <template v-slot:body-cell-actions="props">
+        <q-td :props="props">
+          <q-btn size="sm" @click="Configure(props.row)">Configure</q-btn>
+        </q-td>
+      </template>
+    </q-table>
     <tariff v-if="ShowDialog" :tariff="Tariff" :source="SourceTariff" @close="LoadTariffs"></tariff>
     <esp-esios v-if="Module!=null && Module.Name=='ESP_ESIOS'" :settings="Module" @close="Module=null"></esp-esios>
   </q-card>
@@ -47,29 +41,24 @@
   import * as oZm from 'JS/openZmeter.js';
   export default {
     data: function() {
-      return { ShowSpinner: true, Tariffs: [], FilterTariffs: [], ShowDialog: false, Enabled: false, Tariff: null, SourceTariff: null, Module: null,
+      return { ShowSpinner: true, Tariffs: [], Filter: '', ShowDialog: false, Enabled: false, Tariff: null, SourceTariff: null, Module: null,
         Modules: [
           { Name: 'ESP_ESIOS', Description: 'Fetch hourly prices from spanish ESIOS (Sistema de informacion del operador del sistema)' }
         ],
         ColumnsModules: [
-          { name: 'Name', title: 'Name' },
-          { name: 'Description', title: 'Description' },
-          { name: '__slot:actions', title: '' }
+          { name: 'Name', label: 'Name', field: row => row.Name, align: 'left' },
+          { name: 'Description', label: 'Description', field: row => row.Description, align: 'left' },
+          { name: 'actions', label: '' }
         ],
         ColumnsTariffs: [
-          { name: 'User', title: 'Owner' },
-          { name: 'Name', title: 'Name' },
-          { name: '__slot:actions', title: '' }
+          { name: 'User', label: 'Owner', field: row => row.User, align: 'left' },
+          { name: 'Name', label: 'Name', field: row => row.Name, align: 'left' },
+          { name: 'actions', label: '' }
         ]
       };
     },
     created: function() {
       this.LoadTariffs();
-    },
-    watch: {
-      Filter: function() {
-        this.LoadTariffs();
-      }
     },
     methods: {
       LoadTariffs: function() {

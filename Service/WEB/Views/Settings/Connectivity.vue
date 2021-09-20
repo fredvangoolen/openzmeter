@@ -1,18 +1,20 @@
 <template>
   <q-card>
-    <q-toolbar-title class="bg-grey-9 text-white">
-      <div class="q-ml-sm">Connectivity</div>
-    </q-toolbar-title>
-    <q-table :loading="ShowSpinner" :hide-bottom="true" dense :columns="Columns" row-key="name" :data="Modules" class="q-ma-xs">
-
+    <q-toolbar dense class="bg-grey-9 text-white q-py-none">
+      <q-toolbar-title>Connectivity</q-toolbar-title>
+    </q-toolbar>
+    <q-table :loading="ShowSpinner" :hide-bottom="true" dense :columns="Columns" row-key="module" :data="Modules" class="q-ma-xs">
+      <template v-slot:body-cell-enabled="props">
+        <q-td :props="props">
+          <q-checkbox dense disable v-model="props.row.Enabled"></q-checkbox>
+        </q-td>
+      </template>
+      <template v-slot:body-cell-actions="props">
+        <q-td :props="props">
+          <q-btn size="sm" :disable="!props.row.Avaliable" @click="Configure(props.row)">Configure</q-btn>
+        </q-td>
+      </template>
     </q-table>
-      <vuetable ref="table" :fields="Columns" :data="Modules" :api-mode="false" class="table small table-striped">
-        <template slot="actions" slot-scope="props">
-          <div class="btn-group" >
-            <button class="btn btn-xs btn-default" :disabled="props.rowData.Avaliable==false" @click="LoadModule(props.rowData, true)">Configure</button>
-          </div>
-        </template>
-      </vuetable>
     <bluetooth :settings="Settings" v-if="View=='Bluetooth'" @close="Update"></bluetooth>
     <wifi :settings="Settings" v-if="View=='Wifi'" @close="Update"></wifi>
     <ethernet :settings="Settings" v-if="View=='Ethernet'" @close="Update"></ethernet>
@@ -37,19 +39,19 @@
     data: function() {
       return { View: null, Settings: null,
                Modules: [
-                 { Name: 'Bluetooth', Title: 'Bluetooth connection', Enabled: false, Avaliable: false, Method: 'getBluetooth' },
-                 { Name: 'Wifi', Title: 'Wifi connection', Enabled: false, Avaliable: false, Method: 'getWIFI' },
-                 { Name: 'Ethernet', Title: 'Ethernet', Enabled: false, Avaliable: false, Method: 'getEthernet' },
-                 { Name: 'NTP', Title: 'NTP synchronization', Enabled: false, Avaliable: false, Method: 'getNTP' },
-                 { Name: 'Telegram', Title: 'Telegram Bot', Enabled: false, Avaliable: false, Method: 'getTelegram' },
-                 { Name: 'ModbusTCP', Title: 'ModbusTCP', Enabled: false, Avaliable: false, Method: 'getModbusTCP' },
-                 { Name: 'OpenVPN', Title: 'OpenVPN', Enabled: false, Avaliable: false, Method: 'getVPN' },
-                 { Name: 'Updates', Title: 'Automatic updates', Enabled: false, Avaliable: false, Method: 'getUpdates' }
+                 { name: 'Bluetooth', Title: 'Bluetooth connection', Enabled: false, Avaliable: false, Method: 'getBluetooth' },
+                 { name: 'Wifi', Title: 'Wifi connection', Enabled: false, Avaliable: false, Method: 'getWIFI' },
+                 { name: 'Ethernet', Title: 'Ethernet', Enabled: false, Avaliable: false, Method: 'getEthernet' },
+                 { name: 'NTP', Title: 'NTP synchronization', Enabled: false, Avaliable: false, Method: 'getNTP' },
+                 { name: 'Telegram', Title: 'Telegram Bot', Enabled: false, Avaliable: false, Method: 'getTelegram' },
+                 { name: 'ModbusTCP', Title: 'ModbusTCP', Enabled: false, Avaliable: false, Method: 'getModbusTCP' },
+                 { name: 'OpenVPN', Title: 'OpenVPN', Enabled: false, Avaliable: false, Method: 'getVPN' },
+                 { name: 'Updates', Title: 'Automatic updates', Enabled: false, Avaliable: false, Method: 'getUpdates' }
                ],
                Columns: [
-                 { name: 'Title', title: 'Module' },
-                 { name: 'Enabled', title: 'Enabled', callback: this.EnabledStatus },
-                 { name: '__slot:actions', title: '' }
+                 { name: 'module', label: 'Module', field: row => row.Title, align: 'left' },
+                 { name: 'enabled', label: 'Enabled', align: 'center' },
+                 { name: 'actions', label: '' }
                ],
              };
     },

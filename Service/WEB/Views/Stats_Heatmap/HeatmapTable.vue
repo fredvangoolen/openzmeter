@@ -61,24 +61,24 @@
       CalcOptions: function() {
         this.Days = [];
         if((this.data == null) || (this.aggreg == null)) return;
-        var Headers   = this.data[0];
-        var Rows      = this.data.slice(1);
-        var Tmp       = { };
-        var TimeCol   = Headers.indexOf('Time');
-        var EnergyCol = Headers.indexOf('Active_Energy');
-        for(var i = 0; i < Rows.length; i++) {
-          var RowDate = moment(Rows[i][TimeCol]).tz(this.analyzer.TimeZone);
+        let Headers   = this.data[0];
+        let Rows      = this.data.slice(1);
+        let Tmp       = { };
+        let TimeCol   = Headers.indexOf('Time');
+        let EnergyCol = Headers.indexOf('Active_Energy');
+        for(let i = 0; i < Rows.length; i++) {
+          let RowDate = moment(Rows[i][TimeCol]).tz(this.analyzer.TimeZone);
           if(Tmp.Date != RowDate.format('DD/MM/YYYY')) {
             this.Days.push(Object.assign({}, Tmp));
             Tmp = { };
           }
           if(Tmp.Date == undefined) {
             Tmp = { DayOfWeek: DaysNames[RowDate.day()], Date: RowDate.format('DD/MM/YYYY'), Cells: [] };
-            for(var n = 0; n < 24; n++) {
+            for(let n = 0; n < 24; n++) {
               if(this.aggreg === '1H') {
                 Tmp.Cells.push({ Value: undefined, Date: 'Hour ' + n });
               } else {
-                for(var q = 1; q < 5; q++) Tmp.Cells.push({ Value: undefined, Date: 'Hour ' + n + '(' + q + 'Q)' });
+                for(let q = 1; q < 5; q++) Tmp.Cells.push({ Value: undefined, Date: 'Hour ' + n + '(' + q + 'Q)' });
               }
             }
           }
@@ -88,8 +88,8 @@
           }
         }
         if(Tmp.Date != undefined) this.Days.push(Tmp);
-        var Max = -Infinity;
-        var Min =  Infinity;
+        let Max = -Infinity;
+        let Min =  Infinity;
         for(var i in this.Days) {
           for(var n in this.Days[i].Cells) {
             if(this.Days[i].Cells[n].Value === undefined) continue;

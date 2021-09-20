@@ -1,6 +1,7 @@
 var path = require('path');
 var webpack = require('webpack');
 const VueLoaderPlugin = require('vue-loader/lib/plugin');
+const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
 module.exports = {
   entry: './Index.js',
   output: {
@@ -11,6 +12,7 @@ module.exports = {
   plugins: [
     new webpack.IgnorePlugin(/^\.\/locale$/, /moment$/),
     new VueLoaderPlugin(),
+    new BundleAnalyzerPlugin(),
     new webpack.ProvidePlugin({
       $: "jquery",
       jQuery: "jquery",

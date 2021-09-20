@@ -1,17 +1,17 @@
 <template>
   <q-card v-show="Enabled">
-    <q-toolbar-title class="bg-grey-9 text-white">
-      <div class="q-ml-sm">Device manager</div>
-    </q-toolbar-title>
+    <q-toolbar class="bg-grey-9 text-white">
+      <q-toolbar-title >Device manager</q-toolbar-title>
+    </q-toolbar>
     <q-table :loading="ShowSpinner" :hide-bottom="true" dense :columns="Columns" row-key="name" :data="Devices" class="q-ma-xs">
       <template v-slot:body-cell-enabled="props">
-        <q-td  :props="props">
-          <q-checkbox dense disabled v-model="props.row.Enabled"></q-checkbox>
+        <q-td :props="props">
+          <q-checkbox size="sm" disable v-model="props.row.Enabled"></q-checkbox>
         </q-td>
       </template>
       <template v-slot:body-cell-actions="props">
-        <q-td  :props="props">
-          <q-btn size="xs" color="primary" @click="Configure(props.row)">Configure</q-btn>
+        <q-td :props="props">
+          <q-btn size="sm" dense icon="settings" @click="Configure(props.row)"><q-tooltip>Configure device</q-tooltip></q-btn>
         </q-td>
       </template>
     </q-table>
@@ -21,6 +21,7 @@
     <device-v3 v-if="Driver=='DeviceV3'" :settings="Settings" @close="LoadTable"></device-v3>
     <device-v4 v-if="Driver=='DeviceV4'" ></device-v4>
     <device-remote v-if="Driver=='DeviceRemote'" :settings="Settings" @close="LoadTable"></device-remote>
+    <q-inner-loading :showing="ShowSpinner"><q-spinner-dots size="50px" color="orange-10"></q-spinner-dots></q-inner-loading>
   </q-card>
 </template>
 
@@ -35,12 +36,12 @@
     data() {
       return { Devices: [], ShowSpinner: true, Driver: null, Settings: null, Enabled: false,
         Columns: [
-          {name: 'driver', label: 'Driver', field: row => row.Driver, align: 'center' },
-          {name: 'name', label: 'Name', field: row => row.Name, align: 'left' },
-          {name: 'serial', label: 'Serial', field: row => row.Serial, align: 'center'},
-          {name: 'enabled', label: 'Enabled', align: 'center' },
-          {name: 'analyzers', label: 'Analyzers', field: row => row.Analyzers, align: 'center' },
-          {name: 'actions', label: '' }
+          { name: 'driver', label: 'Driver', field: row => row.Driver, align: 'center' },
+          { name: 'name', label: 'Name', field: row => row.Name, align: 'left' },
+          { name: 'serial', label: 'Serial', field: row => row.Serial, align: 'center'},
+          { name: 'enabled', label: 'Enabled', align: 'center' },
+          { name: 'analyzers', label: 'Analyzers', field: row => row.Analyzers, align: 'center' },
+          { name: 'actions', label: '' }
         ]
       };
     },

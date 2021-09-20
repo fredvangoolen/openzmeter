@@ -1,23 +1,25 @@
 <template>
   <q-card v-show="Enabled">
-    <q-toolbar-title class="bg-grey-9 text-white">
-      <div class="q-ml-sm">Users</div>
-      <div class="pull-right btn-group">
-        <button type="button" class="btn btn-default btn-xs" title="Add user" @click="Add"><img :src="require('Imgs/plus.png')"> Add</button>
-      </div>
-      <toolbar-pager class="pull-right" :pageSize="10" :input="Users" :output.sync="FilterUsers" :filtercols="['User', 'Name', 'TimeZone', 'Email']"></toolbar-pager>
-    </q-toolbar-title>
-    <div class="panel-body">
-      <spinner v-if="ShowSpinner"></spinner>
-      <vuetable ref="table" :fields="Columns" :data="FilterUsers" :api-mode="false" class="table small table-striped">
-        <template slot="actions" slot-scope="props">
-          <div class="btn-group" >
-            <button class="btn btn-xs btn-default" @click="Edit(props.rowData)">Edit</button>
-            <button class="btn btn-xs btn-danger" @click="Delete(props.rowData)">Delete</button>
-          </div>
-        </template>
-      </vuetable>
-    </div>
+    <q-toolbar class="bg-grey-9 text-white q-py-none">
+      <q-toolbar-title>Users</q-toolbar-title>
+      <q-input dense debounce="300" label="Search" color="grey-3" label-color="white" v-model="Filter" input-class="text-white" class="q-mr-sm">
+         <template v-slot:prepend>
+            <q-icon name="search" color="white"></q-icon>
+          </template>
+      </q-input>
+      <q-btn color="positive" @click="Add">Add</q-btn>
+    </q-toolbar>
+    <q-table :loading="ShowSpinner" dense :columns="Columns" :data="Users" :filter="Filter" row-key="user" class="q-ma-xs">
+      <template v-slot:body-cell-actions="props">
+        <q-td :props="props">
+          <q-btn-group>
+          <q-btn size="sm" @click="Edit(props.row)">Edit</q-btn>
+          <q-separator vertical></q-separator>
+          <q-btn size="sm" @click="Delete(props.row)">Delete</q-btn>
+          </q-btn-group>
+        </q-td>
+      </template>
+    </q-table>
     <user-edit v-if="ShowDialog" :user="User" @close="LoadUsers"></user-edit>
   </q-card>
 </template>
@@ -26,23 +28,18 @@
   import UserEdit from 'App/User/Dialog.vue';
   export default {
     data() {
-      return { Users: [], FilterUsers: [], ShowSpinner: true, ShowDialog: false, Enabled: false, User: null,
+      return { Users: [], Filter: '', ShowSpinner: true, ShowDialog: false, Enabled: false, User: null,
         Columns: [
-          {name: 'User', title: 'User name' },
-          {name: 'Name', title: 'Name' },
-          {name: 'TimeZone', title: 'Time zone', titleClass: 'text-center', dataClass: 'text-center' },
-          {name: 'Email', title: 'E-Mail', titleClass: 'text-center', dataClass: 'text-center' },
-          {name: '__slot:actions', title: '', width: '96px', dataClass: 'text-right' }
+          { name: 'user', label: 'User name', field: row => row.User, align: 'left' },
+          { name: 'uame', label: 'Name', field: row => row.Name, align: 'left' },
+          { name: 'timezone', label: 'Time zone', field: row => row.TimeZone, align: 'center' },
+          { name: 'email', label: 'E-Mail', field: row => row.Email, align: 'center' },
+          { name: 'actions', label: '' }
         ]
       };
     },
     created: function () {
       this.LoadUsers();
-    },
-    watch: {
-      Filter: function() {
-        this.LoadUsers();
-      }
     },
     methods: {
       LoadUsers: function () {
@@ -89,11 +86,3 @@
     components: { UserEdit }
   }
 </script>
-
-<style scoped>
-  .header {
-    display: inline-block;
-    font-size: 20px;
-    line-height: 22px;
-  }
-</style>

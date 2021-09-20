@@ -8,20 +8,19 @@ Vue.use(VueResource);
 import PortalVue from 'portal-vue';
 Vue.use(PortalVue);
 import VueToast from 'vue-toast-notification';
-import 'vue-toast-notification/dist/theme-sugar.css';
 Vue.use(VueToast);
+//Import Quasar and icons ----------------------------------------------------------------------------------------------
 import Quasar from 'quasar';
-import 'quasar/dist/quasar.css';
 Vue.use(Quasar);
 //Main libs and style --------------------------------------------------------------------------------------------------
 //import 'jquery';
 //import 'bootstrap';
 //import 'bootstrap/dist/css/bootstrap.css';
-
+import 'quasar/dist/quasar.css';
+//import 'material-icons/iconfont/material-icons.css';
+import 'quasar-extras/material-icons';
+import 'vue-toast-notification/dist/theme-sugar.css';
 import 'CSS/openZmeter.css';
-//Other tools ----------------------------------------------------------------------------------------------------------
-import { blur } from 'auto-blur';
-addEventListener('click', evt => blur(evt));
 //OZM tools ------------------------------------------------------------------------------------------------------------
 import openZmeter from 'JS/openZmeter.js';
 Vue.use(openZmeter);
@@ -113,7 +112,7 @@ import About from 'Views/About/View.vue';
 import Login from 'Views/Login.vue';
 import Config from 'Views/Config.vue';
 
-var ViewRouter = new Router({
+const ViewRouter = new Router({
   linkActiveClass: 'active',
   mode: 'history',
   routes: [

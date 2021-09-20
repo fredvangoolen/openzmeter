@@ -47,20 +47,20 @@
         this.ShowSpinner = true;
         this.Progress = 0;
         this.Data = null;
-        var Count = 0;
-        var Blocks = [];
+        let Count = 0;
+        let Blocks = [];
         if((this.Year == null) || (this.analyzer == null)) return;
-        var GetMonth = (month) => {
-          var To = moment.tz(this.analyzer.TimeZone).year(this.Year).month(month).endOf('month').valueOf();
-          var From = moment.tz(this.analyzer.TimeZone).year(this.Year).month(month).startOf('month').valueOf();
+        let GetMonth = (month) => {
+          let To = moment.tz(this.analyzer.TimeZone).year(this.Year).month(month).endOf('month').valueOf();
+          let From = moment.tz(this.analyzer.TimeZone).year(this.Year).month(month).startOf('month').valueOf();
           this.Post('getSeries', { From: From, To: To, Aggreg: '15M', Series: ['Active_Energy'], Analyzer: this.analyzer.Analyzer }).then(
             (result) => {
               Blocks[month] = (month == 0) ? result : result.slice(1);
               Count++;
               this.Progress = (Count / 12.0) * 100.0;
               if(Count == 12) {
-                var Data = [];
-                for(var n = 0; n < Count; n++) Data = Data.concat(Blocks[n]);
+                let Data = [];
+                for(let n = 0; n < Count; n++) Data = Data.concat(Blocks[n]);
                 this.Data = Object.seal(Data);
                 this.ShowSpinner = false;
               }
@@ -68,7 +68,7 @@
             (fail) => {}
           );
         };
-        for(var month = 0; month < 12; month++) GetMonth(month);
+        for(let month = 0; month < 12; month++) GetMonth(month);
       },
       Export: function() {
         return this.ExportData;
