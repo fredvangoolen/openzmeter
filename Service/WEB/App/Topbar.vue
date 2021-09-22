@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <q-header>
     <div class="navbar-header">
       <button type="button" class="navbar-toggle" @mouseenter="$emit('expandmenu')" @click="$emit('expandmenu')"><img :src="require('Imgs/application_menu.png')"></button>
       <div class="navbar-brand">
@@ -13,7 +13,7 @@
       <topbar-indicator :analyzer="analyzer" serie="Frequency" :value="Transfer1.Data" v-if="analyzer.NominalFrequency > 0.0"></topbar-indicator>
       <topbar-indicator :analyzer="analyzer" serie="Active_Energy" :grouped="Grouped" :value="EnergyUsage"></topbar-indicator>
     </div>
-  </div>
+  </q-header>
 </template>
 
 <script>
@@ -107,16 +107,7 @@
   .navbar-brand > div > img {
     margin: 0px 2px;
   }
-  .sys-stats {
-    font-size: 10px;
-    text-align: center;
-    color: #FFF;
-    width: 100%;
-    line-height: 16px;
-  }
-  .sys-stats img {
-    margin-right: 1px;
-  }
+
   .indicator-bar {
     cursor: pointer;
     background-image: linear-gradient(to bottom,#f3f3f3,#e2e2e2);

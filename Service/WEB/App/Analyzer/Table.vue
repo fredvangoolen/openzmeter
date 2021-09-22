@@ -1,13 +1,18 @@
 <template>
-  <div>
-    <dlg :loading="ShowSpinner" v-if="View==null">
-      <template v-slot:header>
-        <div class="pull-left"><h4 class="modal-title">Analyzers</h4></div>
+  <q-dialog :value="true" no-backdrop-dismiss @hide="$emit('close')">
+    <div v-if="View==null">
+      <q-card>
+        <q-card-actions class="bg-grey-9 text-white">
+          <div class="text-h6">Analyzers</div>
+        </q-card-actions>
+        <q-separator></q-separator>
+<div class="row q-px-sm q-col-gutter-x-sm">
         <div class="pull-right btn-group">
           <button type="button" class="btn btn-default btn-xs" @click="Back"><img :src="require('Imgs/arrow_undo.png')"></button>
         </div>
         <toolbar-pager class="pull-right" :pageSize="10" :input="Analyzers" :output.sync="FilterAnalyzers" :filtercols="['Name', 'Analyzer', 'User']"></toolbar-pager>
-      </template>
+
+
       <div class="alert alert-danger text-center" v-if="Analyzers.length == 0" style="margin-bottom: 5px; padding: 5px">
         <p>There are no analyzers available.</p>
         <p>If you are an administrator, check device settings, otherwise request permission.</p>
@@ -18,7 +23,7 @@
           <img :src="require('Imgs/bullet_yellow.png')" v-if="props.rowData.State=='SYNCING'">
           <img :src="require('Imgs/bullet_red.png')" v-if="props.rowData.State=='OFFLINE'">
         </template>
-        <template slot="actions" slot-scope="props">
+        <!--template slot="actions" slot-scope="props">
           <div class="btn-group">
             <button type="button" class="btn btn-success btn-xs" :disabled="((analyzer != null) && (analyzer.Analyzer == props.rowData.Analyzer))" @click="Select(props.rowData.Analyzer, true)">Select</button>
             <button type="button" class="btn btn-default dropdown-toggle btn-xs" data-toggle="dropdown"><span class="caret"></span></button>
@@ -32,16 +37,25 @@
               <li><a @click="LoadView('Maintenance', props.rowData.Analyzer)">Maintenance</a></li>
             </ul>
           </div>
-        </template>
+        </template-->
       </vuetable>
-    </dlg>
+</div>
+        <q-separator></q-separator>
+        <q-card-actions align="right" class="bg-grey-2">
+          <q-btn @click="$emit('close')">Close</q-btn>
+        </q-card-actions>
+      </q-card>
+
+
+      <q-inner-loading :showing="ShowSpinner"><q-spinner-dots size="50px" color="orange-10"></q-spinner-dots></q-inner-loading>
+    </div>
     <analyzer-configure v-if="View=='Configure'" :analyzer="Analyzer" @close="CloseSelect($event)"></analyzer-configure>
     <analyzer-alarms v-if="View=='Alarms'" :analyzer="Analyzer" @close="CloseSelect($event)"></analyzer-alarms>
     <analyzer-permissions v-if="View=='Permissions'" :analyzer="Analyzer" @close="CloseSelect($event)"></analyzer-permissions>
     <analyzer-remote v-if="View=='Remote'" :analyzer="Analyzer" @close="CloseSelect($event)"></analyzer-remote>
     <analyzer-rates v-if="View=='Rates'" :analyzer="Analyzer" @close="CloseSelect($event)"></analyzer-rates>
     <analyzer-maintenance v-if="View=='Maintenance'" :analyzer="Analyzer" @close="CloseSelect($event)"></analyzer-maintenance>
-  </div>
+  </q-dialog>
 </template>
 
 <script>

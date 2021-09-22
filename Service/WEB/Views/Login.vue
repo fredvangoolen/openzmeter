@@ -1,34 +1,24 @@
 <template>
-  <div class="body">
-    <div class="container">
-      <div class="card">
-        <div class="row">
-          <div class="col-sm-12">
-            <img src="Logo.png" class="logo">
-          </div>
-          <form id="login-form">
-            <div class="col-xs-12">
-              <q-input v-model="UserName" label="Username" required autofocus autocomplete="off" autocapitalize="off" autocorrect="off"></q-input>
-            </div>
-            <div class="col-xs-12">
-              <q-input type="password" class="form-control" placeholder="Password" v-model="Password" required></q-input>
-            </div>
-            <div class="col-xs-12">
-              <button type="submit" class="btn btn-default btn-xs" @click="Login">Sign in</button>
-            </div>
-          </form>
+  <q-page class="bg-grey-9 window-height window-width row justify-center items-center">
+    <q-card class="q-pa-sm">
+      <q-card-section class="text-center">
+        <img src="Logo.png" class="q-ma-sm">
+        <form>
+          <q-input v-model="UserName" label="Username" name="user"></q-input>
+          <q-input v-model="Password" label="Password" type="password" name="password" autocomplete="on"></q-input>
+          <q-btn type="submit" class="q-mt-sm full-width" color="orange-9" @click="Login">Sign in</q-btn>
+        </form>
+      </q-card-section>
+      <q-card-section class="row q-py-none">
+        <div class="col-6">
+          Visit us at<br><a href="http://www.openzmeter.com" style="color: black">www.openzmeter.com</a>
         </div>
-        <div class="row trademark">
-          <div class="col-xs-6">
-            Visit us at<br><a href="http://www.openzmeter.com" style="color: black">www.openzmeter.com</a>
-          </div>
-          <div class="col-xs-6">
-            <a href="http://www.zred.es"><img src="zRed.png"></a>
-          </div>
+        <div class="col-6 text-right self-end">
+          <a href="http://www.zred.es"><img src="zRed.png"></a>
         </div>
-      </div>
-    </div>
-  </div>
+      </q-card-section>
+    </q-card>
+  </q-page>
 </template>
 
 <script>
@@ -38,7 +28,7 @@
       return { UserName: null, Password: null };
     },
     created: function() {
-      if(this.user != null) this.$router.replace('/');
+      if(this.user != null) this.$router.push('/Dashboard');
     },
     methods: {
       Login: function(event) {
@@ -50,68 +40,14 @@
             this.Post('getUser', { User: localStorage.getItem("UserName") }).then(
               (result) => {
                 this.$emit('update:user', result);
-                this.$router.replace('/');
-                this.$toast.open({ type:'success', message: "Logged in", duration: 3000});
+                this.$router.push('/Dashboard');
+                this.$q.notify({ message: 'Logged in', timeout: 3000, color: 'green', position: 'bottom-right' })
               }
             );
           },
-          (fail) => { this.$toast.open({ type:'error', message: "Failed to login<br>Invalid user name or password", duration: 3000}); }
+          (fail) => this.$q.notify({ message: 'Failed to login', caption: 'Invalid user name or password', timeout: 3000, color: 'red', position: 'bottom-right' })
         );
       }
     }
   }
 </script>
-
-<style scoped>
-  .body {
-    box-sizing: border-box;
-    display: table;
-    position: absolute;
-    height: 100%;
-    width: 100%;
-    background-color: #474544;
-    background-image: none;
-    overflow: hidden;
-    margin: 0px;
-  }
-  .container {
-    display: table-cell;
-    vertical-align: middle;
-    width: 100%;
-    position: relative;
-    z-index: 10;
-    margin-right: auto;
-    margin-left: auto;
-    padding-left: 15px;
-    padding-right: 15px;
-  }
-  .card {
-    max-width: 350px;
-    background-color: #F7F7F7;
-    padding: 40px 40px 10px 40px;
-    margin: auto;
-  }
-  .logo {
-    margin-bottom: 20px;
-  }
-    .form-control {
-    margin: 5px 0px;
-  }
-  .btn {
-    background-color: #E8701C;
-    font-weight: 700;
-    color: #F7F7F7;
-    text-align: center;
-    border: 1px solid transparent;
-    padding: 6px 12px;
-    font-size: 14px;
-    width: 100%;
-    margin: 10px 0px;
-  }
-  .trademark {
-    line-height: 16px;
-  }
-  .trademark > div:nth-child(2) {
-    text-align: right;
-  }
-</style>
