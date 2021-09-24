@@ -12,6 +12,7 @@ build_nanopi_air:
   artifacts:
     paths:
       - Service/Tmp/openWRT_nanopi_air/openZmeter*.ipk
+      - Service/Tmp/openWRT_nanopi_air/openZmeter
   script:
     - export BUILD_DATE=$(date -d @$(git show -s --format=%ct $CI_COMMIT_SHA) +%Y%m%d.%H%M)
     - export BUILD_BRANCH=$CI_COMMIT_REF_NAME
@@ -21,11 +22,11 @@ build_nanopi_air:
     - cd Tmp/openWRT_nanopi_air
     - mkdir -p Package
     - mkdir -p Package/usr/sbin
-    - mv openZmeter Package/usr/sbin/
+    - cp openZmeter Package/usr/sbin/
     - mkdir -p Package/CONTROL
     - |
       cat > Package/CONTROL/control << EOF
-      Package: openZmeter-${BUILD_NAME}
+      Package: openZmeter-${BUILD_BRANCH}
       Version: ${BUILD_DATE}
       Section: base
       Priority: optional
@@ -60,4 +61,3 @@ build_nanopi_air:
       EOF
     - chmod +x Package/etc/init.d/openZmeter
     - ipkg-build -o root -g root Package .
-

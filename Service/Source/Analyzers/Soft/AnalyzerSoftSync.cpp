@@ -117,7 +117,8 @@ void *AnalyzerSoftSync::Thread() {
       HTTPClient   = NULL;
       Path         = Url.Path();
       HTTPClient   = new Client(Url.Host(), Url.Port());
-      HTTPClient->set_keep_alive(false);
+      HTTPClient->set_compress(true);
+      HTTPClient->set_keep_alive(true);
       HTTPClient->set_read_timeout(20);
       HTTPClient->set_write_timeout(20);
       vector<uint8_t> Buff = json::to_cbor({ {"User", pUser}, {"Password", pPass}, {"UpdateLastLogin", false} });

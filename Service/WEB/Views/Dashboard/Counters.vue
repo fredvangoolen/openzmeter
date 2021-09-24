@@ -39,7 +39,6 @@
       Sum: function() {
         var Sum = { Value: 0, Count: 0, Budget: 0 };
         if(this.data == null) return Sum;
-        var TimeCol = this.data.Headers.indexOf('Time');
         var EnergyCol = this.data.Headers.indexOf('Active_Energy');
         var CostCol = this.data.Headers.indexOf('Cost');
         for(var x in this.data.Rows) {

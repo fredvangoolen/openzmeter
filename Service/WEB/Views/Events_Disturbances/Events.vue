@@ -31,9 +31,6 @@
 </template>
 
 <script>
-  import Vuetable from 'vuetable-2';
-  import 'CSS/table-responsive.css';
-  import * as oZm from 'JS/openZmeter.js';
   import EventDialog from './EventDialog.vue';
   import EventNotes from './EventNotes.vue';
   import EventDelete from './EventDelete.vue';
@@ -52,9 +49,6 @@
                  { name: '__slot:actions', title: '' }
                ]
       };
-    },
-    updated: function() {
-      oZm.createCaptionsForResponsiveTable(this.$refs.table);
     },
     watch: {
       events: function() {
@@ -189,7 +183,7 @@
         return Object.seal(Export);
       }
     },
-    components: { Vuetable, EventDialog, EventNotes, EventDelete }
+    components: { EventDialog, EventNotes, EventDelete }
   }
 </script>
 

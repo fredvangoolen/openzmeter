@@ -30,7 +30,7 @@
   export default {
     props: { user: Object },
     data: function() {
-      return { ShowPrevious: true, User: null, ShowSpinner: false };
+      return { ShowPrevious: true, User: null, ShowSpinner: false, Error: false };
     },
     watch: {
       User: {

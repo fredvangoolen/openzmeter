@@ -24,10 +24,7 @@
 </template>
 
 <script>
-  import Vuetable from 'vuetable-2';
-  import 'CSS/table-responsive.css';
   import moment from 'moment';
-  import * as oZm from 'JS/openZmeter.js';
   export default {
     props: { analyzer: Object, alarms: Object },
     data: function() {
@@ -40,9 +37,6 @@
                  { name: '__slot:actions', title: '' }
               ]
       };
-    },
-    updated: function() {
-      oZm.createCaptionsForResponsiveTable(this.$refs.table);
     },
     watch: {
       alarms: function() {
@@ -109,8 +103,7 @@
         }
         return Object.seal(Export);
       }
-    },
-    components: { Vuetable }
+    }
   }
 </script>
 

@@ -14,6 +14,7 @@
 
 <style scoped>
   .progress {
+    margin-bottom: 0px;
     position: relative;
     background-color: #FFF;
   }

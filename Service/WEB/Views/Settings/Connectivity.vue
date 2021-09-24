@@ -24,7 +24,6 @@
 </template>
 
 <script>
-  import Vuetable from 'vuetable-2';
   import Bluetooth from './Connectivity/Bluetooth.vue';
   import Wifi from './Connectivity/WIFI.vue';
   import Ethernet from './Connectivity/Ethernet.vue';
@@ -78,7 +77,7 @@
         );
       }
     },
-    components: { Bluetooth, Wifi, Ethernet, Ntp, ModbusTcp, Telegram, Vuetable, Vpn, Updates }
+    components: { Bluetooth, Wifi, Ethernet, Ntp, ModbusTcp, Telegram, Vpn, Updates }
   }
 </script>
 

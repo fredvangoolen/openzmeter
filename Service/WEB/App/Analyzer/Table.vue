@@ -51,25 +51,18 @@
   import AnalyzerMaintenance from './Maintenance.vue';
   import AnalyzerAlarms from './Alarms.vue';
   import AnalyzerRemote from './Remote.vue';
-  import Vuetable from 'vuetable-2';
-  import 'CSS/table-responsive.css';
-  import * as oZm from 'JS/openZmeter.js';
-  import CBOR from 'cbor-js';
   export default {
     props: { analyzer: Object },
     data() {
       return { View: null, Analyzers: [], FilterAnalyzers: [], ShowSpinner: true, Analyzer: null, Filter: '', Timer: null,
         Columns: [
-          { name: '__slot:state', title: '' },
+          { name: '__slot:state', title: '', width: '20px', titleClass: 'text-center', dataClass: 'text-center' },
           { name: 'User', title: 'Owner' },
           { name: 'Name', title: 'Description' },
           { name: 'Analyzer', title: 'Serial' },
-          { name: '__slot:actions', title: '' }
+          { name: '__slot:actions', title: '', width: '96px', dataClass: 'text-right' }
         ]
       };
-    },
-    updated: function(){
-      oZm.createCaptionsForResponsiveTable(this.$refs.table);
     },
     mounted: function() {
       this.GetAnalyzers();
@@ -125,29 +118,6 @@
         this.$emit('close');
       }
     },
-    components: { Vuetable, AnalyzerRemote, AnalyzerConfigure, AnalyzerRates, AnalyzerMaintenance, AnalyzerAlarms, AnalyzerPermissions }
+    components: { AnalyzerRemote, AnalyzerConfigure, AnalyzerRates, AnalyzerMaintenance, AnalyzerAlarms, AnalyzerPermissions }
   }
 </script>
-
-<style scoped>
-  @media screen and (min-width: 600px) {
-    .table >>> th:nth-child(1) {
-      width: 20px;
-      text-align: center;
-    }
-    .table >>> td:nth-child(1) {
-      text-align: center;
-      font-size: 14px;
-    }
-    .table >>> th:nth-child(4) {
-      width: 180px;
-      text-align: center;
-    }
-    .table >>> td:nth-child(4) {
-      text-align: center;
-    }
-    .table >>> th:nth-child(5) {
-      width: 94px;
-    }
-  }
-</style>

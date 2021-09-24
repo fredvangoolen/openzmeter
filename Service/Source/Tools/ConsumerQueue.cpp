@@ -22,12 +22,18 @@ ConsumerQueue::ConsumerQueue(const uint16_t maxConsumers) {
   pHandledCallbacks  = 0;
   pDataSequence      = 0;
   pConsumerEnter     = true;
+  pTerminate         = false;
   pMutex             = PTHREAD_MUTEX_INITIALIZER;
   pConsumerEnterCond = PTHREAD_COND_INITIALIZER;
   pConsumerWaitCond  = PTHREAD_COND_INITIALIZER;
   pProducerCond      = PTHREAD_COND_INITIALIZER;
 }
 ConsumerQueue::~ConsumerQueue() {
+  if(pthread_mutex_lock(&pMutex) != 0) LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
+  pTerminate = true;
+  if(pthread_cond_broadcast(&pConsumerEnterCond) != 0) LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
+  if(pthread_cond_broadcast(&pConsumerWaitCond) != 0) LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
+  if(pthread_mutex_unlock(&pMutex) != 0) LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
 }
 void ConsumerQueue::Write() {
   if(pthread_mutex_lock(&pMutex) != 0) LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
@@ -47,15 +53,15 @@ void ConsumerQueue::Wait() {
   if(pthread_mutex_unlock(&pMutex) != 0) LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
 }
 bool ConsumerQueue::OnWrite(function<bool()> fn) {
-  int      Error    = 0;
+  int Error = 0;
   if(pthread_mutex_lock(&pMutex) != 0) LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
   if(pCallbacks > pMaxCallbacks) {
     if(pthread_mutex_unlock(&pMutex) != 0) LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
     return false;
   }
-  while((Error == 0) && (pConsumerEnter == false)) Error = pthread_cond_wait(&pConsumerEnterCond, &pMutex);
-  if(Error != 0) {
-    LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
+  while((Error == 0) && (pTerminate == false) && (pConsumerEnter == false)) Error = pthread_cond_wait(&pConsumerEnterCond, &pMutex);
+  if((Error != 0) || (pTerminate == true)) {
+    if(Error != 0) LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
     if(pthread_mutex_unlock(&pMutex) != 0) LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
     return false;
   }
@@ -63,9 +69,11 @@ bool ConsumerQueue::OnWrite(function<bool()> fn) {
   uint16_t Sequence = pDataSequence;
   bool     Continue = true;
   while(Continue) {
-    while((Error == 0) && (pDataSequence == Sequence)) Error = pthread_cond_wait(&pConsumerWaitCond, &pMutex);
-    if(Error != 0) {
-      LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
+    timespec To = { .tv_sec = time(NULL) + 5, .tv_nsec = 0 };
+    while((Error == 0) && (pTerminate == false) && (pDataSequence == Sequence)) Error = pthread_cond_timedwait(&pConsumerWaitCond, &pMutex, &To);
+    if((Error != 0) || (pTerminate == true)) {
+      if((Error != 0) && (Error != ETIMEDOUT)) LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
+      pCallbacks--;
       Continue = false;
     } else {
       if(pthread_mutex_unlock(&pMutex) != 0) LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
@@ -75,7 +83,7 @@ bool ConsumerQueue::OnWrite(function<bool()> fn) {
         pHandledCallbacks++;
         Sequence++;
       } else {
-        Continue = Result;
+        Continue = false;
         pCallbacks--;
       }
     }

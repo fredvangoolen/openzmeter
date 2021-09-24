@@ -2,7 +2,7 @@ var path = require('path');
 var webpack = require('webpack');
 const VueLoaderPlugin = require('vue-loader/lib/plugin');
 module.exports = {
-  entry: './main.js',
+  entry: './Index.js',
   output: {
     path: path.resolve(__dirname, '../Tmp'),
     publicPath: '/',
@@ -69,7 +69,7 @@ module.exports = {
     noInfo: true,
     overlay: true,
     proxy: {
-      '*': { target: 'http://192.168.0.13/'}
+      '*': { target: 'http://localhost:8081/'}
     }
   },
   performance: {

@@ -4,17 +4,37 @@
       <template v-slot:header>
         <div class="pull-left"><h4 class="modal-title">Analyzers &raquo; Alarms and events</h4></div>
         <div class="pull-right btn-group">
-          <button type="button" class="btn btn-default btn-xs" @click="Save"><img :src="require('Imgs/diskette.png')" alt="Save alarm and events config"></button>
-          <button type="button" class="btn btn-default btn-xs" @click="Add"><img :src="require('Imgs/plus.png')" alt="Add alarm"></button>
-          <button type="button" class="btn btn-default btn-xs" @click="$emit('close', null)"><img :src="require('Imgs/arrow_undo.png')" alt="Back"></button>
+          <button type="button" class="btn btn-default btn-xs" @click="Save" data-toggle="tooltip" title="Save alarm and events config"><img :src="require('Imgs/diskette.png')"></button>
+          <button type="button" class="btn btn-default btn-xs" @click="Add" data-toggle="tooltip" title="Add new alarm"><img :src="require('Imgs/plus.png')"></button>
+          <button type="button" class="btn btn-default btn-xs" @click="$emit('close', null)" data-toggle="tooltip" title="Back"><img :src="require('Imgs/arrow_undo.png')"></button>
         </div>
       </template>
       <div class="row">
         <div class="col-xs-12">
           <label class="control-label" style="line-height: 22px">Events detection</label>
-          <toggle class="float-right" onText="Yes" offText="No" v-model="Analyzer.EventsEnabled"></toggle>
+          <toggle class="float-right" onText="Yes" offText="No" v-model="Analyzer.Events.Enabled"></toggle>
           <div class="help">Enable standar event detection according to IEC 61000-4-30</div>
         </div>
+        <div class="col-xs-6">
+          <label>Save RMS values</label>
+          <input-spin :min="-200" :max="200" :increment="0.01" :decimals="2" prepend="mS" v-model="Analyzer.Events.SaveRMS"></input-spin>
+        </div>
+        <div class="col-xs-6">
+          <label>Save RAW values</label>
+          <input-spin :min="-200" :max="200" :increment="0.01" :decimals="2" prepend="mS" v-model="Analyzer.Events.SaveRAW"></input-spin>
+        </div>
+        <vuetable :fields="columns_events" :api-mode="false" :data="EventsConfig" class="table small table-striped">
+          <template slot="enable" slot-scope="props">
+            <input type="checkbox" v-model="props.rowData.Enabled">
+            <div class="event-type">{{props.rowData.Type}}</div>
+          </template>
+          <template slot="threshold" slot-scope="props">
+            <input-spin :min="0" :max="100" :increment="0.01" :decimals="2" prepend="%" v-model="props.rowData.Threshold"></input-spin>
+          </template>
+          <template slot="hysteresis" slot-scope="props">
+            <input-spin :min="0" :max="100" :increment="0.01" :decimals="2" prepend="%" v-model="props.rowData.Hysteresis"></input-spin>
+          </template>
+        </vuetable>
         <div class="col-xs-12"><hr style="margin-top: 10px; margin-bottom: 5px;"/></div>
         <div class="col-xs-12">
           <label class="control-label" style="line-height: 22px">Alarms detection</label>
@@ -22,7 +42,7 @@
           <div class="help">Evaluate math expressions with analysis params and generate alarms</div>
         </div>
       </div>
-      <vuetable ref="table" :fields="columns" :api-mode="false" :data="Analyzer.Alarms" track-by="ID" class="table small table-striped">
+      <vuetable :fields="columns_alarms" :api-mode="false" :data="Analyzer.Alarms" track-by="ID" class="table small table-striped">
         <template slot="actions" slot-scope="props">
           <div class="btn-group">
             <button type="button" class="btn btn-default btn-xs" @click="Edit(props.rowIndex)">Edit</button>
@@ -36,26 +56,31 @@
 </template>
 
 <script>
-  import * as oZm from 'JS/openZmeter.js';
-  import vuetable from 'vuetable-2';
-  import 'CSS/table-responsive.css';
   import AnalyzerAlarm from './Alarm.vue';
   export default {
     props: { analyzer: Object },
     data() {
-      return { Analyzer: null, ShowSpinner: false, Alarm: null,
-        columns: [
-          { name: 'Enabled', title: 'Enabled', callback: this.FormatEnabled },
+      return { Analyzer: null, ShowSpinner: false, Alarm: null, EventsConfig: [],
+        columns_alarms: [
+          { name: 'Enabled', title: 'Enabled', callback: this.FormatEnabled, width: '60px', titleClass: 'text-center', dataClass: 'text-center' },
           { name: 'Name', title: 'Name' },
-          { name: '__slot:actions', title: '' }
+          { name: '__slot:actions', title: '', width: '96px', dataClass: 'text-right' }
+        ],
+        columns_events: [
+          { name: '__slot:enable', title: 'Type', width: '140px' },
+          { name: '__slot:threshold', title: 'Threshold' },
+          { name: '__slot:hysteresis', title: 'Hysteresis' }
         ]
       };
     },
-    updated: function() {
-      oZm.createCaptionsForResponsiveTable(this.$refs.table);
-    },
     created: function() {
       this.Analyzer = Object.assign({}, this.analyzer);
+      this.EventsConfig = [
+        { Type: 'RVC', Threshold: this.Analyzer.Events.RVC.Threshold, Hysteresis: this.Analyzer.Events.RVC.Hysteresis, Enabled: this.Analyzer.Events.RVC.Enabled },
+        { Type: 'DIP', Threshold: this.Analyzer.Events.DIP.Threshold, Hysteresis: this.Analyzer.Events.DIP.Hysteresis, Enabled: this.Analyzer.Events.DIP.Enabled },
+        { Type: 'SWELL', Threshold: this.Analyzer.Events.SWELL.Threshold, Hysteresis: this.Analyzer.Events.SWELL.Hysteresis, Enabled: this.Analyzer.Events.SWELL.Enabled },
+        { Type: 'INTERRUPTION', Threshold: this.Analyzer.Events.INTERRUPTION.Threshold, Hysteresis: this.Analyzer.Events.INTERRUPTION.Hysteresis, Enabled: this.Analyzer.Events.INTERRUPTION.Enabled },
+      ];
     },
     methods: {
       UUID: function() {
@@ -81,6 +106,18 @@
       },
       Save: function() {
         this.ShowSpinner = true;
+        this.Analyzer.Events.RVC.Threshold = this.EventsConfig[0].Threshold;
+        this.Analyzer.Events.RVC.Hysteresis = this.EventsConfig[0].Hysteresis;
+        this.Analyzer.Events.RVC.Enabled = this.EventsConfig[0].Enabled;
+        this.Analyzer.Events.DIP.Threshold = this.EventsConfig[1].Threshold;
+        this.Analyzer.Events.DIP.Hysteresis = this.EventsConfig[1].Hysteresis;
+        this.Analyzer.Events.DIP.Enabled = this.EventsConfig[1].Enabled;
+        this.Analyzer.Events.SWELL.Threshold = this.EventsConfig[2].Threshold;
+        this.Analyzer.Events.SWELL.Hysteresis = this.EventsConfig[2].Hysteresis;
+        this.Analyzer.Events.SWELL.Enabled = this.EventsConfig[2].Enabled;
+        this.Analyzer.Events.INTERRUPTION.Threshold = this.EventsConfig[3].Threshold;
+        this.Analyzer.Events.INTERRUPTION.Hysteresis = this.EventsConfig[3].Hysteresis;
+        this.Analyzer.Events.INTERRUPTION.Enabled = this.EventsConfig[3].Enabled;
         this.Post('setAnalyzer', this.Analyzer).then(
           () => { this.$emit('close', this.Analyzer); },
           (fail) => {
@@ -90,26 +127,18 @@
         );
       }
     },
-    components: { vuetable, AnalyzerAlarm }
+    components: { AnalyzerAlarm }
   }
 </script>
 
 <style scoped>
-  @media screen and (min-width: 600px) {
-    .table >>> th:nth-child(1) {
-      width: 60px;
-    }
-    .table >>> td:nth-child(1) {
-      text-align: center;
-    }
-    .table >>> th:nth-child(3) {
-      width: 94px;
-    }
-    .table >>> td:nth-child(3) {
-      text-align: right;
-    }
-  }
   .help {
     font-size: 80%;
+  }
+  .event-type {
+    left: 1px;
+    display: inline-block;
+    position: relative;
+    top: -2px;
   }
 </style>

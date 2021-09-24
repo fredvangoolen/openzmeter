@@ -9,10 +9,7 @@
     <div class="row" v-if="Abort==null">
       <div class="col-md-4" >
         <label class="control-label">File name</label>
-        <div class="input-group">
-          <input type="text" class="form-control" v-model="File">
-          <span class="input-group-addon">{{ (DownloadFormat=='application/json') ? '.json' : '.cbor' }}</span>
-        </div>
+        <input-text :apend="(DownloadFormat=='application/json') ? '.json' : '.cbor'" v-model="File"></input-text>
       </div>
       <div class="col-md-5">
         <label class="control-label">Waves</label>
@@ -45,7 +42,9 @@
 <script>
   import * as oZm from 'JS/openZmeter.js';
   import streamSaver from 'streamsaver';
+import InputText from '../../Components/InputText.vue';
   export default {
+  components: { InputText },
     props: { analyzer: Object },
     data: function() {
       return { File: 'Waveform', DownloadSamples: 'Voltage', DownloadFormat: 'application/json', Abort: null, Length: 0, Downsample: 1 };

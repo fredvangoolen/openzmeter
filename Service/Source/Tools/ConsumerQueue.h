@@ -28,6 +28,7 @@ class ConsumerQueue {
     uint16_t                pMaxCallbacks;
     uint16_t                pDataSequence;
     bool                    pConsumerEnter;
+    bool                    pTerminate;
     pthread_mutex_t         pMutex;
     pthread_cond_t          pConsumerEnterCond;
     pthread_cond_t          pConsumerWaitCond;

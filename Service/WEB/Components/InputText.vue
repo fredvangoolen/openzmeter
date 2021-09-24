@@ -1,13 +1,14 @@
 <template>
   <div class="input-group input-group-xs">
     <span v-if="prepend" class="input-group-addon">{{ prepend }}</span>
-    <input type="text" class="form-control" :class="{ rounded: prepend==null }" :disabled="disabled" :value="value" @change="$emit('input', $event.target.value)">
+    <input type="text" class="form-control" :class="{ rounded: (prepend==null&&apend==null) }" :disabled="disabled" :value="value" @change="$emit('input', $event.target.value)">
+    <span v-if="apend" class="input-group-addon">{{ apend }}</span>
   </div>
 </template>
 
 <script>
   export default {
-    props: { prepend: String, value: String, disabled: Boolean },
+    props: { prepend: String, apend: String, value: String, disabled: Boolean },
     data: function() {
       return { };
     },

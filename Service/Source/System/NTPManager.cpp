@@ -59,7 +59,7 @@ void NTPManager::SetNTPCallback(HTTPRequest &req) {
   string   Server  = req.Param("Server");
   uint64_t Time    = req.Param("Time");
   SystemManager::uBusCall("uci", "set", { {"config", "system"}, {"section", "ntp"} , {"values", { {"enabled", (Enabled == true) ? "1" : "0"}, {"server", Server} } } });
-  SystemManager::Exec("uci commit && /etc/init.d/network restart");
+  SystemManager::Exec("uci commit && wifi reload");
   if(Enabled == false) {
     timeval TimeVal;
     TimeVal.tv_sec  = Time / 1000;

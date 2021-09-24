@@ -103,9 +103,6 @@
         $(this).find('[data-sidenav-dropdown-icon]').toggleClass('show');
         e.preventDefault();
       });
-    },
-    beforeDestroy: function() {
-      this.TransferNow.Destroy();
     }
   }
 </script>
