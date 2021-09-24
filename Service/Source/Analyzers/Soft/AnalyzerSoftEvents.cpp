@@ -226,6 +226,10 @@ void AnalyzerSoftEvents::Events_Func(const AnalyzerSoftBlock *block) {
             SrcPtr = (SrcPtr == pPrevSamples) ? &pPrevSamples[(pPrevSamplesLen - 1) * pVoltageChannels] : SrcPtr - pVoltageChannels;
             for(uint8_t n = 0; n < pVoltageChannels; n++) DstPtr[n] = SrcPtr[n];
           }
+          if(this->pCyclicHistogram != NULL){
+            this->pCyclicHistogram->WriteToDatabase(Timestamp);
+            this->pCyclicHistogram->Clear();
+          }
           DB.ExecSentenceNoResult("INSERT INTO events(changetime, starttime, evttype, samplerate, reference, peak, change, notes, duration, size_raw, size_rms, samples_rms, samples_raw) "
                                   "VALUES (" + DB.Bind(Tools::GetTime64()) + ", " + DB.Bind(pEvent->Start) + ", " + DB.Bind(EventTypeToString(pEvent->Type)) + ", " + DB.Bind(pSamplerate) + ", " +
                                               DB.Bind(pEvent->Reference, pVoltageChannels) + ", " + DB.Bind(pEvent->PeakValue, pVoltageChannels) + ", " +
