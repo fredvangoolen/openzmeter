@@ -258,7 +258,8 @@ void AnalyzerSoftCyclicHistogram::WriteToDisk()
 
 void AnalyzerSoftCyclicHistogram::WriteToDatabase()
 {
-    WriteToDatabase(0);
+    uint64_t startTime = 0;
+    WriteToDatabase(startTime);
 }
 
 void AnalyzerSoftCyclicHistogram::WriteToDatabase(uint64_t &eventStartTime)
