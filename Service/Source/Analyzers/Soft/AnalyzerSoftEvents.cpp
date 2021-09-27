@@ -228,7 +228,9 @@ void AnalyzerSoftEvents::Events_Func(const AnalyzerSoftBlock *block) {
           }
           if(this->pCyclicHistogram != NULL){
             LogFile::Warning("[Events] Event Start Time: %u", Timestamp);
-            this->pCyclicHistogram->WriteToDatabase(Timestamp);
+            LogFile::Warning("[Events] Sending command to write CH to database.");
+            this->pCyclicHistogram->WriteToDatabase(pEvent->Start);
+            LogFile::Warning("[Events] Sending command to clear CH.");
             this->pCyclicHistogram->Clear();
           }
           DB.ExecSentenceNoResult("INSERT INTO events(changetime, starttime, evttype, samplerate, reference, peak, change, notes, duration, size_raw, size_rms, samples_rms, samples_raw) "

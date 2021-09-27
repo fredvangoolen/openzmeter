@@ -261,7 +261,7 @@ void AnalyzerSoftCyclicHistogram::WriteToDatabase()
     WriteToDatabase(0);
 }
 
-void AnalyzerSoftCyclicHistogram::WriteToDatabase(uint64_t eventStartTime)
+void AnalyzerSoftCyclicHistogram::WriteToDatabase(uint64_t &eventStartTime)
 {
     LogFile::Warning("[CH] Event Start Time: %u", eventStartTime);
     if (startTime == 0 && endTime == 0)
