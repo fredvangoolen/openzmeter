@@ -55,6 +55,8 @@ AnalyzerSoft::AnalyzerSoft(const string &id, const Analyzer::AnalyzerMode mode, 
   pAggreg1H       = new AnalyzerSoftAggreg1H(id, mode);
   pRates          = new AnalyzerRates(id);
   pSeries         = new AnalyzerSeries(id, mode);
+  pCyclicHistogram = new AnalyzerSoftCyclicHistogram(id); // Setup cyclic histogram manager
+  pJoltAlgorithm  = new AnalyzerSoftJoltAlgorithm(id); // Setup jolt manager
   pEvents         = new AnalyzerSoftEvents(id, mode, samplerate, pCyclicHistogram);
   pMQTT           = new AnalyzerSoftMQTT(id);
   pAlarms         = new AnalyzerSoftAlarms(id, pMQTT);
@@ -63,8 +65,6 @@ AnalyzerSoft::AnalyzerSoft(const string &id, const Analyzer::AnalyzerMode mode, 
     [&](const vector<string> &series) { return pAccess->GetStatus(series); },
     [&](const vector<string> &series) { return GetSeriesNow(series); }
   );
-  pCyclicHistogram = new AnalyzerSoftCyclicHistogram(id); // Setup cyclic histogram manager
-  pJoltAlgorithm  = new AnalyzerSoftJoltAlgorithm(id); // Setup jolt manager
   if(pthread_create(&pThread, NULL, [](void *params) -> void* { ((AnalyzerSoft*)params)->Thread(); return NULL; }, this) != 0) {
     LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
     pThread = 0;

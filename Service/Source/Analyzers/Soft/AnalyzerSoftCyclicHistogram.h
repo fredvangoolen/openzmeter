@@ -35,7 +35,7 @@ public:
     json GetCurrentCyclicHistogram(string mode);
     void WriteToDisk();
     void WriteToDatabase();
-    void WriteToDatabase(uint64_t &eventStartTime);
+    void WriteToDatabase(uint64_t eventStartTime);
     void Clear();
 
 private:
