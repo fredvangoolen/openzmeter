@@ -263,16 +263,18 @@ void AnalyzerSoftCyclicHistogram::WriteToDatabase()
 
 void AnalyzerSoftCyclicHistogram::WriteToDatabase(string eventStartTime)
 {
-    LogFile::Warning("[CH] Event Start Time: %u", eventStartTime);
+    LogFile::Warning("[CH] Event Start Time: %s", eventStartTime);
     if (startTime == 0 && endTime == 0)
     {
         // No data has been added to the CH. Don't store anything in database.
+        LogFile::Warning("[CH] No data has been added. Skipping saving to database.");
         return;
     }
 
     DB->ExecSentenceNoResult("BEGIN TRANSACTION;");
 
     string sentence = "INSERT INTO cychist (starttime, endtime, event_id) VALUES (" + DB->Bind(startTime) + ", " + DB->Bind(endTime) + ", " + (eventStartTime != "0" ? eventStartTime : "NULL") + ") RETURNING id;";
+    LogFile::Warning("SQL: %s", sentence);
     DB->ExecSentenceAsyncResult(sentence);
 
     if (DB->FecthRow())
