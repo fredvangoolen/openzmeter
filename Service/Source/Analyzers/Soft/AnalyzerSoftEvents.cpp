@@ -227,7 +227,8 @@ void AnalyzerSoftEvents::Events_Func(const AnalyzerSoftBlock *block) {
             for(uint8_t n = 0; n < pVoltageChannels; n++) DstPtr[n] = SrcPtr[n];
           }
           if(this->pCyclicHistogram != NULL){
-            LogFile::Warning("[Events] Event Start Time: %s", DB.Bind(pEvent->Start));
+            LogFile::Warning("[Events] Event Start Time:");
+            LogFile::Warning(DB.Bind(pEvent->Start).c_str());
             LogFile::Warning("[Events] Sending command to write CH to database.");
             this->pCyclicHistogram->WriteToDatabase(DB.Bind(pEvent->Start));
             LogFile::Warning("[Events] Sending command to clear CH.");
