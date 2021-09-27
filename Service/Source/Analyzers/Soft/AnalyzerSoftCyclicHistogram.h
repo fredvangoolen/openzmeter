@@ -7,6 +7,8 @@
 #include <stdlib.h>
 #include <vector>
 
+using namespace std;
+
 enum CyclicHistogramVoltageFilterMode
 {
     VOLTAGE_FILTER_NONE = 0,
