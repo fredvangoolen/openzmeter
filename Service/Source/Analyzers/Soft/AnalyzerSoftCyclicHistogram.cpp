@@ -263,8 +263,7 @@ void AnalyzerSoftCyclicHistogram::WriteToDatabase()
 
 void AnalyzerSoftCyclicHistogram::WriteToDatabase(string eventStartTime)
 {
-    LogFile::Warning("[CH] Event Start Time:");
-    LogFile::Warning(eventStartTime.c_str());
+    LogFile::Warning("[CH] Event Start Time: %s", eventStartTime.c_str());
     if (startTime == 0 && endTime == 0)
     {
         // No data has been added to the CH. Don't store anything in database.

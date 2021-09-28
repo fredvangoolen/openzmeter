@@ -226,14 +226,6 @@ void AnalyzerSoftEvents::Events_Func(const AnalyzerSoftBlock *block) {
             SrcPtr = (SrcPtr == pPrevSamples) ? &pPrevSamples[(pPrevSamplesLen - 1) * pVoltageChannels] : SrcPtr - pVoltageChannels;
             for(uint8_t n = 0; n < pVoltageChannels; n++) DstPtr[n] = SrcPtr[n];
           }
-          if(this->pCyclicHistogram != NULL){
-            LogFile::Warning("[Events] Event Start Time:");
-            LogFile::Warning(DB.Bind(pEvent->Start).c_str());
-            LogFile::Warning("[Events] Sending command to write CH to database.");
-            this->pCyclicHistogram->WriteToDatabase(DB.Bind(pEvent->Start));
-            LogFile::Warning("[Events] Sending command to clear CH.");
-            this->pCyclicHistogram->Clear();
-          }
           DB.ExecSentenceNoResult("INSERT INTO events(changetime, starttime, evttype, samplerate, reference, peak, change, notes, duration, size_raw, size_rms, samples_rms, samples_raw) "
                                   "VALUES (" + DB.Bind(Tools::GetTime64()) + ", " + DB.Bind(pEvent->Start) + ", " + DB.Bind(EventTypeToString(pEvent->Type)) + ", " + DB.Bind(pSamplerate) + ", " +
                                               DB.Bind(pEvent->Reference, pVoltageChannels) + ", " + DB.Bind(pEvent->PeakValue, pVoltageChannels) + ", " +
@@ -241,6 +233,14 @@ void AnalyzerSoftEvents::Events_Func(const AnalyzerSoftBlock *block) {
                                               DB.Bind(DstRMS, pPrevCyclesSaveLen, pVoltageChannels) + ", " + DB.Bind(DstRAW, pPrevSamplesLen, pVoltageChannels) + ")");
           if(DstRMS != NULL) free(DstRMS);
           if(DstRAW != NULL) free(DstRAW);
+
+          if(this->pCyclicHistogram != NULL){
+            LogFile::Warning("[Events] Event Start Time: %s", DB.Bind(pEvent->Start).c_str());
+            LogFile::Warning("[Events] Sending command to write CH to database.");
+            this->pCyclicHistogram->WriteToDatabase(DB.Bind(pEvent->Start));
+            LogFile::Warning("[Events] Sending command to clear CH.");
+            this->pCyclicHistogram->Clear();
+          }
         }
         if(pEvent->Type != Type) {
           LogFile::Debug("Event '%s' running on analyzer '%s' promoted to '%s'", EventTypeToString(pEvent->Type).c_str(), pSerial.c_str(), EventTypeToString(Type).c_str());
