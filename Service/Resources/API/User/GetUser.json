@@ -3,24 +3,27 @@
     "schemas": {
       "UserTemplate": {
         "type": "object",
-        "allOf": [
-          { "$ref": "#/components/schemas/UserListTemplate" },
-          { "type": "object",
-            "properties": {
-              "Address": { "type": "string" },
-              "Company": { "type": "string" },
-              "Photo": { "type": "string" },
-              "Telegram": { "type": "number" }
-            },
-            "example": {
-              "Address": "",
-              "Company": "",
-              "Photo": "",
-              "Telegram": 0
-            },
-            "required": [ "Address", "Company", "Photo", "Telegram" ]
-          }
-        ]
+        "properties": {
+          "User": { "type": "string" },
+          "Name": { "type": "string" },
+          "Email": { "type": "string" },
+          "TimeZone": { "type": "string" },
+          "Address": { "type": "string" },
+          "Company": { "type": "string" },
+          "Photo": { "type": "string" },
+          "Telegram": { "type": "number" }
+        },
+        "example": {
+          "User": "admin",
+          "Name": "System administrator",
+          "Email": "example@example.com",
+          "TimeZone": "UTC",
+          "Address": "",
+          "Company": "",
+          "Photo": "",
+          "Telegram": 0
+        },
+        "required": [ "User", "Name", "Email", "TimeZone", "Address", "Company", "Photo", "Telegram" ]
       }
     }
   },

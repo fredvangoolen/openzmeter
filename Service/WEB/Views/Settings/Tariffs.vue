@@ -76,12 +76,13 @@
         this.ShowSpinner = true;
         this.Post('getTariffs', { }).then(
           (result) => {
+            var NameCol = result[0].indexOf("Name");
+            var UserCol = result[0].indexOf("User");
             this.Enabled = true;
-            this.Tariffs = result;
+            this.Tariffs = [];
             this.ShowSpinner = false;
-            for(var n in this.Tariffs) {
-              this.Tariffs[n].StartDate = moment.tz(this.Tariffs[n].StartDate, this.Tariffs[n].TimeZone).format('DD/MM/YYYY');
-              this.Tariffs[n].EndDate   = moment.tz(this.Tariffs[n].EndDate,   this.Tariffs[n].TimeZone).format('DD/MM/YYYY');
+            for(var n = 1; n < result.length; n++) {
+              this.Tariffs.push({ Name: result[n][NameCol], User: result[n][UserCol]})
             }
           },
           (fail) => { }

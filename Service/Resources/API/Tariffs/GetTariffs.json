@@ -4,16 +4,11 @@
       "TariffListTemplate": {
         "type": "array",
         "items": {
-          "type": "object",
-          "example": {
-            "Name": "ESP_2.0A",
-            "UserName": "admin"
-          },
-          "required": [ "Name", "User" ],
-          "properties": {
-            "Name": { "type": "string" },
-            "UserName": { "type": "string" }
-          }
+          "type": "array",
+          "example": [
+            [ "Name", "User" ],
+            [ "ESP_2.0A", "admin" ]
+          ]
         }
       }
     }

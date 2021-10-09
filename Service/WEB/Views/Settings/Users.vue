@@ -50,9 +50,16 @@
         this.ShowSpinner = true;
         this.Post('getUsers', { }).then(
           (result) => {
+            var NameCol = result[0].indexOf("Name");
+            var UserCol = result[0].indexOf("User");
+            var TimeZoneCol = result[0].indexOf("TimeZone");
+            var EmailCol = result[0].indexOf("Email");
             this.Enabled = true;
-            this.Users = result;
+            this.Users = [];
             this.ShowSpinner = false;
+            for(var n = 1; n < result.length; n++) {
+              this.Users.push({ Name: result[n][NameCol], User: result[n][UserCol], TimeZone: result[n][TimeZoneCol], Email: result[n][EmailCol]})
+            }
           },
           (fail) => { }
         );

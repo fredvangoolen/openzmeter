@@ -43,8 +43,10 @@ void UserManager::GetUsersCallback(HTTPRequest &req) {
   string UserName = req.UserName();
   if(UserName != "admin") return req.Error("", HTTP_FORBIDDEN);
   auto Func = [UserName](function<bool(const json &content)> Write) {
+    json Headers = {"User", "Name", "Email", "TimeZone"};
+    Write(Headers);
     Database DB;
-    DB.ExecSentenceAsyncResult("SELECT json_build_object('User', username, 'Name', name, 'Email', email, 'TimeZone', time_zone) FROM users ORDER BY username ASC");
+    DB.ExecSentenceAsyncResult("SELECT json_build_array(username, name, email, time_zone) FROM users ORDER BY username ASC");
     while(DB.FecthRow()) {
       if(Write(DB.ResultJSON(0)) == false) return;
     }
