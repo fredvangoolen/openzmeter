@@ -50,9 +50,17 @@
         this.ShowSpinner = true;
         this.Post('getDevices', {}).then(
           (result) => {
+            var DriverCol = result[0].indexOf("Driver");
+            var NameCol = result[0].indexOf("Name");
+            var SerialCol = result[0].indexOf("Serial");
+            var EnabledCol = result[0].indexOf("Enabled");
+            var AnalyzersCol = result[0].indexOf("Analyzers");
             this.Enabled = true;
-            this.Devices = result;
+            this.Devices = [];
             this.ShowSpinner = false;
+            for(var n = 1; n < result.length; n++) {
+              this.Tariffs.push({ Driver: result[n][DriverCol], Name: result[n][NameCol], Serial: result[n][SerialCol], Enabled: result[n][EnabledCol], Analyzers: result[n][AnalyzersCol] });
+            }
           },
           (fail) => {}
         );

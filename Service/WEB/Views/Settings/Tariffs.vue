@@ -82,7 +82,7 @@
             this.Tariffs = [];
             this.ShowSpinner = false;
             for(var n = 1; n < result.length; n++) {
-              this.Tariffs.push({ Name: result[n][NameCol], User: result[n][UserCol]})
+              this.Tariffs.push({ Name: result[n][NameCol], User: result[n][UserCol]});
             }
           },
           (fail) => { }

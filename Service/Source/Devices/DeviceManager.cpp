@@ -66,11 +66,16 @@ void DeviceManager::CallDeviceFunction(HTTPRequest &req, void (Device::*method)(
 }
 void DeviceManager::GetDevicesCallback(HTTPRequest &req) {
   if(req.UserName() != "admin") return req.Error("", HTTP_FORBIDDEN);
-  json Response = json::array();
-  if(pthread_rwlock_rdlock(&pDevicesLock) != 0) LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
-  for(auto &Device : pDevices) Response.push_back(Device.second->GetJSONDescriptor());
-  if(pthread_rwlock_unlock(&pDevicesLock) != 0) LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
-  req.Success(Response);
+  auto Func = [](function<bool(const json&)> Write) {
+    Write({ "Driver", "Name", "Serial", "Enabled", "Analyzers" });
+    if(pthread_rwlock_rdlock(&pDevicesLock) != 0) LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
+    for(auto &Tmp : pDevices) {
+      json Device = { Tmp.second->Driver(), Tmp.second->Name(), Tmp.second->Serial(), Tmp.second->Enabled(), Tmp.second->AnalyzersCount() };
+      if(Write(Device) == false) break;
+    }
+    if(pthread_rwlock_unlock(&pDevicesLock) != 0) LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
+  };
+  req.SuccessStreamArray(Func);
 }
 void DeviceManager::GetDeviceCallback(HTTPRequest &req) {
   CallDeviceFunction(req, &Device::GetDevice);
