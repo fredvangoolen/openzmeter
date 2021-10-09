@@ -1,5 +1,5 @@
 <template>
-  <div id="wrapper">
+  <q-page>
     <div class="row">
       <div class="col-lg-12">
         <div class="panel panel-other">
@@ -33,7 +33,7 @@
         <by-duration :data="TransferEvents.Data" :analyzer="analyzer"></by-duration>
       </div>
     </div>
-  </div>
+  </q-page>
 </template>
 
 <script>

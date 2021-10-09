@@ -1,22 +1,36 @@
 <template>
-  <dlg :loading="Loading">
-    <template v-slot:header>
-      <div class="pull-left"><h4 class="modal-title">Device &raquo; {{ Settings.Serial }}</h4></div>
-      <div class="pull-right btn-group">
-        <button type="button" class="btn btn-default btn-xs" @click="Save"><img :src="require('Imgs/diskette.png')"></button>
-        <button type="button" class="btn btn-default btn-xs" @click="$emit('close', false)"><img :src="require('Imgs/arrow_undo.png')"></button>
-      </div>
-    </template>
-    <div class="alert alert-danger text-center" style="margin-bottom: 5px; padding: 5px" v-if="Error!=null">{{Error }}</div>
+  <q-card>
+    <q-card-actions class="bg-grey-9 text-white">
+      <div class="text-h6">Device &raquo; {{ Settings.Serial }}</div>
+    </q-card-actions>
+    <q-item>
+      <q-item-section>
+        <q-item-label>Enabled</q-item-label>
+      </q-item-section>
+      <q-item-section avatar>
+        <q-toggle v-model="Settings.Enabled" />
+      </q-item-section>
+    </q-item>
+    <q-item>
+      <q-item-section>
+        <q-item-label>4KHz low pass filter</q-item-label>
+        <q-item-label caption>Reduce noise on all input channels, input bandwidth is also reduced</q-item-label>
+      </q-item-section>
+      <q-item-section avatar>
+        <q-toggle v-model="Settings.LowPass" />
+      </q-item-section>
+    </q-item>
+    <q-separator />
+    <div class="row q-px-sm q-col-gutter-x-sm">
+      <q-input type="number" v-model.number="Settings.VoltageGain" label="Voltage channel correction" :rules="[ val => (val >= -10.0) && (val <= 10.0) || 'Only numbers from -10.0 to 10.0' ]" class="col-6">
+        <template v-slot:append>%</template>
+      </q-input>
+    </div>
+
     <div class="row">
       <div class="col-xs-12">
-        <label class="control-label" style="line-height: 22px">Enabled</label>
-        <toggle class="float-right" onText="Yes" offText="No" v-model="Settings.Enabled"></toggle>
-        <hr style="margin: 5px 0px 5px 0px"/>
-        <label class="control-label" style="line-height: 22px">4KHz low pass filter</label>
-        <toggle class="float-right" onText="Yes" offText="No" v-model="Settings.LowPass"></toggle>
-        <hr style="margin: 5px 0px 5px 0px"/>
-        <div class="alert alert-info text-center" style="margin-bottom: 5px; padding: 5px">Device inputs can be calibrated to compensate components derating over time.</div>
+
+
       </div>
       <div class="col-xs-12 col-sm-6">
         <label class="control-label">Voltage channel correction</label>
@@ -48,27 +62,35 @@
         </div>
       </div>
     </div>
-  </dlg>
+    <q-separator />
+    <q-card-actions align="right" class="bg-grey-2">
+      <q-btn unelevated color="primary" @click="Save" label="Save" />
+      <q-btn unelevated color="primary" @click="$emit('close')" label="Cancel" />
+    </q-card-actions>
+    <q-inner-loading :showing="ShowSpinner"><q-spinner-dots size="50px" color="orange-10"></q-spinner-dots></q-inner-loading>
+  </q-card>
 </template>
 
 <script>
   export default {
     props: { settings: Object },
     data() {
-      return { Error: null, Loading: false, Settings: null };
+      return { Error: null, ShowSpinner: false, Settings: null };
     },
     created: function() {
       this.Settings = Object.assign({}, this.settings);
     },
     methods: {
       Save: function () {
-        this.Loading = true;
+        this.ShowSpinner = true;
         this.Post('setDevice', this.Settings).then(
-          (result) => { this.$emit('close', true); },
+          (result) => {
+            this.$emit('close', true);
+            this.$q.notify({ message: 'Device settings saved', timeout: 3000, color: 'green', position: 'bottom-right' });
+          },
           (fail) => {
-            this.Loading = false;
-            this.Error = 'Failed to save device settings!';
-            setTimeout(() => { this.Error = null; }, 1000);
+            this.ShowSpinner = false;
+            this.$q.notify({ message: 'Failed to save device settings!', timeout: 3000, color: 'red', position: 'bottom-right' });
           }
         );
       },

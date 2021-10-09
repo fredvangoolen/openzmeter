@@ -9,7 +9,7 @@
   import * as oZm from 'JS/openZmeter.js';
   import Vue from 'vue';
   import moment from 'moment';
-  const This = Vue.prototype;
+//  const This = Vue;
   var PatternImg = new Image();
   PatternImg.onload = () => {};
   PatternImg.src = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAQAAAAECAIAAAAmkwkpAAAAJElEQVQImT2JsQ0AMAyDyP832q+QIWqZEJDEx6gA0JZr9/mmLvBPKENuQmcdAAAAAElFTkSuQmCC";

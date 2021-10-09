@@ -1,84 +1,61 @@
 <template>
-  <div class="this" :class="{ expanded: expanded }">
-    <img class="icon" :src="require('Imgs/user32.png')">
-    <div class="btn-group">
-      <button type="button" class="btn btn-default btn-xs" title="User edit" @click="ShowDialog=true"><img :src="require('Imgs/user_edit.png')"></button>
+  <q-item class="q-pa-none expandable" dark :class="{ expanded: expanded }">
+    <q-item-section side class="q-pa-none">
+      <img class="icon" :src="require('Imgs/user32.png')">
+    </q-item-section>
+    <q-btn dense unelevated color="primary" stretch icon="toc" />
+    <q-item-section class="q-ml-xs">
+      <q-item-label class="ellipsis">{{ Users.User.User || '-' }}</q-item-label>
+      <q-item-label caption class="ellipsis">{{ Users.User.Name || '-' }}</q-item-label>
+    </q-item-section>
+    <!--div class="btn-group">
       <button type="button" class="btn btn-default btn-xs" title="User logout" @click="Logout"><img :src="require('Imgs/user_go.png')"></button>
     </div>
-    <div class="name">{{ (user==null) ? '-' : user.Name }}</div>
-    <user-edit v-if="ShowDialog" :user="user" @close="ShowDialog=false"></user-edit>
-  </div>
+    <user-edit v-if="ShowDialog" :user="user" @close="ShowDialog=false"></user-edit-->
+  </q-item>
 </template>
 
 <script>
   import UserEdit from './User/Dialog.vue';
   export default {
-    props: { user: null, expanded: Boolean },
+    props: { expanded: Boolean },
     data() {
       return { ShowDialog: false };
     },
-    methods: {
-      GetUser: function() {
-        this.ShowDialog = false;
-        this.Post('getUser', { User: localStorage.getItem("UserName") }).then(
-          (result) => this.$emit('update:user', result)
-        );
-      },
-      Logout: function() {
-        localStorage.setItem('UserName', undefined);
-        this.Post('logOut', {}).then(
-          () => { this.$emit('update:user', null); this.$router.replace('Login'); },
-          () => { this.$emit('update:user', null); this.$router.replace('Login'); }
-        );
-      }
-    },
+//    methods: {
+//      GetUser: function() {
+//        this.ShowDialog = false;
+//        this.Post('getUser', { User: localStorage.getItem("UserName") }).then(
+//          (result) => this.$emit('update:user', result)
+//        );
+//      },
+//      Logout: function() {
+//        localStorage.setItem('UserName', undefined);
+//        this.Post('logOut', {}).then(
+//          () => { this.$emit('update:user', null); this.$router.replace('Login'); },
+//          () => { this.$emit('update:user', null); this.$router.replace('Login'); }
+//        );
+//      }
+//    },
     components: { UserEdit }
   }
 </script>
 
 <style scoped>
-  .this {
-    background-color: #474544;
-    color: #FAFAFA;
-    width: 304px;
-    height: 32px;
-    display: flex;
+  .expandable {
     margin-left: 0;
-    transition: margin-left 0.2s ease-in-out;
-    border-bottom: 1px solid #333;
+    width: 300px;
+    transition: margin-left 0.1s ease-in-out;
+    justify-content: start !important;
   }
-  .this.expanded {
+  .expandable.expanded {
     margin-left: -48px;
-    transition: margin-left 0.2s ease-in-out;
+    width: 348px;
+    transition: margin-left 0.1s ease-in-out;
   }
   .icon {
     height: 24px;
     width: 24px;
-    margin: 4px 12px;
-  }
-  .name {
-    width: 192px;
-    padding-left: 2px;
-    line-height: 24px;
-    padding-top: 4px;
-    text-overflow: ellipsis;
-    overflow: hidden;
-    white-space: nowrap;
-  }
-  .btn-group {
-    margin-top: 4px;
-    margin-left: -1px;
-  }
-  .btn-group > .btn {
-    background: #444;
-    border-color: #333;
-    padding: 6px 6px 7px 6px;
-    margin-top: -5px;
-    border-radius: 0px;
-    margin-left: -1px;
-  }
-  .btn-group > .btn:hover {
-    background: #555;
-    border-color: #333;
+    margin: 14px 12px;
   }
 </style>

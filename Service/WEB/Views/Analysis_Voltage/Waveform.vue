@@ -1,5 +1,6 @@
 <template>
-  <div class="panel panel-other">
+  <q-card-section class="q-pa-none">
+    <q-toolbar class="bg-grey-2">
     <div class="panel-heading clearfix">
       <div class="header-text">{{ (data==null) ? 'Loading data...' : 'Last update at ' + analyzer.FormatTimeMS(data.Sampletime) }} {{ paused ? '(Paused)' : MouseOver ? '(Graph paused)' : '' }}</div>
       <div v-if="RmsCurrent<analyzer.MinCurrent" class="title-warning"><img :src="require('Imgs/exclamation.png')">No current or current too low</div>
@@ -14,6 +15,8 @@
         </div>
       </portal>
     </div>
+    </q-toolbar>
+    <q-separator />
     <portal to="fs-body" :disabled="!Expanded" class="panel-body">
       <spinner v-if="data==null"></spinner>
       <div @mouseenter="MouseOver=true" @mouseleave="MouseOver=false">
@@ -22,7 +25,7 @@
     </portal>
     <wave-stream v-if="ShowStream" :analyzer="analyzer" @close="ShowStream=false"></wave-stream>
     <dlg-fs v-if="Expanded" title="Waveform" :height.sync="DialogHeight"></dlg-fs>
-  </div>
+  </q-card-section>
 </template>
 
 <script>

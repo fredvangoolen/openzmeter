@@ -12,7 +12,8 @@
       <div class="row">
         <div class="col-xs-12">
           <label class="control-label" style="line-height: 22px">Events detection</label>
-          <toggle class="float-right" onText="Yes" offText="No" v-model="Analyzer.Events.Enabled"></toggle>
+          <q-toggle v-model="Analyzer.Events.Enabled" />
+
           <div class="help">Enable standar event detection according to IEC 61000-4-30</div>
         </div>
         <div class="col-xs-6">
@@ -38,7 +39,7 @@
         <div class="col-xs-12"><hr style="margin-top: 10px; margin-bottom: 5px;"/></div>
         <div class="col-xs-12">
           <label class="control-label" style="line-height: 22px">Alarms detection</label>
-          <toggle class="float-right" onText="Yes" offText="No" v-model="Analyzer.AlarmsEnabled"></toggle>
+          <q-toggle v-model="Analyzer.AlarmsEnabled" />
           <div class="help">Evaluate math expressions with analysis params and generate alarms</div>
         </div>
       </div>

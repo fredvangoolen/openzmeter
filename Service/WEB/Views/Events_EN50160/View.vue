@@ -1,5 +1,5 @@
 <template>
-  <div v-if="analyzer!=null">
+  <q-page>
     <div class="row">
       <div class="col-lg-12">
         <div class="panel panel-other">
@@ -31,12 +31,7 @@
         <unbalance :data="Weeks[Index]" :analyzer="analyzer" :ranges="Unbalances"></unbalance>
       </div>
     </div>
-  </div>
-  <div v-else-if="analyzer == null">
-    <div class="alert alert-danger text-center">
-      <p>No selected analyzer</p>
-    </div>
-  </div>
+  </q-page>
 </template>
 
 <script>

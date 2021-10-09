@@ -1,31 +1,34 @@
 import CBOR from 'cbor-js';
+import { Notify } from 'quasar';
+import { reactive, ref } from 'vue';
+import Axios from 'axios';
 const openZmeter = {
-  install: function(Vue, options) {
-    Vue.prototype.CBOR = CBOR;
-    Vue.prototype.PostToastError = null;
-    Vue.prototype.Post = (url, params) => {
-      const CommMode = 'application/cbor';
+  install: function(App) {
+    let This = App.config.globalProperties;
+
+    This.APIMode = 'application/cbor';
+    This.Post = (url, params) => {
       return new Promise(function(resolve, reject) {
-        Vue.http.post(url, (CommMode == 'application/cbor') ? CBOR.encode(params) : params, { responseType: (CommMode == 'application/cbor') ? 'arraybuffer' : 'json', headers: { 'Accept': CommMode, 'Content-Type': CommMode } }).then(
+        Axios.post(url, (This.APIMode == 'application/cbor') ? CBOR.encode(params) : params, { responseType: (This.APIMode == 'application/cbor') ? 'arraybuffer' : 'json', headers: { 'Accept': This.APIMode, 'Content-Type': This.APIMode } }).then(
           (result) => {
-            EventBus.$emit('NoNetwork', false);
-            resolve((CommMode == 'application/cbor') ? CBOR.decode(result.data) : result.body);
+//            EventBus.$emit('NoNetwork', false);
+            resolve((This.APIMode == 'application/cbor') ? CBOR.decode(result.data) : result.body);
           },
           (error) => {
             if(error.status == 0) {
-              EventBus.$emit('NoNetwork', true);
+//              EventBus.$emit('NoNetwork', true);
               reject(null);
             } else if(error.status == 403) {
-              EventBus.$emit('NoNetwork', false);
+//              EventBus.$emit('NoNetwork', false);
               if(Vue.PostToastError != null) Vue.PostToastError.dismiss();
               Vue.PostToastError = Vue.$toast.open({type:'error', message: 'User is not allowed to do requested action', duration: 3000});
               reject(null);
             } else if(error.status == 401) {
-              EventBus.$emit('NoNetwork', false);
-              EventBus.$emit('UserUnathorized');
+//              EventBus.$emit('NoNetwork', false);
+//              EventBus.$emit('UserUnathorized');
               reject(null);
             } else if(error.status == 500) {
-              EventBus.$emit('NoNetwork', false);
+//              EventBus.$emit('NoNetwork', false);
               if(Vue.PostToastError != null) Vue.PostToastError.dismiss();
               Vue.PostToastError = Vue.$toast.open({type:'error', message: 'An internal error happends while procesing your request', duration: 3000});
               reject(null);
@@ -35,22 +38,189 @@ const openZmeter = {
         );
       });
     };
-/*    Vue.prototype.createCaptionsForResponsiveTable = (tableVue) => {
-      if(tableVue === undefined) return;
-      var headertext = [],
-      headers = tableVue.$el.querySelectorAll("th"),
-      tablebody = tableVue.$el.querySelector("tbody");
-      for(var i = 0; i < headers.length; i++) {
-        var current = headers[i];
-        headertext.push(current.textContent.replace(/\r?\n|\r/,""));
-      }
-      for (var i = 0, row; row = tablebody.rows[i]; i++) {
-        for (var j = 0, col; col = row.cells[j]; j++) {
-          col.setAttribute("data-th", headertext[j] + ':');
+
+    This.Users = reactive({
+      User: null,
+      Timer: null,
+      Listeners: 0,
+      Headers: [],
+      Items: [],
+      Objects: [],
+      Loading: false,
+      RegisterListener: () => {
+        This.Users.Listeners++;
+        if(This.Users.Listeners == 1) {
+          This.Users.Loading = true;
+          This.Users.Refresh();
         }
+      },
+      UnregisterListener: () => {
+        This.Users.Listeners--;
+        if(This.Users.Listeners == 0) {
+          This.Users.Items.splice(0);
+          This.Users.Objects.splice(0);
+          if(This.Users.Timer != null) {
+            clearTimeout(This.Users.Timer);
+            This.Users.Timer = null;
+          }
+        }
+      },
+      Refresh: () => {
+        if(This.Users.Timer != null) {
+          clearTimeout(This.Users.Timer);
+          This.Users.Timer = null;
+        }
+        This.Users.getUsers().then(
+          (result) => {
+//            This.Users.Headers = result[0];
+//            This.Users.Items.splice(0);
+            This.Users.Objects.splice(0);
+            This.Users.Loading = false;
+            for(var i = 0; i < result.length; i++) {
+//              This.Users.Items.push(result[i]);
+//              let Item = {};
+//              for(var n = 0; n < result[0].length; n++) Item[result[0][n]] = result[i][n];
+//              This.Users.Objects.push(Item);
+This.Users.Objects.push(result[i]);
+            }
+            This.Users.Timer = setTimeout(This.Users.Refresh, 5000);
+          },
+          () => { This.Users.Timer = setTimeout(This.Users.Refresh, 5000); }
+        );
+      },
+      getUsers: () => {
+        return This.Post('getUsers', {});
+      },
+      logOut: () => {
+        This.Post('logOut', {}).then(
+          () => {
+            localStorage.removeItem("UserName");
+            This.Users.User = null;
+            resolve();
+          },
+          () => reject()
+        );
+      },
+      logIn: (user, password) => {
+        return new Promise(function(resolve, reject) {
+          This.Post('logIn', { User: user, Password: password, UpdateLastLogin: true }).then(
+            (result) => {
+              localStorage.setItem('LastLogin', result.LastLogin);
+              localStorage.setItem('UserName', user);
+              resolve();
+            },
+            () => reject()
+          );
+        });
+      },
+      getCurrentUser: () => {
+        return new Promise(function(resolve, reject) {
+          let UserName = localStorage.getItem("UserName");
+          if(UserName == null) {
+            reject();
+          } else if(This.Users.User != null) {
+            resolve();
+          } else {
+            This.Users.getUser(UserName).then(
+              (result) => {
+                This.Users.User = result;
+                Notify.create({ message: 'Logged in', timeout: 3000, color: 'green', position: 'bottom-right' });
+                resolve(result)
+              },
+              (result) => {
+                if(result != null) Notify.create({ message: 'Failed to login', caption: result.message, timeout: 3000, color: 'red', position: 'bottom-right' });
+                reject(result)
+              }
+            );
+          }
+        });
+      },
+      getUser: (userName) => {
+        return new Promise(function(resolve, reject) {
+          This.Post('getUser', { User: userName }).then(
+            (result) => resolve(result),
+            (result) => reject(result)
+          );
+        });
       }
-    };*/
-    Vue.prototype.PriceTransfer = (series) => {
+    });
+
+    This.Analyzers = reactive({
+      Timer: null,
+      Listeners: 0,
+      Headers: [],
+      Items: [],
+      Objects: [],
+      Loading: false,
+      RegisterListener: () => {
+        This.Analyzers.Listeners++;
+        if(This.Analyzers.Listeners == 1) {
+          This.Analyzers.Loading = true;
+          This.Analyzers.Refresh();
+        }
+      },
+      UnregisterListener: () => {
+        This.Analyzers.Listeners--;
+        if(This.Analyzers.Listeners == 0) {
+          This.Analyzers.Items.splice(0);
+          This.Analyzers.Objects.splice(0);
+          if(This.Analyzers.Timer != null) {
+            clearTimeout(This.Analyzers.Timer);
+            This.Analyzers.Timer = null;
+          }
+        }
+      },
+      Refresh: () => {
+        if(This.Analyzers.Timer != null) {
+          clearTimeout(This.Analyzers.Timer);
+          This.Analyzers.Timer = null;
+        }
+        This.Analyzers.getAnalyzers().then(
+          (result) => {
+            console.log(result);
+            This.Analyzers.Headers = result[0];
+            This.Analyzers.Items.splice(0);
+            This.Analyzers.Objects.splice(0);
+            This.Analyzers.Loading = false;
+            for(var i = 1; i < result.length; i++) {
+              This.Analyzers.Items.push(result[i]);
+              let Item = {};
+              for(var n = 0; n < result[0].length; n++) Item[result[0][n]] = result[i][n];
+              This.Analyzers.Objects.push(Item);
+            }
+            This.Analyzers.Timer = setTimeout(This.Analyzers.Refresh, 5000);
+          },
+          () => { This.Analyzers.Timer = setTimeout(This.Analyzers.Refresh, 5000); }
+        );
+      },
+      getAnalyzers: () => {
+        return This.Post('getAnalyzers', {});
+      }
+    });
+
+
+
+
+    This.Analyzer = reactive({ Loaded: false });
+
+
+    This.CBOR = CBOR;
+    This.PostToastError = null;
+
+
+
+
+
+
+    This.GetConfig = (key, def, options) => {
+      //Leo key, si no existe guardo def y devuelvo dev
+      //Si existe y options == undefined devuelvo value
+      //Si options == [] busco que la opcion esta en el array
+    };
+    This.SetConfig = (key, value) => {
+
+    };
+    This.PriceTransfer = (series) => {
       var Transfer = { Timer: null, CancelFunc: null, Data: null, Series: series, Analyzer: null, Aggreg: null, Range: null };
       Transfer.Destroy = () => {
         if(Transfer.Timer != null) { clearTimeout(Transfer.Timer); Transfer.Timer = null; }
@@ -121,7 +291,7 @@ const openZmeter = {
         Transfer.Aggreg    = aggreg;
         Transfer.Range     = range;
         Transfer.CancelFunc = () => { Cancelled = true; };
-        Vue.prototype.Post('getCosts', { Analyzer: analyzer.Analyzer, Aggreg: aggreg, From: ReqRange[0], To: ReqRange[1], Series: series, Group: 0 }).then(
+        Vue.Post('getCosts', { Analyzer: analyzer.Analyzer, Aggreg: aggreg, From: ReqRange[0], To: ReqRange[1], Series: series, Group: 0 }).then(
           (result) => {
             if(Cancelled == true) return;
             Transfer.SetData(ReqRange, aggreg, result);
@@ -135,7 +305,7 @@ const openZmeter = {
       };
       return Transfer;
     };
-    Vue.prototype.StatusTransfer = (series) => {
+    This.StatusTransfer = (series) => {
       var Transfer = { Timer: null, CancelFunc: null, Data: null, Series: series, Analyzer: null };
       Transfer.Destroy = () => {
         if(Transfer.Timer != null) { clearTimeout(Transfer.Timer); Transfer.Timer = null; }
@@ -152,7 +322,7 @@ const openZmeter = {
         if((Transfer.Analyzer == null) || (Transfer.Analyzer.Analyzer != analyzer.Analyzer)) Transfer.Data = null;
         Transfer.Analyzer  = analyzer;
         Transfer.CancelFunc = () => { Cancelled = true; };
-        Vue.prototype.Post('getStatus', { Analyzer: analyzer.Analyzer, Series: series }).then(
+        Vue.Post('getStatus', { Analyzer: analyzer.Analyzer, Series: series }).then(
           (result) => {
             if(Cancelled == true) return;
             Transfer.Data = Object.seal(result);
@@ -166,7 +336,7 @@ const openZmeter = {
       };
       return Transfer;
     };
-    Vue.prototype.NowTransfer = (series) => {
+    This.NowTransfer = (series) => {
       var Transfer = { Timer: null, CancelFunc: null, Data: null, Series: series, Analyzer: null };
       Transfer.Destroy = () => {
         if(Transfer.Timer != null) { clearTimeout(Transfer.Timer); Transfer.Timer = null; }
@@ -183,7 +353,7 @@ const openZmeter = {
         if((Transfer.Analyzer != null) && (Transfer.Analyzer.Analyzer != analyzer.Analyzer)) Transfer.Data = null;
         Transfer.Analyzer  = analyzer;
         Transfer.CancelFunc = () => { Cancelled = true; };
-        Vue.prototype.Post('getSeriesNow', { Analyzer: analyzer.Analyzer, Series: series }).then(
+        Vue.Post('getSeriesNow', { Analyzer: analyzer.Analyzer, Series: series }).then(
           (result) => {
             if(Cancelled == true) return;
             Transfer.Data = Object.seal(result);
@@ -198,7 +368,7 @@ const openZmeter = {
       };
       return Transfer;
     };
-    Vue.prototype.SeriesTransfer = (series) => {
+    This.SeriesTransfer = (series) => {
       var Transfer = { Timer: null, CancelFunc: null, Data: null, LastData: null, Series: series, Analyzer: null, Aggreg: null, Range: null };
       Transfer.Destroy = () => {
         if(Transfer.Timer != null) { clearTimeout(Transfer.Timer); Transfer.Timer = null; }
@@ -238,10 +408,10 @@ const openZmeter = {
         Transfer.Aggreg   = aggreg;
         Transfer.Range    = range;
         if((Transfer.Data == null) || (Transfer.Data.Rows.length == 0)) {
-          Promises.push(Vue.prototype.Post('getSeries', { Analyzer: analyzer.Analyzer, Aggreg: aggreg, From: ReqRange[0], To: ReqRange[1], Series: series }));
+          Promises.push(Vue.Post('getSeries', { Analyzer: analyzer.Analyzer, Aggreg: aggreg, From: ReqRange[0], To: ReqRange[1], Series: series }));
         } else {
-          Promises.push(Vue.prototype.Post('getSeries', { Analyzer: analyzer.Analyzer, Aggreg: aggreg, From: ReqRange[0], To: Transfer.Data.Rows[0][0] - 1, Series: series }));
-          Promises.push(Vue.prototype.Post('getSeries', { Analyzer: analyzer.Analyzer, Aggreg: aggreg, From: Transfer.Data.Rows.slice(-1)[0][0] + 1, To: ReqRange[1], Series: series }));
+          Promises.push(Vue.Post('getSeries', { Analyzer: analyzer.Analyzer, Aggreg: aggreg, From: ReqRange[0], To: Transfer.Data.Rows[0][0] - 1, Series: series }));
+          Promises.push(Vue.Post('getSeries', { Analyzer: analyzer.Analyzer, Aggreg: aggreg, From: Transfer.Data.Rows.slice(-1)[0][0] + 1, To: ReqRange[1], Series: series }));
         }
         Transfer.CancelFunc = () => { Cancelled = true; };
         Promise.all(Promises).then(
@@ -261,7 +431,7 @@ const openZmeter = {
       };
       return Transfer;
     },
-    Vue.prototype.AlarmsTransfer = () => {
+    This.AlarmsTransfer = () => {
       var Transfer = { Timer: null, CancelFunc: null, Data: null, UpdateUnread: false, Analyzer: null, Range: null, ChangeTime: 0 };
       Transfer.Destroy = () => {
         if(Transfer.Timer != null) { clearTimeout(Transfer.Timer); Transfer.Timer = null; }
@@ -327,7 +497,7 @@ const openZmeter = {
       };
       return Transfer;
     },
-    Vue.prototype.EventsTransfer = () => {
+    This.EventsTransfer = () => {
       var Transfer = { Timer: null, CancelFunc: null, Data: null, UpdateUnread: false, Analyzer: null, Range: null, ChangeTime: 0 };
       Transfer.Destroy = () => {
         if(Transfer.Timer != null) { clearTimeout(Transfer.Timer); Transfer.Timer = null; }
@@ -392,7 +562,7 @@ const openZmeter = {
       };
       return Transfer;
     },
-    Vue.prototype.MatrixColsRange = (values, cols, options) => {
+    This.MatrixColsRange = (values, cols, options) => {
       var UpperRange = -Infinity;
       var LowerRange = +Infinity;
       for(var i in values) {
@@ -448,13 +618,13 @@ const openZmeter = {
       }
       return [LowerRange, UpperRange];
     },
-    Vue.prototype.BestUnits = (val) => {
+    This.BestUnits = (val) => {
       return (Math.abs(val) > 1000000) ? 'M' : (Math.abs(val) > 1000) ? 'k' : '';
     },
-    Vue.prototype.ScaleUnits = (val, units) => {
+    This.ScaleUnits = (val, units) => {
       return (units == 'M') ? val / 1000000 : (units == 'k') ? val / 1000 : val;
     },
-    Vue.prototype.Round = (val, decimals, html) => {
+    This.Round = (val, decimals, html) => {
       if((val == null) || (isFinite(val) == false)) return '~';
       if(decimals == null) decimals = 2;
       if(html == null) html = false;
@@ -466,7 +636,7 @@ const openZmeter = {
       while(Fraction.length < decimals) Fraction = '0' + Fraction;
       return (((Integer == 0) && (val < 0.0)) ? '-' : '') + Integer.toString() + (html ? "<span style='font-size:80%'>." + Fraction + '</span>' : '.' + Fraction);
     },
-    Vue.prototype.BestUnitsBin = (val, dec, html) => {
+    This.BestUnitsBin = (val, dec, html) => {
       if(val > 1024 * 1024 * 1024) {
         return Vue.prototype.Round(val / (1024 * 1024 * 1024), dec, html) + ' GB';
       } else if(val > 1024 * 1024) {
@@ -477,22 +647,23 @@ const openZmeter = {
         return val + ' B';
       }
     },
-    Vue.prototype.ArrayAbsMax = (array) => {
+    This.ArrayAbsMax = (array) => {
       var Max = 0;
       for(var i in array) Max = Math.max(Max, Array.isArray(array[i]) ? ArrayMax(array[i]) : Math.abs(array[i]));
       return Max;
     },
-    Vue.prototype.BinPower = (complex) => {
+    This.BinPower = (complex) => {
       return Math.sqrt(Math.pow(complex[0], 2.0) + Math.pow(complex[1], 2.0));
     }
   }
 };
 export default openZmeter;
 
-import chroma from 'chroma-js';
-import Dygraph from 'JS/dygraph.js';
-import moment from 'moment';
-import Vue from 'vue';
+//import chroma from 'chroma-js';
+//import Dygraph from 'JS/dygraph.js';
+//import moment from 'moment';
+//import Vue from 'vue';
+//import VueResource from 'vue-resource';
 
 
 

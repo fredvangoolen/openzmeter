@@ -7,8 +7,8 @@
 
 <script>
   import moment from 'moment';
-  import datetimepicker from 'eonasdan-bootstrap-datetimepicker';
-  import 'eonasdan-bootstrap-datetimepicker/build/css/bootstrap-datetimepicker.css'
+//  import datetimepicker from 'eonasdan-bootstrap-datetimepicker';
+//  import 'eonasdan-bootstrap-datetimepicker/build/css/bootstrap-datetimepicker.css'
   export default {
     props: { options: Object, disabled: Boolean, value: Number },
     data() {

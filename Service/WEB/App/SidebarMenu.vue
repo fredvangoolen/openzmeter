@@ -1,55 +1,71 @@
 <template>
-  <div>
-    <router-link to="/Dashboard" class="item" v-if="analyzer!=null">
-      <img class="icon" :src="require('Imgs/dashboard.png')">
-      <div class="name">Dashboard</div>
-    </router-link>
-    <div class="item" @click="Submenu = (Submenu == 'Analysis') ? null : 'Analysis'" v-if="analyzer!=null">
-      <img class="icon" :src="require('Imgs/draw_wave.png')">
-      <div class="name">Analysis</div>
-      <span class="dropdown-icon" :class="{ show: (Submenu != 'Analysis') }"><img :src="require('Imgs/bullet_arrow_down.png')"></span>
-      <span class="dropdown-icon" :class="{ show: (Submenu == 'Analysis') }"><img :src="require('Imgs/bullet_arrow_up.png')"></span>
-    </div>
-    <div class="submenu" :class="{ show: (Submenu == 'Analysis') }" v-if="analyzer!=null">
-      <router-link to="/Analysis/Voltage">Voltage</router-link>
-      <router-link to="/Analysis/Current">Current</router-link>
-      <router-link to="/Analysis/Power">Power</router-link>
-      <router-link to="/Analysis/Energy">Energy</router-link>
-      <router-link to="/Analysis/Frequency" v-if="analyzer.NominalFrequency!=0">Frequency</router-link>
-      <router-link to="/Analysis/200MS" v-if="analyzer.Save200MS==true">200 MS</router-link>
-    </div>
-    <div class="item" @click="Submenu = (Submenu == 'Events') ? null : 'Events'" v-if="analyzer!=null">
+  <div class="text-subtitle1">
+    <q-item dense clickable class="q-pa-none" to="/Dashboard" active-class="text-white" v-if="Analyzer.Loaded == true">
+      <q-item-section side class="q-pa-none"><img class="icon" :src="require('Imgs/dashboard.png')" /></q-item-section>
+      <q-item-section>Dashboard</q-item-section>
+    </q-item>
+    <q-expansion-item dense header-class="q-pa-none q-pr-xs expandable" group="menu" v-model="Expanded[0]" v-if="Analyzer.Loaded == true">
+      <template v-slot:header>
+        <q-item-section side class="q-pa-none"><img class="icon" :src="require('Imgs/draw_wave.png')" /></q-item-section>
+        <q-item-section>Analysis</q-item-section>
+      </template>
+      <q-card class="bg-grey-8">
+        <q-list>
+          <q-item clickable class="q-pl-lg" to="/Analysis/Voltage"><q-item-section>Voltage</q-item-section></q-item>
+          <q-item clickable class="q-pl-lg" to="/Analysis/Current"><q-item-section>Current</q-item-section></q-item>
+          <q-item clickable class="q-pl-lg" to="/Analysis/Power"><q-item-section>Power</q-item-section></q-item>
+          <q-item clickable class="q-pl-lg" to="/Analysis/Energy"><q-item-section>Energy</q-item-section></q-item>
+          <q-item clickable class="q-pl-lg" to="/Analysis/Frequency" v-if="Analyzer.NominalFrequency != 0"><q-item-section>Frequency</q-item-section></q-item>
+          <q-item clickable class="q-pl-lg" to="/Analysis/200MS" v-if="Analyzer.Save200MS == true"><q-item-section>200 MS</q-item-section></q-item>
+        </q-list>
+      </q-card>
+    </q-expansion-item>
+    <q-expansion-item dense header-class="q-pa-none q-pr-xs expandable" group="menu" v-model="Expanded[1]" v-if="Analyzer.Loaded == true">
+      <template v-slot:header>
+        <q-item-section side class="q-pa-none"><img class="icon" :src="require('Imgs/warning.png')" /></q-item-section>
+        <q-item-section>Events</q-item-section>
+      </template>
+      <q-card class="bg-grey-8">
+        <q-list>
+          <q-item clickable class="q-pl-lg" to="/Events/ITIC" v-if="Analyzer.NominalFrequency != 0"><q-item-section>ITIC</q-item-section></q-item>
+          <q-item clickable class="q-pl-lg" :to="{ path: '/Events/Disturbances', query: (this.UnreadEvents != 0) ? { From: this.status.Events.LastRead, To: this.status.Time } : null }" v-if="Analyzer.NominalFrequency != 0"><q-item-section>Disturbances</q-item-section></q-item>
+          <q-item clickable class="q-pl-lg" to="/Events/EN50160" v-if="Analyzer.NominalFrequency != 0"><q-item-section>EN50160</q-item-section></q-item>
+          <q-item clickable class="q-pl-lg" :to="{ path: '/Events/Alarms', query: (this.UnreadAlarms != 0) ? { From: this.status.Alarms.LastRead, To: this.status.Time } : null }"><q-item-section>Alarms</q-item-section></q-item>
+        </q-list>
+      </q-card>
+    </q-expansion-item>
+
+    <!--div class="item" @click="Submenu = (Submenu == 'Events') ? null : 'Events'" v-if="analyzer!=null">
       <img class="icon" :src="require('Imgs/warning.png')">
       <span class="badge badge-menu" v-if="(UnreadEvents+UnreadAlarms)>0">{{ UnreadEvents+UnreadAlarms }}</span>
       <div class="name">Events</div>
-      <span class="dropdown-icon" :class="{ show: (Submenu != 'Events') }"><img :src="require('Imgs/bullet_arrow_down.png')"></span>
-      <span class="dropdown-icon" :class="{ show: (Submenu == 'Events') }"><img :src="require('Imgs/bullet_arrow_up.png')"></span>
     </div>
     <div class="submenu" :class="{ show: (Submenu == 'Events') }" v-if="analyzer!=null">
-      <router-link to="/Events/ITIC" v-if="analyzer.NominalFrequency!=0">ITIC</router-link>
-      <router-link :to="{ path: '/Events/Disturbances', query: (this.UnreadEvents != 0) ? { From: this.status.Events.LastRead, To: this.status.Time } : null }" v-if="analyzer.NominalFrequency!=0">Disturbances<span class="badge badge-submenu" v-if="UnreadEvents>0">{{ UnreadEvents }}</span></router-link>
       <router-link to="/Events/EN50160" v-if="analyzer.NominalFrequency!=0">EN50160</router-link>
       <router-link :to="{ path: '/Events/Alarms', query: (this.UnreadAlarms != 0) ? { From: this.status.Alarms.LastRead, To: this.status.Time } : null }">Alarms<span class="badge badge-submenu" v-if="UnreadAlarms>0">{{ UnreadAlarms }}</span></router-link>
-    </div>
-    <div class="item" @click="Submenu = (Submenu == 'Costs') ? null : 'Costs'" v-if="analyzer!=null">
-      <img class="icon" :src="require('Imgs/table_money.png')">
-      <div class="name">Energy Stats</div>
-      <span class="dropdown-icon" :class="{ show: (Submenu != 'Costs') }"><img :src="require('Imgs/bullet_arrow_down.png')"></span>
-      <span class="dropdown-icon" :class="{ show: (Submenu == 'Costs') }"><img :src="require('Imgs/bullet_arrow_up.png')"></span>
-    </div>
-    <div class="submenu" :class="{ show: (Submenu == 'Costs') }" v-if="analyzer!=null">
-      <router-link class="link" to="/Stats/Costs">Costs</router-link>
-      <router-link class="link" to="/Stats/Heatmap">Heatmap</router-link>
-      <router-link class="link" to="/Stats/Distribution">Distribution</router-link>
-    </div>
-    <router-link to="/Settings" class="item">
-      <img class="icon" :src="require('Imgs/cog.png')">
-      <div class="name">Settings</div>
-    </router-link>
-    <router-link to="/About" class="item">
-      <img class="icon" :src="require('Imgs/help.png')">
-      <div class="name">About</div>
-    </router-link>
+    </div-->
+    <q-expansion-item dense header-class="q-pa-none q-pr-xs expandable" group="menu" v-model="Expanded[2]" v-if="Analyzer.Loaded == true">
+      <template v-slot:header>
+        <q-item-section side class="q-pa-none"><img class="icon" :src="require('Imgs/table_money.png')" /></q-item-section>
+        <q-item-section>Costs</q-item-section>
+      </template>
+      <q-card class="bg-grey-8">
+        <q-list>
+          <q-item clickable class="q-pl-lg" to="/Stats/Costs"><q-item-section>Costs</q-item-section></q-item>
+          <q-item clickable class="q-pl-lg" to="/Stats/Heatmap"><q-item-section>Heatmap</q-item-section></q-item>
+          <q-item clickable class="q-pl-lg" to="/Stats/Distribution"><q-item-section>Distribution</q-item-section></q-item>
+        </q-list>
+      </q-card>
+    </q-expansion-item>
+    <q-item dense clickable class="q-pa-none" to="/Settings" active-class="text-white">
+      <q-item-section side class="q-pa-none"><img class="icon" :src="require('Imgs/cog.png')"></q-item-section>
+      <q-item-section>Settings</q-item-section>
+    </q-item>
+    <q-item dense clickable class="q-pa-none" to="/About" active-class="text-white">
+      <q-item-section side class="q-pa-none"><img class="icon" :src="require('Imgs/help.png')"></q-item-section>
+      <q-item-section>About</q-item-section>
+    </q-item>
+    <q-resize-observer @resize="onResize" />
   </div>
 </template>
 
@@ -57,27 +73,25 @@
   export default {
     props: { analyzer: Object, expanded: Boolean, status: Object },
     data() {
-      return { Submenu: null, AnalyzerSelected: false, TitleFrame: 0 }
+      return { Expanded: [ false ], AnalyzerSelected: false, TitleFrame: 0 }
     },
     created: function() {
-      setInterval(() => { this.SetTitle(); }, 2000)
+//      setInterval(() => { this.SetTitle(); }, 2000)
     },
     computed: {
       UnreadEvents: function() {
-        if(this.status == null) return 0;
-        return this.status.Events.Count;
+//        if(this.status == null) return 0;
+//        return this.status.Events.Count;
       },
       UnreadAlarms: function() {
-        if(this.status == null) return 0;
-        return this.status.Alarms.Count;
-      }
-    },
-    watch: {
-      expanded: function(val) {
-        if(val == false) this.Submenu = null;
+//        if(this.status == null) return 0;
+//        return this.status.Alarms.Count;
       }
     },
     methods: {
+      onResize: function(val) {
+        if(val.width == 48) this.Expanded.fill(false);
+      },
       SetTitle: function() {
         if((this.TitleFrame == 0) || (this.analyzer == null)) {
           document.title = "openZmeter";
@@ -95,88 +109,18 @@
           this.TitleFrame = 0;
         }
       }
-    },
-    mounted: function() {
-      $('.sidenav-menu').on('click', '[data-sidenav-dropdown-toggle]', function (e) {
-        $(this).parent().parent().find("[data-sidenav-dropdown]:visible").not($(this).next('[data-sidenav-dropdown]')).slideUp("fast");
-        $(this).next('[data-sidenav-dropdown]').slideToggle('fast');
-        $(this).find('[data-sidenav-dropdown-icon]').toggleClass('show');
-        e.preventDefault();
-      });
     }
   }
 </script>
 
 <style scoped>
-  .item {
-    background-color: #474544;
-    color: #FAFAFA;
-    width: 304px;
-    height: 44px;
-    display: flex;
-    margin-left: 0;
-    transition: margin-left 0.2s;
-    text-decoration: none;
-    position: relative;
-    cursor: pointer;
+  ::v-deep(.expandable) {
+    justify-content: start !important;
+    width: 300px;
   }
   .icon {
     height: 24px;
     width: 24px;
-    margin: 10px 12px;
-  }
-  .dropdown-icon {
-    height: 16px;
-    width: 16px;
-    margin-top: 10px;
-    display: none;
-  }
-  .dropdown-icon.show {
-    display: inherit;
-  }
-  .name {
-    width: 180px;
-    padding-left: 5px;
-    line-height: 24px;
-    padding-top: 10px;
-  }
-  .item:hover, .submenu a:hover, .submenu a.active {
-    background: #616161;
-    color: #BDBDBD
-  }
-  .submenu {
-    display: block;
-    padding: 0px;
-    overflow: hidden;
-    max-height: 0px;
-    transition: max-height 0.2s ease-in-out;
-  }
-  .submenu.show {
-    max-height: 200px;
-    transition: max-height 0.2s ease-in-out;
-  }
-  .submenu a {
-    background: #191919;
-    display: block;
-    color: #BDBDBD;
-    padding: 6px 42px;
-    text-decoration: none;
-    position: relative;
-  }
-  .badge-menu {
-    position: absolute;
-    top: 24px;
-    right: 260px;
-    font-size: 9px;
-    padding: 1px 2px;
-    background: #c9302c;
-    border-radius: 3px;
-  }
-  .badge-submenu {
-    position: absolute;
-    top: 8px;
-    right: 10px;
-    border-radius: 3px;
-    background: #c9302c;
+    margin: 14px 12px;
   }
 </style>

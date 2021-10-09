@@ -1,6 +1,6 @@
 <template>
-  <div v-if="analyzer != null">
-    <div class="row">
+  <q-page>
+    <!--div class="row">
       <div class="col-lg-12">
         <div class="panel panel-active-energy">
           <div class="panel-heading">
@@ -47,13 +47,8 @@
       <div class="col-lg-12">
         <variables :analyzer="analyzer" :data="Transfer1M.Data" :dataNow="TransferNow.Data"></variables>
       </div>
-    </div>
-  </div>
-  <div v-else-if="analyzer == null">
-    <div class="alert alert-danger text-center">
-      <p>No selected analyzer</p>
-    </div>
-  </div>
+    </div-->
+  </q-page>
 </template>
 
 <script>

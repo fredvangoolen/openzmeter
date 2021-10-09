@@ -1,5 +1,5 @@
 <template>
-  <div class="row" v-if="analyzer!=null">
+  <q-page>
     <div class="col-lg-12">
       <div class="panel panel-other">
         <div class="panel-heading">
@@ -17,12 +17,7 @@
     <div class="col-lg-12">
       <events-table :analyzer="analyzer" :events="TransferEvents.Data" @eventschanged="UpdateEvents" :pagesize="50"></events-table>
     </div>
-  </div>
-  <div v-else-if="analyzer==null">
-    <div class="alert alert-danger text-center">
-      <p>No selected analyzer</p>
-    </div>
-  </div>
+  </q-page>
 </template>
 
 <script>

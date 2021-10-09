@@ -1,10 +1,14 @@
 <template>
-  <div v-if="analyzer != null">
-    <div class="row">
+  <q-page>
+    <q-card>
+      <q-toolbar class="bg-blue-9 text-white q-pr-none">
+        <q-toolbar-title>Current</q-toolbar-title>
+      </q-toolbar>
+
       <div class="col-lg-12">
         <div class="panel panel-current">
           <div class="panel-heading">
-            <div class="header-text">Current</div>
+            <div class="header-text"></div>
             <portal to="fs-toolbar" :disabled="!Expanded" class="header-buttons">
               <toolbar-aggregation storage="Aggregation" :options="['3S', '1M', '10M', '1H']" v-model="Aggreg"></toolbar-aggregation>
               <toolbar-period storage="Period" v-model="Range" :analyzer="analyzer"></toolbar-period>
@@ -37,14 +41,9 @@
         <advanced v-if="ActiveTab=='Advanced'" :data="TransferNow.Data" :analyzer="analyzer" :paused.sync="Paused"></advanced>
         <parameters v-if="ActiveTab=='Parameters'" :data="TransferCubism.Data" :dataNow="TransferNow.Data" :analyzer="analyzer" :paused.sync="Paused"></parameters>
       </div>
-    </div>
+    </q-card>
     <dlg-fs v-if="Expanded" title="Voltage" :height.sync="DialogHeight"></dlg-fs>
-  </div>
-  <div v-else-if="analyzer == null">
-    <div class="alert alert-danger text-center">
-      <p>No selected analyzer</p>
-    </div>
-  </div>
+  </q-page>
 </template>
 
 <script>

@@ -1,65 +1,70 @@
 <template>
   <q-card v-show="Enabled">
     <q-toolbar class="bg-grey-9 text-white">
-      <q-toolbar-title >Device manager</q-toolbar-title>
+      <q-toolbar-title>Device manager</q-toolbar-title>
     </q-toolbar>
-    <q-table :loading="ShowSpinner" :hide-bottom="true" dense :columns="Columns" row-key="name" :data="Devices" class="q-ma-xs">
+    <q-table :hide-bottom="true" dense :columns="Columns" row-key="name" :rows="Devices" class="q-ma-xs">
       <template v-slot:body-cell-enabled="props">
         <q-td :props="props">
-          <q-checkbox size="sm" disable v-model="props.row.Enabled"></q-checkbox>
+          <q-checkbox size="sm" disable v-model="props.row.Enabled" />
         </q-td>
       </template>
       <template v-slot:body-cell-actions="props">
         <q-td :props="props">
-          <q-btn size="sm" dense icon="settings" @click="Configure(props.row)"><q-tooltip>Configure device</q-tooltip></q-btn>
+          <q-btn size="sm" @click="Configure(props.row)" unelevated color="primary" label="Configure" />
         </q-td>
       </template>
     </q-table>
-    <device-virtual v-if="Driver=='DeviceVirtual'" :settings="Settings" @close="LoadTable"></device-virtual>
-    <device-v1 v-if="Driver=='DeviceV1'" :settings="Settings" @close="LoadTable"></device-v1>
-    <device-v2 v-if="Driver=='DeviceV2'" :settings="Settings" @close="LoadTable"></device-v2>
-    <device-v3 v-if="Driver=='DeviceV3'" :settings="Settings" @close="LoadTable"></device-v3>
-    <device-v4 v-if="Driver=='DeviceV4'" ></device-v4>
-    <device-remote v-if="Driver=='DeviceRemote'" :settings="Settings" @close="LoadTable"></device-remote>
-    <q-inner-loading :showing="ShowSpinner"><q-spinner-dots size="50px" color="orange-10"></q-spinner-dots></q-inner-loading>
+    <q-dialog :modelValue="Driver!=null" no-backdrop-dismiss @escape-key="LoadTable(false)">
+      <component :is="Driver" :settings="Settings" @close="LoadTable" />
+    </q-dialog>
+    <q-inner-loading :showing="ShowSpinner"><q-spinner-dots size="50px" color="orange-10" /></q-inner-loading>
   </q-card>
 </template>
 
 <script>
-  import DeviceVirtual from './Devices/Virtual.vue';
-  import DeviceV1 from './Devices/V1.vue';
-  import DeviceV2 from './Devices/V2.vue';
-  import DeviceV3 from './Devices/V3.vue';
-  import DeviceV4 from './Devices/V4.vue';
-  import DeviceRemote from './Devices/Remote.vue';
+  import { defineAsyncComponent } from 'vue';
+  let DeviceVirtual = defineAsyncComponent(() => import('./Devices/Virtual.vue'));
+  let DeviceV1 = defineAsyncComponent(() => import('./Devices/V1.vue'));
+  let DeviceV2 = defineAsyncComponent(() => import('./Devices/V2.vue'));
+  let DeviceV3 = defineAsyncComponent(() => import('./Devices/V3.vue'));
+  let DeviceV4 = defineAsyncComponent(() => import('./Devices/V4.vue'));
+  let DeviceRemote = defineAsyncComponent(() => import('./Devices/Remote.vue'));
   export default {
     data() {
       return { Devices: [], ShowSpinner: true, Driver: null, Settings: null, Enabled: false,
         Columns: [
-          { name: 'driver', label: 'Driver', field: row => row.Driver, align: 'center' },
+          { name: 'driver', label: 'Driver', field: row => row.Driver, align: 'center', style: 'width: 80px' },
           { name: 'name', label: 'Name', field: row => row.Name, align: 'left' },
           { name: 'serial', label: 'Serial', field: row => row.Serial, align: 'center'},
-          { name: 'enabled', label: 'Enabled', align: 'center' },
-          { name: 'analyzers', label: 'Analyzers', field: row => row.Analyzers, align: 'center' },
-          { name: 'actions', label: '' }
+          { name: 'enabled', label: 'Enabled', align: 'center', style: 'width: 60px' },
+          { name: 'analyzers', label: 'Analyzers', field: row => row.Analyzers, align: 'center', style: 'width: 70px' },
+          { name: 'actions', label: '', style: 'width: 80px' }
         ]
       };
     },
+    created: function () {
+      this.$emit('queries', 1);
+      this.LoadTable(true);
+    },
     methods: {
-      LoadTable: function (update) {
+      LoadTable: function(update) {
         this.Driver = null;
         if(update == false) return;
         this.ShowSpinner = true;
         this.Post('getDevices', {}).then(
           (result) => {
+            this.$emit('done');
             this.Enabled = true;
             this.Devices = result;
             this.ShowSpinner = false;
           },
-          (fail) => {}
+          () => {
+            this.$emit('done');
+          }
         );
       },
-      Configure: function (id) {
+      Configure: function(id) {
         this.ShowSpinner = true;
         this.Post('getDevice', { Serial: id.Serial }).then(
           (result) => {
@@ -72,14 +77,11 @@
             if(id.Driver === 'Remote') this.Driver = 'DeviceRemote';
             this.ShowSpinner = false;
           },
-          (fail) => {
+          () => {
             this.ShowSpinner = false;
           }
         );
       }
-    },
-    mounted: function () {
-      this.LoadTable();
     },
     components: { DeviceVirtual, DeviceV1, DeviceV2, DeviceV3, DeviceV4, DeviceRemote }
   }

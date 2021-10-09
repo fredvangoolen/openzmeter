@@ -30,8 +30,8 @@
 </template>
 
 <script>
-  import 'highlight-within-textarea/jquery.highlight-within-textarea.js';
-  import 'highlight-within-textarea/jquery.highlight-within-textarea.css';
+//  import 'highlight-within-textarea/jquery.highlight-within-textarea.js';
+//  import 'highlight-within-textarea/jquery.highlight-within-textarea.css';
   export default {
     props: { value: String, vars: Array },
     data: function() {

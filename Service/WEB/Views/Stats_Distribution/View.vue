@@ -1,37 +1,44 @@
 <template>
-  <div v-if="analyzer != null">
-    <div class="row">
-      <div class="col-lg-12">
-        <div class="panel panel-active-energy">
-          <div class="panel-heading">
-            <span class="header-text">Energy distribution</span>
-            <div class="header-buttons clearfix">
+  <q-page>
+    <q-card>
+      <q-toolbar class="bg-indigo-9 text-white q-pr-none">
+        <q-toolbar-title>Energy distribution</q-toolbar-title>
+        <q-btn stretch flat size="sm"><div>Year<br><strong>sdf</strong></div></q-btn>
+        <q-separator dark vertical />
+        <q-btn stretch flat icon="menu">
+          <q-menu>
+            <q-list dense>
+              <q-item clickable v-close-popup>Reload</q-item>
+              <q-item clickable v-close-popup>Export</q-item>
+            </q-list>
+          </q-menu>
+        </q-btn>
+      </q-toolbar>
+      <q-card-section class="bg-grey-2 q-pa-xs">
+        <color-bar :width="140" :height="10" :range="Range" units="Wh"></color-bar>
+      </q-card-section>
+      <q-separator />
+                    <div class="header-buttons clearfix">
               <color-bar :width="140" :height="10" :range="Range" units="Wh"></color-bar>
               <toolbar-years storage="StatsYear" v-model="Year" :analyzer="analyzer" aggreg="1H"></toolbar-years>
               <div class="btn-group">
                 <button-export file="Distribution" :rows="Export"></button-export>
               </div>
             </div>
-          </div>
-          <div class="panel-body">
-            <spinner v-if="ShowSpinner" :progress="Progress"></spinner>
+
+
+        <q-card-section>
             <calendar :data="Data" :analyzer="analyzer" :year="Year" :range.sync="Range" @update:export="CalendarData=$event"></calendar>
-          </div>
-        </div>
-      </div>
-      <div class="col-md-12 col-lg-6" v-if="!ShowSpinner">
+        </q-card-section>
+        <q-inner-loading :showing="ShowSpinner"><q-spinner-dots size="50px" color="orange-10" /></q-inner-loading>
+      </q-card>
+      <q-card class="col-12 col-lg-6" v-if="!ShowSpinner">
         <months :data="Data" :analyzer="analyzer"></months>
-      </div>
-      <div class="col-md-12 col-lg-6" v-if="!ShowSpinner">
+      </q-card>
+      <q-card class="col-12 col-lg-6" v-if="!ShowSpinner">
         <week-day :data="Data" :analyzer="analyzer"></week-day>
-      </div>
-    </div>
-  </div>
-  <div v-else-if="analyzer == null">
-    <div class="alert alert-danger text-center">
-      <p>No selected analyzer</p>
-    </div>
-  </div>
+    </q-card>
+  </q-page>
 </template>
 
 <script>
@@ -83,10 +90,3 @@
     components: { Calendar, Months, WeekDay }
   }
 </script>
-
-<style scoped>
-  .header-text {
-    font-size: 20px;
-    line-height: 24px;
-  }
-</style>

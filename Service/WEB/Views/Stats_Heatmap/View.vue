@@ -1,32 +1,31 @@
 <template>
-  <div v-if="analyzer != null">
-    <div class="row">
-      <div class="col-lg-12">
-        <div class="panel panel-active-energy stats-headmap">
-          <div class="panel-heading">
-            <span class="header-text">Energy Heatmap</span>
-            <div class="header-buttons clearfix">
-              <color-bar :width="140" :height="10" :range="Range" units="Wh"></color-bar>
-              <toolbar-aggregation storage="HeatmapAggreg" :options="['15M', '1H']" v-model="Aggreg"></toolbar-aggregation>
-              <toolbar-years :analyzer="analyzer" v-model="Year" aggreg="15M" storage="StatsYear"></toolbar-years>
-              <div class="btn-group">
-                <button-export file="Heatmap" :rows="Export"></button-export>
-              </div>
-            </div>
-          </div>
-          <div class="panel-body" style="min-height: 300px">
-            <spinner v-if="ShowSpinner" :progress="Progress"></spinner>
-            <heatmap-table :data="Data" :aggreg="Aggreg" :analyzer="analyzer" :range.sync="Range" @update:export="ExportData=$event"></heatmap-table>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-  <div v-else-if="analyzer == null">
-    <div class="alert alert-danger text-center">
-      <p>No selected analyzer</p>
-    </div>
-  </div>
+  <q-page>
+    <q-card>
+      <q-toolbar class="bg-indigo-9 text-white q-pr-none">
+        <q-toolbar-title>Energy Heatmap</q-toolbar-title>
+        <q-btn stretch flat size="sm"><div>Aggregation<br><strong>sdf</strong></div></q-btn>
+        <q-separator dark vertical />
+        <q-btn stretch flat size="sm"><div>Year<br><strong>sdf</strong></div></q-btn>
+        <q-separator dark vertical />
+        <q-btn stretch flat icon="menu">
+          <q-menu>
+            <q-list dense>
+              <q-item clickable v-close-popup>Reload</q-item>
+              <q-item clickable v-close-popup>Export</q-item>
+            </q-list>
+          </q-menu>
+        </q-btn>
+      </q-toolbar>
+      <q-card-section class="bg-grey-2 q-pa-xs">
+        <color-bar :width="140" :height="10" :range="Range" units="Wh"></color-bar>
+      </q-card-section>
+      <q-separator />
+      <heatmap-table :data="Data" :aggreg="Aggreg" :analyzer="analyzer" :range.sync="Range" @update:export="ExportData=$event" class="q-ma-xs" />
+      <q-inner-loading :showing="!Loaded" v-if="Queries>0">
+        <q-circular-progress show-value font-size="12px" :value="(Queries-Pending)/Queries*100" size="50px" :thickness="0.3" color="orange-10">{{ Math.trunc(((Queries-Pending)/Queries)*100, 0) }} %</q-circular-progress>
+      </q-inner-loading>
+    </q-card>
+  </q-page>
 </template>
 
 <script>
@@ -77,10 +76,3 @@
     components: { HeatmapTable }
   }
 </script>
-
-<style>
-  .stats-headmap .header-text {
-    font-size: 20px;
-    line-height: 24px;
-  }
-</style>

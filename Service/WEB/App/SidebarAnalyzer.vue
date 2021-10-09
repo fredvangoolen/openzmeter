@@ -1,6 +1,18 @@
 <template>
-  <div class="this" :class="{ expanded: expanded }">
-    <div class="collapse-icon">
+  <q-item class="q-pa-none expandable" dark :class="{ expanded: expanded }">
+    <q-item-section side class="q-pa-none">
+      <img class="icon" :src="require('Imgs/disconnect32.png')">
+    </q-item-section>
+    <q-btn dense unelevated color="primary" stretch icon="toc" @click="Dialog = true" />
+    <q-item-section class="q-ml-xs">
+      <q-item-label class="ellipsis">{{ (Analyzer.Loaded == false) ? 'No analyzer selected' : Analyzer.Name }}</q-item-label>
+      <q-item-label caption class="ellipsis">{{ (Analyzer.Loaded == false) ? 'Select one before continue' : 'Serial: ' + Analyzer.Analyzer }}</q-item-label>
+    </q-item-section>
+
+
+
+
+    <!--div class="collapse-icon">
       <img class="icon" :src="require('Imgs/disconnect32.png')">
       <span v-if="(status!=null)&&(status.State!=null)&&(status.PendingActions!=null)&&(status.PendingActions>0)">
         <span class="badge badge-menu badge-green" v-if="status.State=='ONLINE'">{{ status.PendingActions }}</span>
@@ -17,11 +29,9 @@
     <div class="btn-group">
       <button type="button" class="btn btn-default btn-xs" @click="Dialog='Table'" title="Select and configure avaliable analyzers"><img :src="require('Imgs/magnifier.png')"></button>
       <button type="button" class="btn btn-default btn-xs" :disabled="analyzer==null" @click="Dialog='Info'" title="Analyzer information and status"><img :src="require('Imgs/system_monitor.png')"></button>
-    </div>
-    <div class="name">{{ (analyzer == null) ? 'None selected' : analyzer.Name }}</div>
-    <analyzer-table v-if="Dialog=='Table'" :analyzer="analyzer" @update:analyzer="SetAnalyzer($event)" @close="Dialog=null"></analyzer-table>
-    <analyzer-info v-if="Dialog=='Info'" :analyzer="analyzer" @close="Dialog=null"></analyzer-info>
-  </div>
+    </div-->
+    <analyzer-table v-if="Dialog" @close="Dialog=false" />
+  </q-item>
 </template>
 
 <script>
@@ -30,9 +40,9 @@
   import moment from 'moment';
   import 'moment-timezone';
   export default {
-    props: { analyzer: Object, expanded: Boolean, status: Object },
+    props: { expanded: Boolean, status: Object },
     data() {
-      return { Dialog: null };
+      return { Dialog: false };
     },
     created: function() {
       if(localStorage.getItem("Analyzer") == null) {
@@ -46,7 +56,7 @@
           },
           (fail) => {
             if(fail != null) {
-              this.$toast.open({type:'error', message: "Previous analyzer not found, choose new one", duration: 3000});
+//              this.$toast.open({type:'error', message: "Previous analyzer not found, choose new one", duration: 3000});
               this.SetAnalyzer(null);
               this.Dialog = 'Table';
             }
@@ -76,7 +86,7 @@
           analyzer.FormatTimeMS = this.FormatTimeMS.bind(this);
           analyzer.FormatDateTime = this.FormatDateTime.bind(this);
           analyzer.CalcRange = this.CalcRange.bind(this);
-          this.$toast.open({type:'info', message: "Selected analyzer '" + analyzer.Name + "'", duration: 3000});
+//          this.$toast.open({type:'info', message: "Selected analyzer '" + analyzer.Name + "'", duration: 3000});
         }
         this.$emit('update:analyzer', analyzer);
       },
@@ -189,74 +199,20 @@
 </script>
 
 <style scoped>
-  .collapse-icon {
-    position: relative;
+  .expandable {
+    margin-left: 0px;
+    width: 300px;
+    transition: margin-left 0.1s ease-in-out;
+    justify-content: start !important;
   }
-  .this {
-    background-color: #474544;
-    color: #FAFAFA;
-    width: 304px;
-    height: 33px;
-    display: flex;
-    margin-left: 0;
-    transition: margin-left 0.2s ease-in-out;
-    border-bottom: 1px solid #333;
-    border-top: 1px solid #333;
-  }
-  .this.expanded {
+  .expandable.expanded {
     margin-left: -48px;
-    transition: margin-left 0.2s ease-in-out;
+    width: 348px;
+    transition: margin-left 0.1s ease-in-out;
   }
   .icon {
     height: 24px;
     width: 24px;
-    margin: 4px 12px;
-  }
-  .name {
-    width: 192px;
-    padding-left: 2px;
-    line-height: 24px;
-    padding-top: 4px;
-    text-overflow: ellipsis;
-    overflow: hidden;
-    white-space: nowrap;
-  }
-  .btn-group {
-    margin-top: 4px;
-    margin-left: -1px;
-  }
-  .btn-group > .btn {
-    background: #444;
-    border-color: #333;
-    padding: 6px 6px 7px 6px;
-    margin-top: -5px;
-    border-radius: 0px;
-    margin-left: -1px;
-  }
-  .btn-group > .btn:hover {
-    background: #555;
-    border-color: #333;
-  }
-  .badge-icon {
-    position: absolute;
-    top: 17px;
-    right: 8px;
-  }
-  .badge-menu {
-    position: absolute;
-    top: 16px;
-    right: 12px;
-    font-size: 9px;
-    padding: 1px 2px;
-    border-radius: 3px;
-  }
-  .badge-red {
-    background: #c9302c;
-  }
-  .badge-green {
-    background: #5cb85c;
-  }
-  .badge-yellow {
-    background: #f0ad4e;
+    margin: 14px 12px;
   }
 </style>

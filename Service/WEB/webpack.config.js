@@ -1,7 +1,7 @@
 var path = require('path');
-var webpack = require('webpack');
-const VueLoaderPlugin = require('vue-loader/lib/plugin');
-const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
+
+const { VueLoaderPlugin } = require('vue-loader');
+//const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
 module.exports = {
   entry: './Index.js',
   output: {
@@ -10,21 +10,16 @@ module.exports = {
     filename: 'openZmeter.js'
   },
   plugins: [
-    new webpack.IgnorePlugin(/^\.\/locale$/, /moment$/),
+
     new VueLoaderPlugin(),
-    new BundleAnalyzerPlugin(),
-    new webpack.ProvidePlugin({
-      $: "jquery",
-      jQuery: "jquery",
-      "window.jQuery": "jquery"
-    })
+//    new BundleAnalyzerPlugin(),
   ],
   module: {
     rules: [
       {
         test: /\.css$/,
         use: [
-          'vue-style-loader',
+          'style-loader',
           'css-loader'
         ]
       }, {
@@ -62,7 +57,7 @@ module.exports = {
       'JS': path.resolve(__dirname, 'JS'),
       'CSS': path.resolve(__dirname, 'CSS'),
       'Imgs': path.resolve(__dirname, 'Imgs'),
-      'vue$': 'vue/dist/vue.esm.js'
+
     },
     extensions: ['*', '.js', '.vue', '.json']
   },
@@ -71,26 +66,25 @@ module.exports = {
     noInfo: true,
     overlay: true,
     proxy: {
-      '*': { target: 'http://localhost:8081/'}
+      '*': { target: 'http://10.8.0.135:80/'}
     }
   },
   performance: {
     hints: false
   },
-  devtool: '#eval-source-map'
+  devtool: 'eval-source-map'
 };
 
 if(process.env.NODE_ENV === 'production') {
   module.exports.devtool = false;
-  module.exports.resolve.alias['vue$'] =  'vue/dist/vue.min.js';
-  module.exports.plugins = (module.exports.plugins || []).concat([
-    new webpack.DefinePlugin({
-      'process.env': {
-        NODE_ENV: '"production"'
-      }
-    }),
-    new webpack.LoaderOptionsPlugin({
-      minimize: true
-    })
-  ]);
+//  module.exports.plugins = (module.exports.plugins || []).concat([
+//    new webpack.DefinePlugin({
+//      'process.env': {
+//        NODE_ENV: '"production"'
+//      }
+//    }),
+//    new webpack.LoaderOptionsPlugin({
+//      minimize: true
+//    })
+//  ]);
 }

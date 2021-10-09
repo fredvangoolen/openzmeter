@@ -1,7 +1,7 @@
 <template>
-  <div>
-    <spinner v-if="ShowSpinner"></spinner>
-    <div v-html="Content"></div>
+  <div style="min-height: 200px">
+    <div v-html="Content" />
+    <q-inner-loading :showing="ShowSpinner"><q-spinner-dots size="50px" color="orange-10" /></q-inner-loading>
   </div>
 </template>
 
@@ -22,17 +22,3 @@
    }
   }
 </script>
-
-<style scoped>
-  .panel-body {
-    padding: 20px;
-    text-align: justify;
-  }
-  .panel-body >>> p {
-    font-size: 110%;
-  }
-  .panel-other {
-    border-top-left-radius: 0px;
-    border-top-right-radius: 0px;
-  }
-</style>

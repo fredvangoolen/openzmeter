@@ -1,47 +1,55 @@
 <template>
   <q-card>
-    <q-toolbar class="bg-grey-9 text-white">
+    <q-toolbar class="bg-grey-9 text-white q-pr-none">
       <q-toolbar-title>Tariffs</q-toolbar-title>
-      <q-input dense debounce="300" label="Search" color="grey-3" label-color="white" v-model="Filter" input-class="text-white"  class="q-mr-sm">
-         <template v-slot:prepend>
-            <q-icon name="search" color="white"></q-icon>
-          </template>
-      </q-input>
-      <q-btn  color="positive" @click="Add">Add</q-btn>
+      <q-tabs stretch v-model="Tab" active-bg-color="primary">
+        <q-tab name="templates" label="Templates" />
+        <q-tab name="modules" label="Price modules" />
+      </q-tabs>
     </q-toolbar>
-    <q-table :loading="ShowSpinner" dense :columns="ColumnsTariffs" :data="Tariffs" :filter="Filter" row-key="user" class="q-ma-xs" title="Template definitions">
-      <template v-slot:body-cell-actions="props">
-        <q-td :props="props">
-          <q-btn-group>
-            <q-btn size="sm" @click="Edit(props.row)">Edit</q-btn>
-            <q-separator vertical></q-separator>
-            <q-btn size="sm" @click="Duplicate(props.row)">Duplicate</q-btn>
-            <q-separator vertical></q-separator>
-            <q-btn size="sm" @click="Delete(props.row)">Delete</q-btn>
-          </q-btn-group>
-        </q-td>
-      </template>
-    </q-table>
-    <q-table :loading="ShowSpinner" dense :hide-bottom="true" :columns="ColumnsModules" :data="Modules" row-key="name" class="q-ma-xs" title="Price fetch modules">
-      <template v-slot:body-cell-actions="props">
-        <q-td :props="props">
-          <q-btn size="sm" @click="Configure(props.row)">Configure</q-btn>
-        </q-td>
-      </template>
-    </q-table>
+    <q-card-section v-if="Tab=='templates'" class="q-pa-none">
+      <q-toolbar class="bg-grey-2 q-pa-none">
+        <q-space />
+        <q-input dense debounce="300" label="Search" v-model="Filter" class="q-mr-sm">
+          <template v-slot:prepend><q-icon name="search" /></template>
+        </q-input>
+        <q-btn stretch unelevated color="primary" size="sm" @click="Add">Add</q-btn>
+      </q-toolbar>
+      <q-separator />
+      <q-table flat dense :columns="ColumnsTariffs" :rows="Tariffs" :filter="Filter" row-key="user" class="q-ma-xs">
+        <template v-slot:body-cell-actions="props">
+          <q-td :props="props">
+            <q-btn-dropdown size="sm" split unelevated color="primary" @click="Edit(props.row)" label="Edit">
+              <q-list dense>
+                <q-item clickable @click="Duplicate(props.row)">Duplicate</q-item>
+                <q-item clickable @click="Delete(props.row)">Delete</q-item>
+              </q-list>
+            </q-btn-dropdown>
+          </q-td>
+        </template>
+      </q-table>
+    </q-card-section>
+    <q-card-section v-if="Tab=='modules'" class="q-pa-none">
+      <q-table dense :hide-bottom="true" :columns="ColumnsModules" :rows="Modules" row-key="name" class="q-ma-xs">
+        <template v-slot:body-cell-actions="props">
+          <q-td :props="props">
+            <q-btn size="sm" unelevated color="primary" @click="Configure(props.row)" label="Configure" />
+          </q-td>
+        </template>
+      </q-table>
+    </q-card-section>
     <tariff v-if="ShowDialog" :tariff="Tariff" :source="SourceTariff" @close="LoadTariffs"></tariff>
     <esp-esios v-if="Module!=null && Module.Name=='ESP_ESIOS'" :settings="Module" @close="Module=null"></esp-esios>
+    <q-inner-loading :showing="ShowSpinner"><q-spinner-dots size="50px" color="orange-10" /></q-inner-loading>
   </q-card>
 </template>
 
 <script>
-  import moment from 'moment';
-  import Tariff from './Tariffs/Tariff.vue';
-  import EspEsios from './Tariffs/EspEsios.vue';
-  import * as oZm from 'JS/openZmeter.js';
+  let Tariff = () => import('./Tariffs/Tariff.vue');
+  let EspEsios = () => import('./Tariffs/EspEsios.vue');
   export default {
     data: function() {
-      return { ShowSpinner: true, Tariffs: [], Filter: '', ShowDialog: false, Enabled: false, Tariff: null, SourceTariff: null, Module: null,
+      return { ShowSpinner: true, Tariffs: [], Filter: '', ShowDialog: false, Tariff: null, SourceTariff: null, Module: null, Tab: 'templates',
         Modules: [
           { Name: 'ESP_ESIOS', Description: 'Fetch hourly prices from spanish ESIOS (Sistema de informacion del operador del sistema)' }
         ],
@@ -51,13 +59,14 @@
           { name: 'actions', label: '' }
         ],
         ColumnsTariffs: [
-          { name: 'User', label: 'Owner', field: row => row.User, align: 'left' },
+          { name: 'User', label: 'Owner', field: row => row.User, align: 'left', style: 'width: 100px' },
           { name: 'Name', label: 'Name', field: row => row.Name, align: 'left' },
           { name: 'actions', label: '' }
         ]
       };
     },
     created: function() {
+      this.$emit('queries', 1);
       this.LoadTariffs();
     },
     methods: {
@@ -66,15 +75,13 @@
         this.ShowSpinner = true;
         this.Post('getTariffs', { }).then(
           (result) => {
-            this.Enabled = true;
             this.Tariffs = result;
             this.ShowSpinner = false;
-            for(var n in this.Tariffs) {
-              this.Tariffs[n].StartDate = moment.tz(this.Tariffs[n].StartDate, this.Tariffs[n].TimeZone).format('DD/MM/YYYY');
-              this.Tariffs[n].EndDate   = moment.tz(this.Tariffs[n].EndDate,   this.Tariffs[n].TimeZone).format('DD/MM/YYYY');
-            }
+            this.$emit('done');
           },
-          (fail) => { }
+          () => {
+            this.$emit('done');
+          }
         );
       },
       Add: function() {

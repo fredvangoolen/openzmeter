@@ -14,7 +14,7 @@
     <div class="row" v-if="View=='Main'">
       <div class="col-xs-12">
         <label class="control-label" style="line-height: 22px">Enabled</label>
-        <toggle class="float-right" onText="Yes" offText="No" v-model="Alarm.Enabled"></toggle>
+        <q-toggle v-model="Alarm.Enabled" />
       </div>
     </div>
     <div class="row" v-if="View=='Main'">

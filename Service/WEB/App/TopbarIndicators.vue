@@ -1,19 +1,11 @@
 <template>
-  <q-header>
-    <div class="navbar-header">
-      <button type="button" class="navbar-toggle" @mouseenter="$emit('expandmenu')" @click="$emit('expandmenu')"><img :src="require('Imgs/application_menu.png')"></button>
-      <div class="navbar-brand">
-        <img src="MainLogo.png">
-      </div>
-    </div>
-    <div class="indicator-bar" v-if="analyzer != null" @click="Grouped = !Grouped">
-      <topbar-indicator :analyzer="analyzer" serie="Voltage" :grouped="Grouped" :value="Transfer1.Data"></topbar-indicator>
-      <topbar-indicator :analyzer="analyzer" serie="Current" :grouped="Grouped" :value="Transfer1.Data"></topbar-indicator>
-      <topbar-indicator :analyzer="analyzer" serie="Active_Power" :grouped="Grouped" :value="Transfer1.Data"></topbar-indicator>
-      <topbar-indicator :analyzer="analyzer" serie="Frequency" :value="Transfer1.Data" v-if="analyzer.NominalFrequency > 0.0"></topbar-indicator>
-      <topbar-indicator :analyzer="analyzer" serie="Active_Energy" :grouped="Grouped" :value="EnergyUsage"></topbar-indicator>
-    </div>
-  </q-header>
+  <div class="indicator-bar" v-if="Analyzer.Analyzer != null" @click="Grouped = !Grouped">
+    <topbar-indicator serie="Voltage" :grouped="Grouped" :value="Transfer1.Data"></topbar-indicator>
+    <topbar-indicator serie="Current" :grouped="Grouped" :value="Transfer1.Data"></topbar-indicator>
+    <topbar-indicator serie="Active_Power" :grouped="Grouped" :value="Transfer1.Data"></topbar-indicator>
+    <topbar-indicator serie="Frequency" :value="Transfer1.Data" v-if="Analyzer.NominalFrequency != 0.0"></topbar-indicator>
+    <topbar-indicator serie="Active_Energy" :grouped="Grouped" :value="EnergyUsage"></topbar-indicator>
+  </div>
 </template>
 
 <script>

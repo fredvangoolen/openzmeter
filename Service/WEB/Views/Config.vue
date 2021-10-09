@@ -1,6 +1,5 @@
 <template>
-  <div class="modal" tabindex="1" role="dialog" data-backdrop="false" data-keyboard="false" ref="dialog">
-    <div class="modal-backdrop in"></div>
+  <q-dialog :value="true">
     <div class="modal-dialog">
       <div class="modal-content">
         <div class="modal-header">
@@ -127,7 +126,8 @@
         </div>
       </div>
     </div>
-  </div>
+
+  </q-dialog>
 </template>
 
 <script>
@@ -154,7 +154,7 @@
       if(this.Timer != null) clearTimeout(this.Timer);
     },
     created: function() {
-      if(window.LocalConnection != true) this.$router.replace('Dashboard');
+//      if(window.LocalConnection != true) this.$router.replace('Dashboard');
     },
     methods: {
       FullSite: function() {

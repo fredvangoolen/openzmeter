@@ -1002,16 +1002,7 @@ text.area_text {
 
 
 
-.spinnerdiv {
-  position: absolute;
-  top: 0;
-  left:0;
-  width:100%;
-  height:100%;
-  z-index:1000;
-  opacity: 0.8;
-  background-color: #FFF;
-}
+
 
 .annotation {
   border: 1px solid black;

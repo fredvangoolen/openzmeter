@@ -12,7 +12,7 @@
     <div class="row">
       <div class="col-xs-6">
         <label class="control-label" style="line-height: 22px">Enable</label>
-        <toggle class="float-right" onText="Yes" offText="No" v-model="Config.Enabled"></toggle>
+        <q-toggle v-model="Config.Enabled" />
       </div>
       <div class="col-xs-6" style="display: flex">
         <label class="control-label">Port</label>

@@ -3,8 +3,8 @@
 </template>
 
 <script>
-  import scrollingTabs from 'jquery-bootstrap-scrolling-tabs';
-  import 'jquery-bootstrap-scrolling-tabs/dist/jquery.scrolling-tabs.css';
+//  import scrollingTabs from 'jquery-bootstrap-scrolling-tabs';
+//  import 'jquery-bootstrap-scrolling-tabs/dist/jquery.scrolling-tabs.css';
   export default {
     props: { value: String, tabs: Array, storage: String, light: Boolean },
     data() {

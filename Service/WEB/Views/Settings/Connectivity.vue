@@ -3,7 +3,7 @@
     <q-toolbar dense class="bg-grey-9 text-white q-py-none">
       <q-toolbar-title>Connectivity</q-toolbar-title>
     </q-toolbar>
-    <q-table :loading="ShowSpinner" :hide-bottom="true" dense :columns="Columns" row-key="module" :data="Modules" class="q-ma-xs">
+    <q-table :hide-bottom="true" dense :columns="Columns" row-key="module" :rows="Modules" class="q-ma-xs">
       <template v-slot:body-cell-enabled="props">
         <q-td :props="props">
           <q-checkbox dense disable v-model="props.row.Enabled"></q-checkbox>
@@ -11,7 +11,7 @@
       </template>
       <template v-slot:body-cell-actions="props">
         <q-td :props="props">
-          <q-btn size="sm" :disable="!props.row.Avaliable" @click="Configure(props.row)">Configure</q-btn>
+          <q-btn size="sm" unelevated color="primary" :disable="!props.row.Avaliable" @click="Configure(props.row)" label="Configure"></q-btn>
         </q-td>
       </template>
     </q-table>
@@ -23,21 +23,22 @@
     <modbus-tcp :settings="Settings" v-if="View=='ModbusTCP'" @close="Update"></modbus-tcp>
     <vpn :settings="Settings" v-if="View=='OpenVPN'" @close="Update"></vpn>
     <updates :settings="Settings" v-if="View=='Updates'" @close="Update"></updates>
+    <q-inner-loading :showing="ShowSpinner"><q-spinner-dots size="50px" color="orange-10" /></q-inner-loading>
   </q-card>
 </template>
 
 <script>
-  import Bluetooth from './Connectivity/Bluetooth.vue';
-  import Wifi from './Connectivity/WIFI.vue';
-  import Ethernet from './Connectivity/Ethernet.vue';
-  import Ntp from './Connectivity/NTP.vue';
-  import ModbusTcp from './Connectivity/ModbusTCP.vue';
-  import Telegram from './Connectivity/Telegram.vue';
-  import Vpn from './Connectivity/OpenVPN.vue';
-  import Updates from './Connectivity/Updates.vue'
+  let Bluetooth = () => import('./Connectivity/Bluetooth.vue');
+  let Wifi = () => import('./Connectivity/WIFI.vue');
+  let Ethernet = () => import('./Connectivity/Ethernet.vue');
+  let Ntp = () => import('./Connectivity/NTP.vue');
+  let ModbusTcp = () => import('./Connectivity/ModbusTCP.vue');
+  let Telegram = () => import('./Connectivity/Telegram.vue');
+  let Vpn = () => import('./Connectivity/OpenVPN.vue');
+  let Updates = () => import('./Connectivity/Updates.vue');
   export default {
     data: function() {
-      return { View: null, Settings: null,
+      return { ShowSpinner: false, View: null, Settings: null,
                Modules: [
                  { name: 'Bluetooth', Title: 'Bluetooth connection', Enabled: false, Avaliable: false, Method: 'getBluetooth' },
                  { name: 'Wifi', Title: 'Wifi connection', Enabled: false, Avaliable: false, Method: 'getWIFI' },
@@ -49,59 +50,45 @@
                  { name: 'Updates', Title: 'Automatic updates', Enabled: false, Avaliable: false, Method: 'getUpdates' }
                ],
                Columns: [
-                 { name: 'module', label: 'Module', field: row => row.Title, align: 'left' },
-                 { name: 'enabled', label: 'Enabled', align: 'center' },
-                 { name: 'actions', label: '' }
+                 { name: 'module', label: 'Module', field: row => row.Title, align: 'left'},
+                 { name: 'enabled', label: 'Enabled', align: 'center', style: 'width: 60px' },
+                 { name: 'actions', label: '', style: 'width: 80px'  }
                ],
              };
     },
     created: function() {
+      this.$emit('queries', this.Modules.length);
       this.Update();
     },
     methods: {
       Update: function() {
         this.View = null;
+        this.ShowSpinner = true;
+        this.Components = this.Modules.length;
         for(var n in this.Modules) this.LoadModule(this.Modules[n], false);
-      },
-      EnabledStatus: function(value) {
-        return (value === true) ? '&#9635;' : '&#9633;';
       },
       LoadModule: function(module, full) {
         this.Post(module.Method, { Full: full }).then(
           (result) => {
             module.Enabled = result.Enabled;
             module.Avaliable = true;
+            this.Components--;
+            if(this.Components == 0) this.ShowSpinner = false;
+            this.$emit('done');
             if(full) {
               this.Settings = result;
               this.View = module.Name;
             }
           },
-          (fail) => { module.Avaliable = false; }
+          () => {
+            module.Avaliable = false;
+            this.Components--;
+            if(this.Components == 0) this.ShowSpinner = false;
+            this.$emit('done');
+          }
         );
       }
     },
     components: { Bluetooth, Wifi, Ethernet, Ntp, ModbusTcp, Telegram, Vpn, Updates }
   }
 </script>
-
-<style scoped>
-  textarea {
-    resize: none;
-    font-family: 'Fira Code';
-    font-size: 12px;
-  }
-  .table >>> th:nth-child(2) {
-    width: 60px;
-    text-align: center;
-  }
-  .table >>> td:nth-child(2) {
-    text-align: center;
-  }
-  .table >>> th:nth-child(3) {
-    width: 80px;
-    text-align: center;
-  }
-  .table >>> td:nth-child(3) {
-    text-align: center;
-  }
-</style>

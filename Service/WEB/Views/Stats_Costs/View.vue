@@ -1,10 +1,16 @@
 <template>
-  <div v-if="analyzer != null">
+  <q-page>
+    <q-card>
+      <q-toolbar class="bg-indigo-9 text-white q-pr-none">
+        <q-toolbar-title>Energy costs</q-toolbar-title>
+      </q-toolbar>
+
+    </q-card>
+
     <div class="row">
       <div class="col-lg-12">
         <div class="panel panel-active-energy">
           <div class="panel-heading">
-            <span class="header-text">Energy costs</span>
             <div class="header-buttons clearfix">
               <div class="btn-group">
                 <option-picker v-model="Group" :options="[{name: 'Contracted', value: 0}, {name: 'Compare group 1', value: 1}, {name: 'Compare group 2', value: 2}, {name: 'Compare group 3', value: 3}, {name: 'Compare group 4', value: 4}, {name: 'Compare group 5', value: 5}, {name: 'Compare group 6', value: 6}, {name: 'Compare group 7', value: 7}, {name: 'Compare group 8', value: 8}, {name: 'Compare group 9', value: 9}, {name: 'Compare group 10', value: 10}]"></option-picker>
@@ -31,12 +37,7 @@
         </div>
       </div>
     </div>
-  </div>
-  <div v-else-if="analyzer == null">
-    <div class="alert alert-danger text-center">
-      <p>No selected analyzer</p>
-    </div>
-  </div>
+  </q-page>
 </template>
 
 <script>

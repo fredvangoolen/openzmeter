@@ -1,14 +1,15 @@
 <template>
   <div>
-    <q-bar dense>
+    <q-toolbar class="bg-grey-2 q-pr-none">
       <div>{{ (LastUpdate==null) ? 'Loading data...' : 'Last update at ' + FormatDate(LastUpdate) }}</div>
       <q-space></q-space>
-      <div class="header-buttons">
+      <q-btn stretch flat size="sm"><div>Level<br><strong>Warnings</strong></div></q-btn>
+      <!--div class="header-buttons">
         <toolbar-options storage="SystemOptions" :options="['Debug', 'Warning', 'Error', 'Info']" v-model="Options"></toolbar-options>
         <toolbar-pager :pageSize="20" :input="Messages" :output.sync="FilterMessages" :filtercols="['Message', 'Date']"></toolbar-pager>
-      </div>
-    </q-bar>
-
+      </div-->
+    </q-toolbar>
+    <q-separator />
     <div class="panel-heading clearfix">
 
 

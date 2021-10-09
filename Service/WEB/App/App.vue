@@ -1,108 +1,95 @@
 <template>
-  <q-layout id="app" v-if="User!=null">
-    <topbar :analyzer="Analyzer" @expandmenu="ShowBar" :expanded="Expanded" :status="TransferStatus.Data"></topbar>
+  <q-layout id="app" view="hHh Lpr lff">
+    <q-header v-if="Users.User != null">
+      <q-toolbar class="bg-grey-9 q-px-xs">
+        <q-btn dense flat icon="menu" class="lt-md q-mr-xs" @click="$refs.Sidebar.toggle()" />
+        <q-toolbar-title class="q-pa-none">
+          <img src="MainLogo.png" style="margin-top: 12px; max-width: 428px" />
+        </q-toolbar-title>
+        <topbar-indicators />
+      </q-toolbar>
+    </q-header>
+    <q-drawer v-if="Users.User != null" ref="Sidebar" v-model="Expanded" mini-to-overlay :mini="MiniState" @mouseover="MiniState=false" @mouseout="MiniState=true" :width="300" :mini-width="48" dark class="bg-grey-9">
+      <q-list class="justify-left">
+        <q-separator />
+        <sidebar-analyzer :expanded="IsExpanded" :status="TransferStatus"></sidebar-analyzer>
+        <q-separator />
+        <sidebar-user :expanded="IsExpanded" />
+        <q-separator />
+        <sidebar-menu :expanded="IsExpanded" />
+      </q-list>
+    </q-drawer>
     <q-page-container>
-      <div class="sidenav-overlay" :class="{ 'overlay-enabled': Expanded }" @mouseenter="CloseBar"></div>
-      <sidebar :analyzer.sync="Analyzer" :user.sync="User" @expandmenu="ShowBar" :expanded="Expanded" :status="TransferStatus.Data"></sidebar>
-      <router-view class="q-pa-xs" :analyzer="Analyzer" :user="User" id="contents"></router-view>
+      <router-view class="q-pa-sm"></router-view>
       <offline v-if="NoNetwork"></offline>
     </q-page-container>
-  </q-layout>
-  <q-layout v-else id="app">
-    <q-page-container>
-      <router-view></router-view>
-    </q-page-container>
+    <q-resize-observer @resize="onResize" />
   </q-layout>
 </template>
 
 <script>
-  import Topbar from './Topbar.vue';
-  import Sidebar from './Sidebar.vue';
-  import Offline from './Offline.vue';
-  import IconSet from 'quasar/icon-set/svg-material-icons';
+  import { defineAsyncComponent } from 'vue';
+  let TopbarIndicators = defineAsyncComponent(() => import('./TopbarIndicators.vue'));
+  let Offline = defineAsyncComponent(() => import('./Offline.vue'));
+  let SidebarMenu = defineAsyncComponent(() => import('./SidebarMenu.vue'));
+  let SidebarUser = defineAsyncComponent(() => import('./SidebarUser.vue'));
+  let SidebarAnalyzer = defineAsyncComponent(() => import('./SidebarAnalyzer.vue'));
+  let IconSet = defineAsyncComponent(() => import('quasar/icon-set/svg-material-icons'));
   export default {
     data: function() {
-      return { Analyzer: null, User: null, Expanded: false, CloseTimer: null, NoNetwork: false, TransferStatus: this.StatusTransfer(['Events', 'Alarms']) };
+      return { MiniState: false, Expanded: false, DesktopMode: false, NoNetwork: false, TransferStatus: this.StatusTransfer(['Events', 'Alarms']) };
     },
     created: function() {
       this.$q.iconSet.set(IconSet);
-      window.EventBus.$on('UserUnathorized', () => {
-        localStorage.setItem("UserName", undefined);
-        this.$router.replace('Login');
-        this.User = null;
-      });
-      window.EventBus.$on('NoNetwork', (b) => { this.NoNetwork = b; });
-      if(window.LocalConnection == true) {
-        this.$router.replace('Config');
-      } else {
-        this.Post('getUser', { User: localStorage.getItem("UserName") }).then(
-          (result) => { this.User = result; },
-          () => {
-            localStorage.setItem("UserName", undefined);
-            this.$router.replace('Login');
-            this.User = null;
-          }
-        );
+//      window.EventBus.$on('UserUnathorized', () => {
+//        localStorage.setItem("UserName", undefined);
+//        this.$router.replace('Login');
+//        this.User = null;
+//      });
+//      window.EventBus.$on('NoNetwork', (b) => { this.NoNetwork = b; });
+//      if(window.LocalConnection == true) {
+//        this.$router.replace('Config');
+//      } else {
+//        this.Post('getUser', { User: localStorage.getItem("UserName") }).then(
+//          (result) => { this.User = result; },
+//          () => {
+//            localStorage.setItem("UserName", undefined);
+//            this.$router.replace('Login');
+//            this.User = null;
+//          }
+//        );
+//      }
+    },
+    computed: {
+      IsExpanded: function() {
+        return (this.DesktopMode && !this.MiniState) || (!this.DesktopMode && this.Expanded);
       }
     },
-    watch: {
-      Analyzer: function() {
-        this.TransferStatus.Update(this.Analyzer);
-      }
+            watch: {
+
+//      Analyzer: function() {
+//        this.TransferStatus.Update(this.Analyzer);
+//      }
     },
     methods: {
-      ShowBar: function() {
-        if(this.CloseTimer) clearTimeout(this.CloseTimer);
-        this.Expanded = true;
-      },
-      CloseBar: function() {
-        this.CloseTimer = setTimeout(() => { this.Expanded = false; }, 250);
+      onResize: function(val) {
+        if(val.width > 1023) {
+          this.MiniState = true;
+          this.Expanded = true;
+          this.DesktopMode = true;
+        } else {
+          this.MiniState = false;
+          this.Expanded = false;
+          this.DesktopMode = false;
+        }
       }
     },
-    components: { Topbar, Sidebar, Offline }
+    components: { TopbarIndicators, SidebarUser, SidebarAnalyzer, SidebarMenu, Offline }
   }
 </script>
 
-<style>
-  #contents {
-    position: fixed;
-    z-index: 0;
-    padding: 10px;
-    overflow-x: hidden;
-    overflow-y: auto;
-    left: 0px;
-    top: 116px;
-    bottom: 0px;
-    right: 0px;
-  }
-  @media (min-width: 840px) {
-    #contents {
-      top: 56px;
-    }
-  }
-  .sidenav-overlay {
-    background: #000;
-    opacity: 0.0;
-    display: block;
-    height: 0px;
-    left: 0px;
-    position: fixed;
-    top: 0px;
-    width: 100%;
-    z-index: 95;
-    transition: height 0ms 200ms, opacity 200ms 0ms;
-  }
-  .overlay-enabled {
-    height: 100%;
-    opacity: 0.5;
-    transition: height 0ms 0ms, opacity 200ms 0ms;
-  }
-  @media (min-width: 1280px) {
-    #contents {
-      left: 48px;
-    }
-    .sidenav-overlay {
-      top: 56px;
-    }
+<style scoped>
+  ::v-deep(.q-drawer__content) {
+    overflow: hidden;
   }
 </style>

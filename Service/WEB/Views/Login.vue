@@ -6,7 +6,7 @@
         <form>
           <q-input v-model="UserName" label="Username" name="user"></q-input>
           <q-input v-model="Password" label="Password" type="password" name="password" autocomplete="on"></q-input>
-          <q-btn type="submit" class="q-mt-sm full-width" color="orange-9" @click="Login">Sign in</q-btn>
+          <q-btn unelevated type="submit" class="q-mt-sm full-width" color="orange-9" @click="Login">Sign in</q-btn>
         </form>
       </q-card-section>
       <q-card-section class="row q-py-none">
@@ -23,29 +23,15 @@
 
 <script>
   export default {
-    props: { user: Object },
     data() {
       return { UserName: null, Password: null };
-    },
-    created: function() {
-      if(this.user != null) this.$router.push('/Dashboard');
     },
     methods: {
       Login: function(event) {
         event.preventDefault();
-        this.Post('logIn', { User: this.UserName, Password: this.Password, UpdateLastLogin: true }).then(
-          (result) => {
-            localStorage.setItem('LastLogin', result.LastLogin);
-            localStorage.setItem('UserName', this.UserName);
-            this.Post('getUser', { User: localStorage.getItem("UserName") }).then(
-              (result) => {
-                this.$emit('update:user', result);
-                this.$router.push('/Dashboard');
-                this.$q.notify({ message: 'Logged in', timeout: 3000, color: 'green', position: 'bottom-right' })
-              }
-            );
-          },
-          (fail) => this.$q.notify({ message: 'Failed to login', caption: 'Invalid user name or password', timeout: 3000, color: 'red', position: 'bottom-right' })
+        this.logIn(this.UserName, this.Password).then(
+          () => this.$router.replace('/Dashboard'),
+          () => this.$q.notify({ message: 'Failed to login', caption: 'Invalid user name or password', timeout: 3000, color: 'red', position: 'bottom-right' })
         );
       }
     }

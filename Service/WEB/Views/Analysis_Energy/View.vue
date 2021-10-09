@@ -1,5 +1,5 @@
 <template>
-  <div v-if="analyzer != null">
+  <q-page>
     <div class="row">
       <div class="col-lg-12">
         <div class="panel panel-active-energy">
@@ -54,12 +54,7 @@
     </div>
     <dlg-fs v-if="ExpandedActive" title="Active Energy" :height.sync="DialogHeight"></dlg-fs>
     <dlg-fs v-if="ExpandedReactive" title="Reactive Energy" :height.sync="DialogHeight"></dlg-fs>
-  </div>
-  <div v-else-if="analyzer == null">
-    <div class="alert alert-danger text-center">
-      <p>No selected analyzer</p>
-    </div>
-  </div>
+  </q-page>
 </template>
 
 <script>
