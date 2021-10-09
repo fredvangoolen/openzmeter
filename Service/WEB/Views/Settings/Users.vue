@@ -28,7 +28,7 @@
       </template>
     </q-table>
     <user-edit v-if="ShowDialog" :user="User" @close="LoadUsers" />
-    <q-inner-loading :showing="Users.Loading || ShowSpinner"><q-spinner-dots size="50px" color="orange-10" /></q-inner-loading>
+    <q-inner-loading :showing="ShowSpinner"><q-spinner-dots size="50px" color="orange-10" /></q-inner-loading>
   </q-card>
 </template>
 

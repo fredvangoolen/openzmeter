@@ -129,7 +129,6 @@ const ViewRouter = createRouter({
   ],
 });
 ViewRouter.beforeEach((to, from, next) => {
-  console.log(to);
   Loading.show();
   App.config.globalProperties.Users.getCurrentUser().then(
     () => {

@@ -1,5 +1,5 @@
 <template>
-  <q-card>
+  <q-card v-show="Tariffs.Loading == false">
     <q-toolbar class="bg-grey-9 text-white q-pr-none">
       <q-toolbar-title>Tariffs</q-toolbar-title>
       <q-tabs stretch v-model="Tab" active-bg-color="primary">
@@ -16,7 +16,10 @@
         <q-btn stretch unelevated color="primary" size="sm" @click="Add">Add</q-btn>
       </q-toolbar>
       <q-separator />
-      <q-table flat dense :columns="ColumnsTariffs" :rows="Tariffs" :filter="Filter" row-key="user" class="q-ma-xs">
+      <q-table flat dense :columns="ColumnsTariffs" :rows="Tariffs.Objects" :filter="Filter" row-key="user" class="q-ma-xs">
+        <template v-slot:no-data="data">
+          <div class="full-width row flex-center q-gutter-sm">{{ data.message }}</div>
+        </template>
         <template v-slot:body-cell-actions="props">
           <q-td :props="props">
             <q-btn-dropdown size="sm" split unelevated color="primary" @click="Edit(props.row)" label="Edit">
@@ -31,6 +34,9 @@
     </q-card-section>
     <q-card-section v-if="Tab=='modules'" class="q-pa-none">
       <q-table dense :hide-bottom="true" :columns="ColumnsModules" :rows="Modules" row-key="name" class="q-ma-xs">
+        <template v-slot:no-data="data">
+          <div class="full-width row flex-center q-gutter-sm">{{ data.message }}</div>
+        </template>
         <template v-slot:body-cell-actions="props">
           <q-td :props="props">
             <q-btn size="sm" unelevated color="primary" @click="Configure(props.row)" label="Configure" />
@@ -49,7 +55,7 @@
   let EspEsios = () => import('./Tariffs/EspEsios.vue');
   export default {
     data: function() {
-      return { ShowSpinner: true, Tariffs: [], Filter: '', ShowDialog: false, Tariff: null, SourceTariff: null, Module: null, Tab: 'templates',
+      return { FirstLoad: true, ShowSpinner: false, Filter: '', ShowDialog: false, Tariff: null, SourceTariff: null, Module: null, Tab: 'templates',
         Modules: [
           { Name: 'ESP_ESIOS', Description: 'Fetch hourly prices from spanish ESIOS (Sistema de informacion del operador del sistema)' }
         ],
@@ -65,25 +71,27 @@
         ]
       };
     },
-    created: function() {
+    watch: {
+      'Tariffs.Loading': function(val) {
+        if((val == false) && this.FirstLoad) {
+          this.$emit('done');
+          this.FirstLoad = false;
+        }
+      }
+    },
+    mounted: function() {
+      this.Tariffs.RegisterListener();
+      this.FirstLoad = true;
       this.$emit('queries', 1);
-      this.LoadTariffs();
+      if((this.Tariffs.Loading == false) && this.FirstLoad) {
+        this.$emit('done');
+        this.FirstLoad = false;
+      }
+    },
+    unmounted: function() {
+      this.Tariffs.UnregisterListener();
     },
     methods: {
-      LoadTariffs: function() {
-        this.ShowDialog = false;
-        this.ShowSpinner = true;
-        this.Post('getTariffs', { }).then(
-          (result) => {
-            this.Tariffs = result;
-            this.ShowSpinner = false;
-            this.$emit('done');
-          },
-          () => {
-            this.$emit('done');
-          }
-        );
-      },
       Add: function() {
         this.SourceTariff = null;
         this.Tariff = null;

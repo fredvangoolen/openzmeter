@@ -4,6 +4,9 @@
       <q-toolbar-title>Connectivity</q-toolbar-title>
     </q-toolbar>
     <q-table :hide-bottom="true" dense :columns="Columns" row-key="module" :rows="Modules" class="q-ma-xs">
+      <template v-slot:no-data="data">
+        <div class="full-width row flex-center q-gutter-sm">{{ data.message }}</div>
+      </template>
       <template v-slot:body-cell-enabled="props">
         <q-td :props="props">
           <q-checkbox dense disable v-model="props.row.Enabled"></q-checkbox>

@@ -21,13 +21,16 @@
           <p>If you are an administrator, check device settings, otherwise request permission.</p>
         </div>
         <q-table v-else flat dense :columns="Columns" :rows="Analyzers.Objects" :filter="Filter" row-key="analyzer" class="q-ma-xs">
-            <template v-slot:body-cell-state="props">
-              <q-td :props="props">
-                <img :src="require('Imgs/bullet_green.png')" v-if="props.row.State=='ONLINE'">
-                <img :src="require('Imgs/bullet_yellow.png')" v-if="props.row.State=='SYNCING'">
-                <img :src="require('Imgs/bullet_red.png')" v-if="props.row.State=='OFFLINE'">
-              </q-td>
-            </template>
+          <template v-slot:no-data>
+            <div class="full-width row flex-center q-gutter-sm">There are no analyzers available.<br />If you are an administrator, check device settings, otherwise request permission.</div>
+          </template>
+          <template v-slot:body-cell-state="props">
+            <q-td :props="props">
+              <img :src="require('Imgs/bullet_green.png')" v-if="props.row.State=='ONLINE'">
+              <img :src="require('Imgs/bullet_yellow.png')" v-if="props.row.State=='SYNCING'">
+              <img :src="require('Imgs/bullet_red.png')" v-if="props.row.State=='OFFLINE'">
+            </q-td>
+          </template>
             <template v-slot:body-cell-actions="props">
               <q-td :props="props">
                 <q-btn-dropdown size="sm" color="primary" split label="Select" @click="Select(props.row.Analyzer, true)" :disable-main-btn="((analyzer != null) && (analyzer.Analyzer == props.row.Analyzer))">
@@ -100,13 +103,6 @@
     unmounted: function() {
       this.Analyzers.UnregisterListener();
     },
-watch: {
-  'Analyzers.Loading': function(val) {
-
-    console.log(Analyzers.Object);
-  }
-},
-
     methods: {
 
       Select: function(analyzer, close) {

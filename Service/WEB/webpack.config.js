@@ -1,5 +1,5 @@
 var path = require('path');
-
+const webpack = require('webpack');
 const { VueLoaderPlugin } = require('vue-loader');
 //const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
 module.exports = {
@@ -10,7 +10,9 @@ module.exports = {
     filename: 'openZmeter.js'
   },
   plugins: [
+    new webpack.DefinePlugin({
 
+    }),
     new VueLoaderPlugin(),
 //    new BundleAnalyzerPlugin(),
   ],

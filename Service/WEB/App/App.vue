@@ -12,7 +12,7 @@
     <q-drawer v-if="Users.User != null" ref="Sidebar" v-model="Expanded" mini-to-overlay :mini="MiniState" @mouseover="MiniState=false" @mouseout="MiniState=true" :width="300" :mini-width="48" dark class="bg-grey-9">
       <q-list class="justify-left">
         <q-separator />
-        <sidebar-analyzer :expanded="IsExpanded" :status="TransferStatus"></sidebar-analyzer>
+        <sidebar-analyzer :expanded="IsExpanded" :status="TransferStatus" />
         <q-separator />
         <sidebar-user :expanded="IsExpanded" />
         <q-separator />

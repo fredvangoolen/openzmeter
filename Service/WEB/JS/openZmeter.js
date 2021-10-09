@@ -39,6 +39,59 @@ const openZmeter = {
       });
     };
 
+    This.Devices = reactive({
+      Timer: null,
+      Listeners: 0,
+      Headers: [],
+      Items: [],
+      Objects: [],
+      Loading: false,
+      RegisterListener: () => {
+        This.Devices.Listeners++;
+        if(This.Devices.Listeners == 1) {
+          This.Devices.Loading = true;
+          This.Devices.Refresh();
+        }
+      },
+      UnregisterListener: () => {
+        This.Devices.Listeners--;
+        if(This.Devices.Listeners == 0) {
+          This.Devices.Items.splice(0);
+          This.Devices.Objects.splice(0);
+          if(This.Devices.Timer != null) {
+            clearTimeout(This.Devices.Timer);
+            This.Devices.Timer = null;
+          }
+        }
+      },
+      Refresh: () => {
+        if(This.Devices.Timer != null) {
+          clearTimeout(This.Devices.Timer);
+          This.Devices.Timer = null;
+        }
+        This.Devices.getDevices().then(
+          (result) => {
+            console.log(result);
+            This.Devices.Headers = result[0];
+            This.Devices.Items.splice(0);
+            This.Devices.Objects.splice(0);
+            This.Devices.Loading = false;
+            for(var i = 1; i < result.length; i++) {
+              This.Devices.Items.push(result[i]);
+              let Item = {};
+              for(var n = 0; n < result[0].length; n++) Item[result[0][n]] = result[i][n];
+              This.Devices.Objects.push(Item);
+            }
+            This.Devices.Timer = setTimeout(This.Devices.Refresh, 5000);
+          },
+          () => { This.Devices.Timer = setTimeout(This.Devices.Refresh, 5000); }
+        );
+      },
+      getDevices: () => {
+        return This.Post('getDevices', {});
+      }
+    });
+
     This.Users = reactive({
       User: null,
       Timer: null,
@@ -72,16 +125,15 @@ const openZmeter = {
         }
         This.Users.getUsers().then(
           (result) => {
-//            This.Users.Headers = result[0];
-//            This.Users.Items.splice(0);
+            This.Users.Headers = result[0];
+            This.Users.Items.splice(0);
             This.Users.Objects.splice(0);
             This.Users.Loading = false;
-            for(var i = 0; i < result.length; i++) {
-//              This.Users.Items.push(result[i]);
-//              let Item = {};
-//              for(var n = 0; n < result[0].length; n++) Item[result[0][n]] = result[i][n];
-//              This.Users.Objects.push(Item);
-This.Users.Objects.push(result[i]);
+            for(var i = 1; i < result.length; i++) {
+              This.Users.Items.push(result[i]);
+              let Item = {};
+              for(var n = 0; n < result[0].length; n++) Item[result[0][n]] = result[i][n];
+              This.Users.Objects.push(Item);
             }
             This.Users.Timer = setTimeout(This.Users.Refresh, 5000);
           },
@@ -177,7 +229,6 @@ This.Users.Objects.push(result[i]);
         }
         This.Analyzers.getAnalyzers().then(
           (result) => {
-            console.log(result);
             This.Analyzers.Headers = result[0];
             This.Analyzers.Items.splice(0);
             This.Analyzers.Objects.splice(0);
@@ -198,6 +249,57 @@ This.Users.Objects.push(result[i]);
       }
     });
 
+    This.Tariffs = reactive({
+      Timer: null,
+      Listeners: 0,
+      Headers: [],
+      Items: [],
+      Objects: [],
+      Loading: false,
+      RegisterListener: () => {
+        This.Tariffs.Listeners++;
+        if(This.Tariffs.Listeners == 1) {
+          This.Tariffs.Loading = true;
+          This.Tariffs.Refresh();
+        }
+      },
+      UnregisterListener: () => {
+        This.Tariffs.Listeners--;
+        if(This.Tariffs.Listeners == 0) {
+          This.Tariffs.Items.splice(0);
+          This.Tariffs.Objects.splice(0);
+          if(This.Tariffs.Timer != null) {
+            clearTimeout(This.Tariffs.Timer);
+            This.Tariffs.Timer = null;
+          }
+        }
+      },
+      Refresh: () => {
+        if(This.Tariffs.Timer != null) {
+          clearTimeout(This.Tariffs.Timer);
+          This.Tariffs.Timer = null;
+        }
+        This.Tariffs.getTariffs().then(
+          (result) => {
+            This.Tariffs.Headers = result[0];
+            This.Tariffs.Items.splice(0);
+            This.Tariffs.Objects.splice(0);
+            This.Tariffs.Loading = false;
+            for(var i = 1; i < result.length; i++) {
+              This.Tariffs.Items.push(result[i]);
+              let Item = {};
+              for(var n = 0; n < result[0].length; n++) Item[result[0][n]] = result[i][n];
+              This.Tariffs.Objects.push(Item);
+            }
+            This.Tariffs.Timer = setTimeout(This.Tariffs.Refresh, 5000);
+          },
+          () => { This.Tariffs.Timer = setTimeout(This.Tariffs.Refresh, 5000); }
+        );
+      },
+      getTariffs: () => {
+        return This.Post('getTariffs', {});
+      }
+    });
 
 
 

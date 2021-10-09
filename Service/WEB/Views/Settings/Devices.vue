@@ -1,9 +1,12 @@
 <template>
-  <q-card v-show="Enabled">
+  <q-card v-show="Devices.Loading == false">
     <q-toolbar class="bg-grey-9 text-white">
       <q-toolbar-title>Device manager</q-toolbar-title>
     </q-toolbar>
-    <q-table :hide-bottom="true" dense :columns="Columns" row-key="name" :rows="Devices" class="q-ma-xs">
+    <q-table :hide-bottom="true" dense :columns="Columns" row-key="name" :rows="Devices.Objects" class="q-ma-xs">
+      <template v-slot:no-data="data">
+        <div class="full-width row flex-center q-gutter-sm">{{ data.message }}</div>
+      </template>
       <template v-slot:body-cell-enabled="props">
         <q-td :props="props">
           <q-checkbox size="sm" disable v-model="props.row.Enabled" />
@@ -15,8 +18,8 @@
         </q-td>
       </template>
     </q-table>
-    <q-dialog :modelValue="Driver!=null" no-backdrop-dismiss @escape-key="LoadTable(false)">
-      <component :is="Driver" :settings="Settings" @close="LoadTable" />
+    <q-dialog :modelValue="Driver != null" no-backdrop-dismiss @escape-key="Driver = null">
+      <component :is="Driver" :settings="Settings" @close="Driver = null" />
     </q-dialog>
     <q-inner-loading :showing="ShowSpinner"><q-spinner-dots size="50px" color="orange-10" /></q-inner-loading>
   </q-card>
@@ -32,7 +35,7 @@
   let DeviceRemote = defineAsyncComponent(() => import('./Devices/Remote.vue'));
   export default {
     data() {
-      return { Devices: [], ShowSpinner: true, Driver: null, Settings: null, Enabled: false,
+      return { FirstLoad: true, ShowSpinner: false, Driver: null, Settings: null, Enabled: false,
         Columns: [
           { name: 'driver', label: 'Driver', field: row => row.Driver, align: 'center', style: 'width: 80px' },
           { name: 'name', label: 'Name', field: row => row.Name, align: 'left' },
@@ -43,27 +46,27 @@
         ]
       };
     },
-    created: function () {
+    watch: {
+      'Devices.Loading': function(val) {
+        if((val == false) && this.FirstLoad) {
+          this.$emit('done');
+          this.FirstLoad = false;
+        }
+      }
+    },
+    mounted: function () {
+      this.Devices.RegisterListener();
+      this.FirstLoad = true;
       this.$emit('queries', 1);
-      this.LoadTable(true);
+      if((this.Devices.Loading == false) && this.FirstLoad) {
+        this.$emit('done');
+        this.FirstLoad = false;
+      }
+    },
+    unmounted: function() {
+      this.Devices.UnregisterListener();
     },
     methods: {
-      LoadTable: function(update) {
-        this.Driver = null;
-        if(update == false) return;
-        this.ShowSpinner = true;
-        this.Post('getDevices', {}).then(
-          (result) => {
-            this.$emit('done');
-            this.Enabled = true;
-            this.Devices = result;
-            this.ShowSpinner = false;
-          },
-          () => {
-            this.$emit('done');
-          }
-        );
-      },
       Configure: function(id) {
         this.ShowSpinner = true;
         this.Post('getDevice', { Serial: id.Serial }).then(
