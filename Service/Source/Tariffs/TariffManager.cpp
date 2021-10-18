@@ -44,8 +44,10 @@ TariffManager::~TariffManager() {
 void TariffManager::GetTariffsCallback(HTTPRequest &req) {
   string UserName = req.UserName();
   auto Func = [UserName](function<bool(const json &content)> Write) {
+    json Header = {"Name", "User"};
+    Write(Header);
     Database DB;
-    DB.ExecSentenceAsyncResult("SELECT json_build_object('Name', name, 'User', username) FROM tariffs" + ((UserName == "admin") ? "" : " WHERE username IN ('admin', " + DB.Bind(UserName) + ") ORDER BY name ASC"));
+    DB.ExecSentenceAsyncResult("SELECT json_build_array(name, username) FROM tariffs" + ((UserName == "admin") ? "" : " WHERE username IN ('admin', " + DB.Bind(UserName) + ") ORDER BY name ASC"));
     while(DB.FecthRow()) {
       if(Write(DB.ResultJSON(0)) == false) return;
     }

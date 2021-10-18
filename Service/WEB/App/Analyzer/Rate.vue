@@ -320,8 +320,13 @@
         this.Rate.Periods = null;
         this.Post('getTariffs', {}).then(
           (result) => {
-            this.Tariffs = result;
+            var NameCol = result[0].indexOf("Name");
+            var UserCol = result[0].indexOf("User");
+            this.Tariffs = [];
             this.ShowSpinner = false;
+            for(var n = 1; n < result.length; n++) {
+              this.Tariffs.push({ Name: result[n][NameCol], User: result[n][UserCol]})
+            }
           },
           (fail) => { }
         );

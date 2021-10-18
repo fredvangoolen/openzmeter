@@ -81,13 +81,16 @@
       DurationFormat: function(val) {
         return (val.Duration == 0) ? 'RUNNNING' : this.Round(val.Duration / val.SampleRate, 2, false);
       },
-      ChangeFormat: function(val) {
+      ChangeFormat: function(val, br) {
         var Max = 0;
         for(var i = 0; i < val.Reference.length; i++) Max = (Math.abs(val.Reference[i] - val.Peak[i]) > Math.abs(Max)) ? val.Peak[i] - val.Reference[i] : Max;
         if(val.Type == 'RVC') {
           var Diff = 0;
           for(var i = 0; i < val.Reference.length; i++) Diff = (Math.abs(val.Reference[i] - val.Change[i]) > Math.abs(Diff)) ? val.Change[i] - val.Reference[i] : Diff;
-          return this.Round(Diff, 2, false) + '<br>(' + this.Round(Max, 2, false) + ' Max)';
+          if(br == false)
+            return this.Round(Diff, 2, false) + ' (' + this.Round(Max, 2, false) + ' Max)';
+          else
+            return this.Round(Diff, 2, false) + '<br>(' + this.Round(Max, 2, false) + ' Max)';
         } else {
           return this.Round(Max, 2, false);
         }
@@ -179,7 +182,7 @@
       },
       Export: function() {
         var Export = [['Date', 'Type', 'Duration', 'ΔU (V)', 'Notes']];
-        for(var i = 0; i < this.Events.length; i++) Export.push([this.Events[i].StartTime, this.Events[i].Type, this.Round(this.Events[i].SampleDuration / this.Events[i].SampleRate, 3), this.Round(this.Events[i].Diff, 3), this.Events[i].Notes]);
+        for(var i = 0; i < this.Events.length; i++) Export.push([this.Events[i].StartTime, this.Events[i].Type, this.Round(this.Events[i].Duration / this.Events[i].SampleRate, 3), this.ChangeFormat(this.Events[i], false), this.Events[i].Notes]);
         return Object.seal(Export);
       }
     },

@@ -207,7 +207,7 @@
          var Rows = [['Sample'].concat(this.analyzer.SerieNames('Voltage'))];
          for(var i = 0; i < this.event.Samples.length; i++) {
           var Row = [i];
-          for(var ch = 0; ch < this.analyzer.VoltageChannels; ch++) Row.push(this.Round(this.event.Samples[i][ch], 2));
+          for(var ch = 0; ch < this.event.Samples[0].length; ch++) Row.push(this.Round(this.event.Samples[i][ch], 2));
           Rows.push(Row);
           if((this.event.Samples.length == (4 * this.event.Length)) && (i == (2 * this.event.Length))) Rows.push(new Array(this.event.Samples[0].length + 1).fill('- GAP -'));
         }
