@@ -10,10 +10,10 @@
           <q-icon name="search" />
         </template>
       </q-input>
-      <q-btn stretch unelevated color="primary" size="sm" @click="Add">Add</q-btn>
+      <q-btn stretch unelevated color="primary" @click="Add">Add</q-btn>
     </q-toolbar>
     <q-separator />
-    <q-table dense :columns="Columns" :rows="Users.Objects" :filter="Filter" row-key="user" class="q-ma-xs">
+    <q-table dense :columns="Columns" :rows="Users.Rows" :filter="Filter" row-key="user" class="q-ma-xs">
       <template v-slot:no-data="data">
         <div class="full-width row flex-center q-gutter-sm">{{ data.message }}</div>
       </template>
@@ -35,8 +35,8 @@
 <script>
   let UserEdit = () => import('App/User/Dialog.vue');
   export default {
-    data() {
-      return { FirstLoad: true, Filter: '', ShowSpinner: false, ShowDialog: false, Enabled: false, User: null,
+    data: function() {
+      return { ShowSpinner: false, Filter: '', ShowDialog: false, Enabled: false, User: null, Users: this.APIList(this.API.getUsers),
         Columns: [
           { name: 'user', label: 'User name', field: row => row.User, align: 'left' },
           { name: 'uame', label: 'Name', field: row => row.Name, align: 'left' },
@@ -48,23 +48,14 @@
     },
     watch: {
       'Users.Loading': function(val) {
-        if((val == false) && this.FirstLoad) {
-          this.$emit('done');
-          this.FirstLoad = false;
-        }
+        this.$emit('done');
       }
     },
     mounted: function () {
-      this.Users.RegisterListener();
-      this.FirstLoad = true;
       this.$emit('queries', 1);
-      if((this.Users.Loading == false) && this.FirstLoad) {
-        this.$emit('done');
-        this.FirstLoad = false;
-      }
     },
     unmounted: function() {
-      this.Users.UnregisterListener();
+      this.Users.Stop();
     },
     methods: {
       Add: function() {
@@ -84,7 +75,7 @@
       },
       Edit: function(user) {
         this.ShowSpinner = true;
-        this.Post('getUser', { User: user.User }).then(
+        this.API.getUser(user.User).then(
           (result) => {
             this.User = result;
             this.ShowDialog = true;

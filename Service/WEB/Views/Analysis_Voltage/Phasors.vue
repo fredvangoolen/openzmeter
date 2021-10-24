@@ -69,7 +69,7 @@
   import Graph from 'Components/Graph.vue';
   import Complex from 'complex';
   export default {
-    props: { analyzer: Object, data: Object, paused: Boolean },
+    props: { data: Object, paused: Boolean },
     data: function() {
       return { MouseOver: false, PhasorHeight: 200, SequenceHeight: 200,
         Columns: [

@@ -26,7 +26,7 @@
 <script>
   import moment from 'moment';
   export default {
-    props: { analyzer: Object, alarms: Object },
+    props: { alarms: Object },
     data: function() {
       return { Alarms: [], FilterAlarms: [], ShowSpinner: false,
                Columns: [
@@ -59,7 +59,7 @@
     },
     methods: {
       FormatDate: function(val) {
-        return (val == null) ? '-' : this.analyzer.FormatDateTime(val);
+        return (val == null) ? '-' : this.Analyzer.FormatDateTime(val);
       },
       DeleteSelected: function() {
         var Selection = this.$refs.table.selectedTo;
@@ -80,7 +80,7 @@
       },
       Delete: function(evt) {
         if(confirm("Delete selected alarm?")) {
-          this.Post('delAlarm', { Trigger: evt.StartDate, Analyzer: this.analyzer.Analyzer, AlarmID: evt.ID }).then(
+          this.Post('delAlarm', { Trigger: evt.StartDate, Analyzer: this.Analyzer.Analyzer, AlarmID: evt.ID }).then(
             (result, n) => { this.$emit('alarmschanged'); }
           );
         }

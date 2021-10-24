@@ -42,7 +42,6 @@
   import Thd from './THD.vue';
   import Unbalance from './Unbalance.vue';
   export default {
-    props: { analyzer: Object },
     data: function() {
       return { Ready: false, Year: null, Index: 'All year', TransferEvents: this.EventsTransfer(), TransferSeries: this.SeriesTransfer(['Frequency_Stats', 'Voltage_Stats', 'Voltage_THD_Stats', 'Voltage_Harmonics_Stats', 'Unbalance_Stats']),
                Frequencies: [ -Math.INFINITY, -5, -4, -3, -2, -1, -0.9, -0.8, -0.7, -0.6, -0.5, -0.45, -0.40, -0.35, -0.30, -0.25, -0.20, -0.15, -0.10, -0.05, 0.00, 0.05, 0.10, 0.15, 0.20, 0.25, 0.30, 0.35, 0.40, 0.45, 0.5, 0.6, 0.7, 0.8, 0.9, 1, 2, 3, 4, 5, Math.INFINITY ],
@@ -165,11 +164,11 @@
           Week.Start          = 0;
           Week.End            = 0;
         } else if(date == 0) {
-          Week.Start          = moment().tz(this.analyzer.TimeZone).year(this.Year).startOf('year').valueOf();
-          Week.End            = moment().tz(this.analyzer.TimeZone).year(this.Year).endOf('year').valueOf();
+          Week.Start          = moment().tz(this.Analyzer.TimeZone).year(this.Year).startOf('year').valueOf();
+          Week.End            = moment().tz(this.Analyzer.TimeZone).year(this.Year).endOf('year').valueOf();
         } else {
-          Week.Start          = moment(date).tz(this.analyzer.TimeZone).startOf('isoWeek').valueOf();
-          Week.End            = moment(date).tz(this.analyzer.TimeZone).endOf('isoWeek').valueOf();
+          Week.Start          = moment(date).tz(this.Analyzer.TimeZone).startOf('isoWeek').valueOf();
+          Week.End            = moment(date).tz(this.Analyzer.TimeZone).endOf('isoWeek').valueOf();
         }
         Week.Frequency        = new Array(this.Frequencies.length - 1).fill(0);
         Week.FrequencySamples = 0;
@@ -191,11 +190,11 @@
         return Week;
       },
       MaxDiff: function(a) {
-        var Max = a[0] - this.analyzer.NominalVoltage;
+        var Max = a[0] - this.Analyzer.NominalVoltage;
         for(var n = 1; n < a.length; n++) {
-          if(Math.abs(a[n] - this.analyzer.NominalVoltage) > Math.abs(Max)) Max = a[n] - this.analyzer.NominalVoltage;
+          if(Math.abs(a[n] - this.Analyzer.NominalVoltage) > Math.abs(Max)) Max = a[n] - this.Analyzer.NominalVoltage;
         }
-        return (Max * 100.0) / this.analyzer.NominalVoltage;
+        return (Max * 100.0) / this.Analyzer.NominalVoltage;
       },
 //      WeekChange: function(week) {
 //        this.$refs.frequency.SetData(this.Weeks[week], this.Frequencies);

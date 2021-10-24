@@ -47,7 +47,7 @@
   import Graph from 'Components/Graph.vue';
   import * as oZm from 'JS/openZmeter.js';
   export default {
-    props: { analyzer: { type: Object }, serie: { type: String, required: true }, data3S: { type: Object }, data1M: { type: Object }, dataGraph: { type: Object } },
+    props: { serie: { type: String, required: true }, data3S: { type: Object }, data1M: { type: Object }, dataGraph: { type: Object } },
     data: function() {
       return { };
     },

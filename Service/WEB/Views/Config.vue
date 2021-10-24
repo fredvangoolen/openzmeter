@@ -135,7 +135,7 @@
   import 'moment-timezone';
   export default {
     props: { user: Object },
-    data() {
+    data: function() {
       return { ShowSpinner: false, View: 'Intro', WifiList: [], Timer: null, WifiConfig: null, NTPConfig: null, Details: null,
         WifiColumns: [
           {name: 'ESSID', title: 'Name'},

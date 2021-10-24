@@ -43,8 +43,8 @@
 
 <script>
   export default {
-    props: { analyzer: Object, dataNow: Object, dataGraph: Object },
-    data() {
+    props: { dataNow: Object, dataGraph: Object },
+    data: function() {
       return { };
     },
     updated: function() {

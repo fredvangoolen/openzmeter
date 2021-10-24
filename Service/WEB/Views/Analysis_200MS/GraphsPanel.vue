@@ -3,7 +3,7 @@
     <div class="panel-heading">
       <div class="header-text">{{ PanelTitle }} {{ paused ? '(Paused)' : '' }}</div>
       <portal to="fs-toolbar" :disabled="!Expanded" class="header-buttons">
-        <toolbar-phases :analyzer="analyzer" v-model="Phases" v-if="serie != 'Frequency'" :storage="'Dashboard_' + serie" :current="serie=='Current'" :multi="true"></toolbar-phases>
+        <toolbar-phases v-model="Phases" v-if="serie != 'Frequency'" :storage="'Dashboard_' + serie" :current="serie=='Current'" :multi="true"></toolbar-phases>
         <div class="btn-group">
           <button-export :rows="Export" :file="PanelTitle"></button-export>
           <button-expand v-model="Expanded"></button-expand>
@@ -27,8 +27,8 @@
   import Graph from 'Components/Graph.vue';
   import 'JS/dygraph-crosshair.js';
   export default {
-    props: { serie: String, analyzer: Object, paused: Boolean, range: [String, Array] },
-    data() {
+    props: { serie: String, paused: Boolean, range: [String, Array] },
+    data: function() {
       return { ShowSpinner: true, Phases: null, Expanded: false, DialogHeight: 300,
                TransferGraph: this.SeriesTransfer([this.serie])
       };
@@ -75,12 +75,12 @@
         Opt.connectSeparatedPoints = false;
         Opt.fillGraph = false;
         Opt.legend = 'follow';
-        Opt.labels = ['Time'].concat(this.analyzer.SerieNames(this.serie));
-        Opt.colors = this.analyzer.SerieColors(this.serie);
+        Opt.labels = ['Time'].concat(this.Analyzer.SerieNames(this.serie));
+        Opt.colors = this.Analyzer.SerieColors(this.serie);
         Opt.selectMode = 'euclidian';
         Opt.xAxisHeight = 12;
-        Opt.axes.x.valueFormatter = (x) => { return this.analyzer.FormatTime(x); };
-        Opt.axes.x.axisLabelFormatter = (x) => { return this.analyzer.FormatTime(x); };
+        Opt.axes.x.valueFormatter = (x) => { return this.Analyzer.FormatTime(x); };
+        Opt.axes.x.axisLabelFormatter = (x) => { return this.Analyzer.FormatTime(x); };
         Opt.axes.y.pixelsPerLabel = 15;
         Opt.axes.y.axisLabelWidth = 30;
         if(this.Phases != null) Opt.visibility =  this.Phases;
@@ -107,7 +107,7 @@
           Opt.axes.y.valueRange = this.MatrixColsRange(Opt.file, [false, true], { rmsRange: 0.1 });
         }
         var Units = this.BestUnits(Math.max(Math.abs(Opt.axes.y.valueRange[0]), Math.abs(Opt.axes.y.valueRange[1])));
-        Opt.axes.y.valueFormatter = (x) => { return Graph.Formatters.Y_UnitScale(x, this.analyzer.SerieUnits(this.serie), 2, true); };
+        Opt.axes.y.valueFormatter = (x) => { return Graph.Formatters.Y_UnitScale(x, this.Analyzer.SerieUnits(this.serie), 2, true); };
         Opt.axes.y.axisLabelFormatter = (x, gran, opts, g) => { return Graph.Formatters.Y_UnitScaleFull(x, gran, opts, g, '', 2, true); };
         return Object.seal(Opt);
       }
@@ -115,7 +115,7 @@
     methods: {
       Export: function() {
         if(this.data == null) return [];
-        var Header = [['Time'].concat(this.analyzer.SerieNames(this.serie))];
+        var Header = [['Time'].concat(this.Analyzer.SerieNames(this.serie))];
         for(var n in this.data.Sampletime) {
           var Row = [this.data.Sampletime[n]];
           if(this.serie == 'Voltage') {

@@ -7,8 +7,8 @@
 <script>
   import Graph from 'Components/Graph.vue';
   export default {
-    props: { data: Object, serie: String, height: Number, analyzer: Object, periods: Object, bills: Array },
-    data() {
+    props: { data: Object, serie: String, height: Number, periods: Object, bills: Array },
+    data: function() {
       return { };
     },
     computed: {

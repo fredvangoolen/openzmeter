@@ -3,7 +3,7 @@
     <div class="panel-heading clearfix">
       <div class="header-text">From {{ (data!=null) ? analyzer.FormatAggregation(data.Aggreg) : '-' }} aggregation {{ MouseOver ? '(Graph paused)' : '' }}</div>
       <div class="header-buttons">
-        <toolbar-phases storage="DetailsPhases" :analyzer="analyzer" :multi="false" :current="false" v-model="Phase"></toolbar-phases>
+        <toolbar-phases storage="DetailsPhases" :multi="false" :current="false" v-model="Phase"></toolbar-phases>
         <div class="btn-group">
           <button-export file="Variables" :rows="Export"></button-export>
         </div>
@@ -24,8 +24,8 @@
   import moment from 'moment';
   import Dygraph from 'JS/dygraph.js';
   export default {
-    props: { analyzer: Object, data: Object, dataNow: Object },
-    data() {
+    props: { data: Object, dataNow: Object },
+    data: function() {
       return { Phase: null, MouseOver: false };
     },
     computed: {

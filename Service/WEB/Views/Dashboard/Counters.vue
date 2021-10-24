@@ -28,7 +28,7 @@
 
 <script>
   export default {
-    props: { analyzer: Object, data: Object },
+    props: { data: Object },
     data: function() {
       return { };
     },

@@ -7,8 +7,8 @@
 <script>
   import Graph from 'Components/Graph.vue';
   export default {
-    props: { analyzer: Object, data: Object, height: Number },
-    data() {
+    props: { data: Object, height: Number },
+    data: function() {
       return { MouseOver: false };
     },
     computed: {

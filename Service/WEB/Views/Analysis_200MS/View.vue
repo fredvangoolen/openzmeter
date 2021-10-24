@@ -36,7 +36,6 @@
 <script>
   import GraphsPanel from './GraphsPanel.vue';
   export default {
-    props: { analyzer: { type: Object } },
     data: function() {
       return { Paused: false, Range: null, AvaliableSeries:[], Series: [] };
     },

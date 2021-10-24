@@ -22,12 +22,11 @@
 </template>
 
 <script>
-  import { defineAsyncComponent } from 'vue';
-  let Api = defineAsyncComponent(() => import('./API.vue'));
-  let Help = defineAsyncComponent(() => import('./Help.vue'));
-  let License = defineAsyncComponent(() => import('./License.vue'));
-  let Changelog = defineAsyncComponent(() => import('./Changelog.vue'));
-  let System = defineAsyncComponent(() => import('./System.vue'));
+  import Api from './API.vue';
+  import Help from './Help.vue';
+  import License from './License.vue';
+  import Changelog from './Changelog.vue';
+  import System from './System.vue';
   export default {
     data: function() {
       return { ActiveTab: 'help' };

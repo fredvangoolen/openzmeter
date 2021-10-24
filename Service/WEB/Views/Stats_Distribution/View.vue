@@ -20,7 +20,7 @@
       <q-separator />
                     <div class="header-buttons clearfix">
               <color-bar :width="140" :height="10" :range="Range" units="Wh"></color-bar>
-              <toolbar-years storage="StatsYear" v-model="Year" :analyzer="analyzer" aggreg="1H"></toolbar-years>
+              <toolbar-years storage="StatsYear" v-model="Year" aggreg="1H"></toolbar-years>
               <div class="btn-group">
                 <button-export file="Distribution" :rows="Export"></button-export>
               </div>
@@ -28,15 +28,15 @@
 
 
         <q-card-section>
-            <calendar :data="Data" :analyzer="analyzer" :year="Year" :range.sync="Range" @update:export="CalendarData=$event"></calendar>
+            <calendar :data="Data" :year="Year" :range.sync="Range" @update:export="CalendarData=$event"></calendar>
         </q-card-section>
         <q-inner-loading :showing="ShowSpinner"><q-spinner-dots size="50px" color="orange-10" /></q-inner-loading>
       </q-card>
       <q-card class="col-12 col-lg-6" v-if="!ShowSpinner">
-        <months :data="Data" :analyzer="analyzer"></months>
+        <months :data="Data"></months>
       </q-card>
       <q-card class="col-12 col-lg-6" v-if="!ShowSpinner">
-        <week-day :data="Data" :analyzer="analyzer"></week-day>
+        <week-day :data="Data"></week-day>
     </q-card>
   </q-page>
 </template>
@@ -48,7 +48,6 @@
   import moment from 'moment';
   import 'moment-timezone';
   export default {
-    props: { analyzer: { type: Object } },
     data: function() {
       return { Range: [0, 1], Year: null, Data: null, ShowSpinner: true, Progress: 0, CalendarData: [] };
     },
@@ -65,9 +64,9 @@
         let Blocks = [];
         if((this.Year == null) || (this.analyzer == null)) return;
         let GetMonth = (month) => {
-          let To = moment.tz(this.analyzer.TimeZone).year(this.Year).month(month).endOf('month').valueOf();
-          let From = moment.tz(this.analyzer.TimeZone).year(this.Year).month(month).startOf('month').valueOf();
-          this.Post('getCosts', { From: From, To: To, Series: ['Active_Energy', 'Period'], Analyzer: this.analyzer.Analyzer, Group: 0 }).then(
+          let To = moment.tz(this.Analyzer.TimeZone).year(this.Year).month(month).endOf('month').valueOf();
+          let From = moment.tz(this.Analyzer.TimeZone).year(this.Year).month(month).startOf('month').valueOf();
+          this.Post('getCosts', { From: From, To: To, Series: ['Active_Energy', 'Period'], Analyzer: this.Analyzer.Analyzer, Group: 0 }).then(
             (result) => {
               Blocks[month] = (month == 0) ? result : result.slice(1);
               Count++;

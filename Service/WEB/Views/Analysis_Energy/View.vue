@@ -61,7 +61,6 @@
   import Energy from './Energy.vue';
   import Counters from './Counters.vue';
   export default {
-    props: { analyzer: { type: Object } },
     data: function() {
       return { Aggreg: null, Range: null, ActiveHeight: 300, ReactiveHeight: 300, ExpandedActive: false, ExpandedReactive: false, DialogHeight: 300,
                Transfer15M: this.SeriesTransfer(['Active_Energy', 'Reactive_Energy']),

@@ -56,7 +56,7 @@ void UserManager::GetUserCallback(HTTPRequest &req) {
   string User = req.Param("User");
   if((req.UserName() != "admin") && (req.UserName() != User)) return req.Error("", HTTP_FORBIDDEN);
   Database DB;
-  if((DB.ExecSentenceAsyncResult("SELECT json_build_object('User', username, 'Name', name, 'Address', address, 'Company', company, 'Photo', photo, 'Email', email, 'Telegram', telegram, 'TimeZone', time_zone) FROM users WHERE username = " + DB.Bind(User)) == false) || (DB.FecthRow() == false)) return req.Error("", HTTP_INTERNAL_SERVER_ERROR);
+  if((DB.ExecSentenceAsyncResult("SELECT json_build_object('Name', name, 'Address', address, 'Company', company, 'Photo', photo, 'Email', email, 'Telegram', telegram, 'TimeZone', time_zone) FROM users WHERE username = " + DB.Bind(User)) == false) || (DB.FecthRow() == false)) return req.Error("", HTTP_INTERNAL_SERVER_ERROR);
   req.Success(DB.ResultJSON(0));
 }
 void UserManager::SetUserCallback(HTTPRequest &req) {

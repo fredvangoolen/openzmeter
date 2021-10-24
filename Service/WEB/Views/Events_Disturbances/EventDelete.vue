@@ -19,7 +19,7 @@
 
 <script>
   export default {
-    props: { analyzer: Object, event: Array },
+    props: { event: Array },
     data: function() {
       return { ShowSpinner: false, Mode: 'All' };
     },

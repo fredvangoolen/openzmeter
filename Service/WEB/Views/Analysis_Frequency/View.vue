@@ -36,7 +36,6 @@
   import Frequency from './Frequency.vue';
   import Counters from './Counters.vue';
   export default {
-    props: { analyzer: Object },
     data: function() {
       return { Aggreg: null, Range: null, Height: 300, Expanded: false, DialogHeight: 300,
                TransferGraph: this.SeriesTransfer(['Frequency']),

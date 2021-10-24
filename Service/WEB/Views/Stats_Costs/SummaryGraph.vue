@@ -6,8 +6,8 @@
   import Graph from 'Components/Graph.vue';
   import moment from 'moment';
   export default {
-    props: { data: Array, analyzer: Object },
-    data () {
+    props: { data: Array },
+    data: function() {
       return { Labels: [] };
     },
     computed: {
@@ -27,7 +27,7 @@
         Opt.legendFormatter = Graph.Formatters.Legend_Follow;
         Opt.plotter = Graph.Plotters.MultiBar;
         Opt.labels = ['Time', 'Cost'];
-        Opt.colors = [this.analyzer.SerieColor('Active_Energy')];
+        Opt.colors = [this.Analyzer.SerieColor('Active_Energy')];
         Opt.includeZero = true;
         Opt.axes.y.pixelsPerLabel = 15;
         Opt.axes.y.axisLabelWidth = 30,
@@ -40,7 +40,7 @@
           this.Labels = [];
           var MonthsNames = moment.months();
           for(var i in this.data) {
-            this.Labels.push(MonthsNames[moment.tz(this.data[i].To, this.analyzer.TimeZone).month()]);
+            this.Labels.push(MonthsNames[moment.tz(this.data[i].To, this.Analyzer.TimeZone).month()]);
             Opt.file.push([parseInt(i), (this.data[i].Complete == true) ? this.data[i].Total : null]);
           }
           Opt.dateWindow = [-0.5, this.data.length - 0.5];

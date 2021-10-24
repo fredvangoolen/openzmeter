@@ -23,7 +23,7 @@
 <script>
   import Graph from 'Components/Graph.vue';
   export default {
-    props: { data: Object, analyzer: Object, ranges: Array },
+    props: { data: Object, ranges: Array },
     data: function() {
       return { };
     },

@@ -1,12 +1,12 @@
 <template>
   <div class="text-subtitle1">
-    <q-item dense clickable class="q-pa-none" to="/Dashboard" active-class="text-white" v-if="Analyzer.Loaded == true">
-      <q-item-section side class="q-pa-none"><img class="icon" :src="require('Imgs/dashboard.png')" /></q-item-section>
+    <q-item clickable class="q-pa-xs" to="/Dashboard" active-class="text-white" v-if="Analyzer.Analyzer != null" style="width: 300px">
+      <q-item-section side class="q-pr-xs"><img class="icon" :src="require('Imgs/dashboard.png')" /></q-item-section>
       <q-item-section>Dashboard</q-item-section>
     </q-item>
-    <q-expansion-item dense header-class="q-pa-none q-pr-xs expandable" group="menu" v-model="Expanded[0]" v-if="Analyzer.Loaded == true">
+    <q-expansion-item header-class="q-pa-xs" group="menu" v-model="Expanded[0]" v-if="Analyzer.Analyzer != null" style="width: 300px">
       <template v-slot:header>
-        <q-item-section side class="q-pa-none"><img class="icon" :src="require('Imgs/draw_wave.png')" /></q-item-section>
+        <q-item-section side class="q-pr-xs"><img class="icon" :src="require('Imgs/draw_wave.png')" /></q-item-section>
         <q-item-section>Analysis</q-item-section>
       </template>
       <q-card class="bg-grey-8">
@@ -20,17 +20,17 @@
         </q-list>
       </q-card>
     </q-expansion-item>
-    <q-expansion-item dense header-class="q-pa-none q-pr-xs expandable" group="menu" v-model="Expanded[1]" v-if="Analyzer.Loaded == true">
+    <q-expansion-item header-class="q-pa-xs" group="menu" v-model="Expanded[1]" v-if="Analyzer.Analyzer != null" style="width: 300px">
       <template v-slot:header>
-        <q-item-section side class="q-pa-none"><img class="icon" :src="require('Imgs/warning.png')" /></q-item-section>
+        <q-item-section side class="q-pr-xs"><img class="icon" :src="require('Imgs/warning.png')" /></q-item-section>
         <q-item-section>Events</q-item-section>
       </template>
       <q-card class="bg-grey-8">
         <q-list>
-          <q-item clickable class="q-pl-lg" to="/Events/ITIC" v-if="Analyzer.NominalFrequency != 0"><q-item-section>ITIC</q-item-section></q-item>
-          <q-item clickable class="q-pl-lg" :to="{ path: '/Events/Disturbances', query: (this.UnreadEvents != 0) ? { From: this.status.Events.LastRead, To: this.status.Time } : null }" v-if="Analyzer.NominalFrequency != 0"><q-item-section>Disturbances</q-item-section></q-item>
-          <q-item clickable class="q-pl-lg" to="/Events/EN50160" v-if="Analyzer.NominalFrequency != 0"><q-item-section>EN50160</q-item-section></q-item>
-          <q-item clickable class="q-pl-lg" :to="{ path: '/Events/Alarms', query: (this.UnreadAlarms != 0) ? { From: this.status.Alarms.LastRead, To: this.status.Time } : null }"><q-item-section>Alarms</q-item-section></q-item>
+          <q-item clickable class="q-pl-lg" v-if="Analyzer.NominalFrequency != 0.0" to="/Events/ITIC"><q-item-section>ITIC</q-item-section></q-item>
+          <!--q-item clickable class="q-pl-lg" v-if="Analyzers.Analyzer.NominalFrequency != 0.0" :to="{ path: '/Events/Disturbances', query: (this.UnreadEvents != 0) ? { From: this.status.Events.LastRead, To: this.status.Time } : null }"><q-item-section>Disturbances</q-item-section></q-item>
+          <q-item clickable class="q-pl-lg" v-if="Analyzers.Analyzer.NominalFrequency != 0.0" to="/Events/EN50160"><q-item-section>EN50160</q-item-section></q-item>
+          <q-item clickable class="q-pl-lg" :to="{ path: '/Events/Alarms', query: (this.UnreadAlarms != 0) ? { From: this.status.Alarms.LastRead, To: this.status.Time } : null }"><q-item-section>Alarms</q-item-section></q-item-->
         </q-list>
       </q-card>
     </q-expansion-item>
@@ -44,9 +44,9 @@
       <router-link to="/Events/EN50160" v-if="analyzer.NominalFrequency!=0">EN50160</router-link>
       <router-link :to="{ path: '/Events/Alarms', query: (this.UnreadAlarms != 0) ? { From: this.status.Alarms.LastRead, To: this.status.Time } : null }">Alarms<span class="badge badge-submenu" v-if="UnreadAlarms>0">{{ UnreadAlarms }}</span></router-link>
     </div-->
-    <q-expansion-item dense header-class="q-pa-none q-pr-xs expandable" group="menu" v-model="Expanded[2]" v-if="Analyzer.Loaded == true">
+    <q-expansion-item header-class="q-pa-xs" group="menu" v-model="Expanded[2]" v-if="Analyzer.Analyzer != null" style="width: 300px">
       <template v-slot:header>
-        <q-item-section side class="q-pa-none"><img class="icon" :src="require('Imgs/table_money.png')" /></q-item-section>
+        <q-item-section side class="q-pr-xs"><img class="icon" :src="require('Imgs/table_money.png')" /></q-item-section>
         <q-item-section>Costs</q-item-section>
       </template>
       <q-card class="bg-grey-8">
@@ -57,12 +57,12 @@
         </q-list>
       </q-card>
     </q-expansion-item>
-    <q-item dense clickable class="q-pa-none" to="/Settings" active-class="text-white">
-      <q-item-section side class="q-pa-none"><img class="icon" :src="require('Imgs/cog.png')"></q-item-section>
+    <q-item clickable class="q-pa-xs" to="/Settings" active-class="text-white" style="width: 300px">
+      <q-item-section side class="q-pr-xs"><img class="icon" :src="require('Imgs/cog.png')"></q-item-section>
       <q-item-section>Settings</q-item-section>
     </q-item>
-    <q-item dense clickable class="q-pa-none" to="/About" active-class="text-white">
-      <q-item-section side class="q-pa-none"><img class="icon" :src="require('Imgs/help.png')"></q-item-section>
+    <q-item clickable class="q-pa-xs" to="/About" active-class="text-white" style="width: 300px">
+      <q-item-section side class="q-pr-xs"><img class="icon" :src="require('Imgs/help.png')"></q-item-section>
       <q-item-section>About</q-item-section>
     </q-item>
     <q-resize-observer @resize="onResize" />
@@ -71,9 +71,9 @@
 
 <script>
   export default {
-    props: { analyzer: Object, expanded: Boolean, status: Object },
+    props: { status: Object },
     data() {
-      return { Expanded: [ false ], AnalyzerSelected: false, TitleFrame: 0 }
+      return { Expanded: [ false ], TitleFrame: 0 }
     },
     created: function() {
 //      setInterval(() => { this.SetTitle(); }, 2000)
@@ -90,7 +90,7 @@
     },
     methods: {
       onResize: function(val) {
-        if(val.width == 48) this.Expanded.fill(false);
+        if(val.width < 100) this.Expanded.fill(false);
       },
       SetTitle: function() {
         if((this.TitleFrame == 0) || (this.analyzer == null)) {
@@ -121,6 +121,6 @@
   .icon {
     height: 24px;
     width: 24px;
-    margin: 14px 12px;
+    margin: 0px 3px;
   }
 </style>

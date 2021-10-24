@@ -8,7 +8,7 @@
   import { Timeline } from "vis-timeline/peer";
   import "vis-timeline/styles/vis-timeline-graph2d.css";
   export default {
-    props: { analyzer: Object, events: Object },
+    props: { events: Object },
     data: function() {
       return { };
     },

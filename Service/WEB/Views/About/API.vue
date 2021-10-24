@@ -12,7 +12,7 @@
       return { ShowSpinner: true };
     },
     mounted: function() {
-      this.Post('getAPI', {}).then(
+      this.API.Post('getAPI', {}).then(
         (result) => {
           this.$refs.api.loadSpec(result);
           this.ShowSpinner = false;

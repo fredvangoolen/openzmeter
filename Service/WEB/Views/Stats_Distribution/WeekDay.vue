@@ -17,8 +17,8 @@
   import 'moment-timezone';
   let Names = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
   export default {
-    props: { data: Array, analyzer: Object },
-    data() {
+    props: { data: Array },
+    data: function() {
       return { Columns: [], Units: '', Days: [], Periods: [], ExportData: [] };
     },
     watch: {

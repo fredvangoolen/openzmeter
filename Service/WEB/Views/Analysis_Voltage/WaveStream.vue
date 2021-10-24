@@ -42,10 +42,7 @@
 <script>
   import * as oZm from 'JS/openZmeter.js';
   import streamSaver from 'streamsaver';
-import InputText from '../../Components/InputText.vue';
   export default {
-  components: { InputText },
-    props: { analyzer: Object },
     data: function() {
       return { File: 'Waveform', DownloadSamples: 'Voltage', DownloadFormat: 'application/json', Abort: null, Length: 0, Downsample: 1 };
     },

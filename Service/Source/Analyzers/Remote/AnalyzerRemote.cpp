@@ -78,6 +78,7 @@ void AnalyzerRemote::GetAnalyzer(HTTPRequest &req) {
   pthread_rwlock_rdlock(&pLock);
   json Response = pConfig;
   pthread_rwlock_unlock(&pLock);
+  Response["Analyzer"]       = pSerial;
   Response["User"]           = pOwner;
   Response["Mode"]           = Analyzer::ModeToString(pMode);
   Response["SampleRate"]     = pSamplerate;

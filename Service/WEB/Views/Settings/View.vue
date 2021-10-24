@@ -14,7 +14,7 @@
   let Tariffs = defineAsyncComponent(() => import('./Tariffs.vue'));
   let Connectivity = defineAsyncComponent(() => import('./Connectivity.vue'));
   export default {
-    data () {
+    data: function() {
       return { Queries: 0, Pending: 0, Loaded: null };
     },
     mounted: function() {

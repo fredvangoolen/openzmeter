@@ -5,17 +5,17 @@
         <div class="panel-heading">
           <span class="header-text">Alarms</span>
           <div class="header-buttons clearfix">
-            <toolbar-period storage="PeriodAlarms" v-model="Range" :analyzer="analyzer"></toolbar-period>
+            <toolbar-period storage="PeriodAlarms" v-model="Range"></toolbar-period>
           </div>
         </div>
         <div class="panel-body">
           <spinner v-if="TransferAlarms.Data==null"></spinner>
-          <time-line :analyzer="analyzer" :range.sync="Range" :alarms="TransferAlarms.Data"></time-line>
+          <time-line :range.sync="Range" :alarms="TransferAlarms.Data"></time-line>
         </div>
       </div>
     </div>
     <div class="col-lg-12">
-      <alarms-table :analyzer="analyzer" :alarms="TransferAlarms.Data" @alarmschanged="UpdateAlarms"></alarms-table>
+      <alarms-table :alarms="TransferAlarms.Data" @alarmschanged="UpdateAlarms"></alarms-table>
     </div>
   </q-page>
 </template>
@@ -24,7 +24,6 @@
   import AlarmsTable from './Alarms.vue';
   import TimeLine from './TimeLine.vue';
   export default {
-    props: { analyzer: Object },
     data: function() {
       return { Range: null, TransferAlarms: this.AlarmsTransfer() };
     },

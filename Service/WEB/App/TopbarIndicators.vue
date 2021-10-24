@@ -11,7 +11,7 @@
 <script>
   import TopbarIndicator from './TopbarIndicator.vue';
   export default {
-    props: { analyzer: Object, expanded: Boolean, status: Object },
+    props: { status: Object },
     data () {
       return { Grouped: false,
                Transfer1: this.NowTransfer(['Voltage', 'Current', 'Active_Power', 'Frequency']),
@@ -19,8 +19,8 @@
       };
     },
     created: function() {
-      this.Transfer1.Update(this.analyzer);
-      this.Transfer2.Update(this.analyzer, '15M', 'Day');
+      this.Transfer1.Update(this.Analyzer);
+      this.Transfer2.Update(this.Analyzer, '15M', 'Day');
     },
     beforeDestroy: function() {
       this.Transfer1.Destroy();
@@ -29,14 +29,14 @@
     watch: {
       analyzer: function() {
         this.$nextTick(() => {
-          this.Transfer1.Update(this.analyzer);
-          this.Transfer2.Update(this.analyzer, '15M', 'Day');
+          this.Transfer1.Update(this.Analyzer);
+          this.Transfer2.Update(this.Analyzer, '15M', 'Day');
         });
       }
     },
     computed: {
       EnergyUsage: function() {
-        var Energy = new Array(this.analyzer.PhaseNames.length).fill(0);
+        var Energy = new Array(this.Analyzer.PhaseNames.length).fill(0);
         if(this.Transfer2.Data == null) return { Active_Energy: Energy };
         var EnergyCol = this.Transfer2.Data.Headers.indexOf('Active_Energy');
         for(var n = 0; n < this.Transfer2.Data.Rows.length; n++) {

@@ -5,17 +5,17 @@
         <div class="panel-heading">
           <span class="header-text">Disturbances</span>
           <div class="header-buttons clearfix">
-            <toolbar-period storage="PeriodEvents" v-model="Range" :analyzer="analyzer"></toolbar-period>
+            <toolbar-period storage="PeriodEvents" v-model="Range"></toolbar-period>
           </div>
         </div>
         <div class="panel-body">
           <spinner v-if="TransferEvents.Data==null"></spinner>
-          <time-line :analyzer="analyzer" :range.sync="Range" :events="TransferEvents.Data"></time-line>
+          <time-line :range.sync="Range" :events="TransferEvents.Data"></time-line>
         </div>
       </div>
     </div>
     <div class="col-lg-12">
-      <events-table :analyzer="analyzer" :events="TransferEvents.Data" @eventschanged="UpdateEvents" :pagesize="50"></events-table>
+      <events-table :events="TransferEvents.Data" @eventschanged="UpdateEvents" :pagesize="50"></events-table>
     </div>
   </q-page>
 </template>
@@ -24,7 +24,6 @@
   import TimeLine from './TimeLine.vue';
   import EventsTable from './Events.vue';
   export default {
-    props: { analyzer: Object },
     data: function() {
       return { Range: null, TransferEvents: this.EventsTransfer() };
     },

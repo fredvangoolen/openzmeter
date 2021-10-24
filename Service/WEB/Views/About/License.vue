@@ -7,12 +7,13 @@
 
 <script>
   import marked from 'marked';
+  import axios from 'axios';
   export default {
    data: function() {
      return { ShowSpinner: true, Content: ''};
    },
    mounted: function() {
-     this.$http.get('License.md').then(
+     axios.get('License.md').then(
        (result) => {
          this.Content = marked(result.data, { sanitize: true });
          this.ShowSpinner = false;

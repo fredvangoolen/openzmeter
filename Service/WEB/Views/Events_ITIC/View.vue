@@ -6,7 +6,7 @@
           <div class="panel-heading">
             <span class="header-text">ITIC Curve (CBEMA)</span>
             <div class="header-buttons">
-              <toolbar-years :analyzer="analyzer" v-model="Year" storage="StatYear" aggreg="1H"></toolbar-years>
+              <toolbar-years v-model="Year" storage="StatYear" aggreg="1H"></toolbar-years>
               <div class="btn-group">
                 <button-export file="Events" :rows="Export"></button-export>
               </div>
@@ -14,23 +14,23 @@
           </div>
           <div class="panel-body">
             <spinner v-if="TransferEvents.Data==null"></spinner>
-            <curve :data="TransferEvents.Data" :analyzer="analyzer"></curve>
+            <curve :data="TransferEvents.Data"></curve>
           </div>
         </div>
       </div>
     </div>
     <div class="row">
       <div class="col-xs-12 col-md-6">
-        <by-date :data="TransferEvents.Data" :analyzer="analyzer"></by-date>
+        <by-date :data="TransferEvents.Data"></by-date>
       </div>
       <div class="col-xs-12 col-md-6">
-        <by-type :data="TransferEvents.Data" :analyzer="analyzer"></by-type>
+        <by-type :data="TransferEvents.Data"></by-type>
       </div>
       <div class="col-xs-12 col-md-6">
-        <by-rms :data="TransferEvents.Data" :analyzer="analyzer"></by-rms>
+        <by-rms :data="TransferEvents.Data"></by-rms>
       </div>
       <div class="col-xs-12 col-md-6">
-        <by-duration :data="TransferEvents.Data" :analyzer="analyzer"></by-duration>
+        <by-duration :data="TransferEvents.Data"></by-duration>
       </div>
     </div>
   </q-page>
@@ -44,7 +44,6 @@
   import ByDuration from './ByDuration.vue';
   import moment from 'moment';
   export default {
-    props: { analyzer: Object },
     data: function() {
       return { Year: null, TransferEvents: this.EventsTransfer() };
     },

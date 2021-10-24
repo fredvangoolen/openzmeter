@@ -1,6 +1,6 @@
 <template>
   <q-page>
-    <!--div class="row">
+    <div class="row">
       <div class="col-lg-12">
         <div class="panel panel-active-energy">
           <div class="panel-heading">
@@ -20,7 +20,7 @@
               <div class="col-md-7 col-lg-8 col-xl-9">
                 <portal to="fs-body" :disabled="!Expanded" class="panel-body">
                   <spinner v-if="TransferGraph.Data==null"></spinner>
-                  <energy :analyzer="analyzer" :height="Expanded?DialogHeight:Height-10" :data="TransferGraph.Data" @range="Range=$event"></energy>
+                  <!--energy :analyzer="analyzer" :height="Expanded?DialogHeight:Height-10" :data="TransferGraph.Data" @range="Range=$event"></energy-->
                 </portal>
               </div>
             </div>
@@ -31,36 +31,36 @@
     </div>
     <div class="row">
       <div class="col-lg-6 col-md-12">
-        <graphs ref="g0" serie="Voltage" :analyzer="analyzer" :data="Transfer3S.Data" :last="Transfer3S.LastData" :paused.sync="Paused3S"></graphs>
+        <!--graphs ref="g0" serie="Voltage" :data="Transfer3S.Data" :last="Transfer3S.LastData" :paused.sync="Paused3S"></graphs-->
       </div>
       <div class="col-lg-6 col-md-12">
-        <graphs ref="g1" serie="Current" :analyzer="analyzer" :data="Transfer3S.Data" :last="Transfer3S.LastData" :paused.sync="Paused3S"></graphs>
+        <!--graphs ref="g1" serie="Current" :data="Transfer3S.Data" :last="Transfer3S.LastData" :paused.sync="Paused3S"></graphs-->
       </div>
-      <div :class="{'col-lg-6': (analyzer.NominalFrequency > 0.0)}" class="col-md-12">
-        <graphs ref="g2" serie="Active_Power" :analyzer="analyzer" :data="Transfer3S.Data" :last="Transfer3S.LastData" :paused.sync="Paused3S"></graphs>
+      <div :class="{'col-lg-6': (Analyzer.NominalFrequency > 0.0)}" class="col-md-12">
+        <!--graphs ref="g2" serie="Active_Power" :data="Transfer3S.Data" :last="Transfer3S.LastData" :paused.sync="Paused3S"></graphs-->
       </div>
-      <div class="col-lg-6 col-md-12" v-if="analyzer.NominalFrequency > 0.0">
-        <graphs ref="g3" serie="Frequency" :analyzer="analyzer" :data="Transfer3S.Data" :last="Transfer3S.LastData" :paused.sync="Paused3S"></graphs>
+      <div class="col-lg-6 col-md-12" v-if="Analyzer.NominalFrequency > 0.0">
+        <!--graphs ref="g3" serie="Frequency" :data="Transfer3S.Data" :last="Transfer3S.LastData" :paused.sync="Paused3S"></graphs-->
       </div>
     </div>
-    <div class="row" v-if="analyzer.NominalFrequency > 0.0">
+    <div class="row" v-if="Analyzer.NominalFrequency > 0.0">
       <div class="col-lg-12">
-        <variables :analyzer="analyzer" :data="Transfer1M.Data" :dataNow="TransferNow.Data"></variables>
+        <!--variables :data="Transfer1M.Data" :dataNow="TransferNow.Data"></variables-->
       </div>
-    </div-->
+    </div>
   </q-page>
 </template>
 
 <script>
-  import Energy from './Energy.vue';
+  import { defineAsyncComponent } from 'vue';
+  let Energy = defineAsyncComponent(() => import('./Energy.vue'));
   import Counters from './Counters.vue';
   import Graphs from './GraphsPanel.vue';
   import Variables from './Variables.vue';
   import 'JS/dygraph-synchronizer.js';
   import Dygraph from 'JS/dygraph.js';
   export default {
-    props: { analyzer: { type: Object } },
-    data () {
+    data: function() {
       return { Aggreg: null, Range: null, Height: 200, Paused3S: false, Expanded: false, DialogHeight: 200,
                TransferNow: this.NowTransfer(['Voltage_THD', 'Active_Power', 'Reactive_Power', 'Current_THD', 'Power_Factor', 'Phi']),
                Transfer3S: this.SeriesTransfer(['Voltage', 'Current', 'Active_Power', 'Frequency']),

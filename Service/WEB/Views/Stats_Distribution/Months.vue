@@ -17,7 +17,7 @@
   import 'moment-timezone';
   var Names = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
   export default {
-    props: { data: Array, analyzer: Object },
+    props: { data: Array },
     data: function() {
       return { Units: '', Columns: [], Months: [], Periods: [], ExportData: [] };
     },

@@ -5,149 +5,79 @@ import Axios from 'axios';
 const openZmeter = {
   install: function(App) {
     let This = App.config.globalProperties;
-
-    This.APIMode = 'application/cbor';
-    This.Post = (url, params) => {
-      return new Promise(function(resolve, reject) {
-        Axios.post(url, (This.APIMode == 'application/cbor') ? CBOR.encode(params) : params, { responseType: (This.APIMode == 'application/cbor') ? 'arraybuffer' : 'json', headers: { 'Accept': This.APIMode, 'Content-Type': This.APIMode } }).then(
-          (result) => {
-//            EventBus.$emit('NoNetwork', false);
-            resolve((This.APIMode == 'application/cbor') ? CBOR.decode(result.data) : result.body);
-          },
-          (error) => {
-            if(error.status == 0) {
-//              EventBus.$emit('NoNetwork', true);
-              reject(null);
-            } else if(error.status == 403) {
-//              EventBus.$emit('NoNetwork', false);
-              if(Vue.PostToastError != null) Vue.PostToastError.dismiss();
-              Vue.PostToastError = Vue.$toast.open({type:'error', message: 'User is not allowed to do requested action', duration: 3000});
-              reject(null);
-            } else if(error.status == 401) {
-//              EventBus.$emit('NoNetwork', false);
-//              EventBus.$emit('UserUnathorized');
-              reject(null);
-            } else if(error.status == 500) {
-//              EventBus.$emit('NoNetwork', false);
-              if(Vue.PostToastError != null) Vue.PostToastError.dismiss();
-              Vue.PostToastError = Vue.$toast.open({type:'error', message: 'An internal error happends while procesing your request', duration: 3000});
-              reject(null);
+    This.API = reactive({
+      Mode: 'application/json',
+      Online: true,
+      Success: 0,
+      Fail: 0,
+      Post: (url, params) => {
+        return new Promise(function(resolve, reject) {
+          Axios.post(url, (This.API.Mode == 'application/cbor') ? CBOR.encode(params) : params, { responseType: (This.API.Mode == 'application/cbor') ? 'arraybuffer' : 'json', headers: { 'Accept': This.API.Mode, 'Content-Type': This.API.Mode } }).then(
+            (result) => {
+              This.API.Success++;
+              This.API.Online = true;
+              resolve((This.API.Mode == 'application/cbor') ? CBOR.decode(result.data) : result.data);
+            },
+            (error) => {
+              This.API.Fail++;
+              if(error.status == 0) {
+                This.API.Online = false;
+                reject(null);
+              } else if(error.status == 403) {
+                This.API.Online = true;
+                Notify.create({ message: 'User is not allowed to do requested action', timeout: 3000, color: 'red', position: 'bottom-right', group: 'error403' });
+                reject(null);
+              } else if(error.status == 401) {
+                This.API.Online = true;
+                Notify.create({ message: 'Session is closed due to inactivity', timeout: 5000, color: 'red', position: 'bottom-right' });
+                App.$router.push('/Login');
+                reject(null);
+              } else if(error.status == 500) {
+                This.Comm.Online = true;
+                Notify.create({ message: 'An internal error happends while procesing your request', timeout: 3000, color: 'red', position: 'bottom-right', group: 'error500' });
+                reject(null);
+              }
+              reject({status: error.status, message: String.fromCharCode.apply(null, new Uint8Array(error.data))});
             }
-            reject({status: error.status, message: String.fromCharCode.apply(null, new Uint8Array(error.data))});
-          }
-        );
-      });
-    };
-
-    This.Devices = reactive({
-      Timer: null,
-      Listeners: 0,
-      Headers: [],
-      Items: [],
-      Objects: [],
-      Loading: false,
-      RegisterListener: () => {
-        This.Devices.Listeners++;
-        if(This.Devices.Listeners == 1) {
-          This.Devices.Loading = true;
-          This.Devices.Refresh();
-        }
-      },
-      UnregisterListener: () => {
-        This.Devices.Listeners--;
-        if(This.Devices.Listeners == 0) {
-          This.Devices.Items.splice(0);
-          This.Devices.Objects.splice(0);
-          if(This.Devices.Timer != null) {
-            clearTimeout(This.Devices.Timer);
-            This.Devices.Timer = null;
-          }
-        }
-      },
-      Refresh: () => {
-        if(This.Devices.Timer != null) {
-          clearTimeout(This.Devices.Timer);
-          This.Devices.Timer = null;
-        }
-        This.Devices.getDevices().then(
-          (result) => {
-            console.log(result);
-            This.Devices.Headers = result[0];
-            This.Devices.Items.splice(0);
-            This.Devices.Objects.splice(0);
-            This.Devices.Loading = false;
-            for(var i = 1; i < result.length; i++) {
-              This.Devices.Items.push(result[i]);
-              let Item = {};
-              for(var n = 0; n < result[0].length; n++) Item[result[0][n]] = result[i][n];
-              This.Devices.Objects.push(Item);
-            }
-            This.Devices.Timer = setTimeout(This.Devices.Refresh, 5000);
-          },
-          () => { This.Devices.Timer = setTimeout(This.Devices.Refresh, 5000); }
-        );
+          );
+        });
       },
       getDevices: () => {
-        return This.Post('getDevices', {});
-      }
-    });
-
-    This.Users = reactive({
-      User: null,
-      Timer: null,
-      Listeners: 0,
-      Headers: [],
-      Items: [],
-      Objects: [],
-      Loading: false,
-      RegisterListener: () => {
-        This.Users.Listeners++;
-        if(This.Users.Listeners == 1) {
-          This.Users.Loading = true;
-          This.Users.Refresh();
-        }
+        return This.API.Post('getDevices', {});
       },
-      UnregisterListener: () => {
-        This.Users.Listeners--;
-        if(This.Users.Listeners == 0) {
-          This.Users.Items.splice(0);
-          This.Users.Objects.splice(0);
-          if(This.Users.Timer != null) {
-            clearTimeout(This.Users.Timer);
-            This.Users.Timer = null;
-          }
-        }
+      getDevice: (serial) => {
+        return new Promise(function(resolve, reject) {
+          This.API.Post('getDevice', { Serial: serial }).then(
+            (result) => {
+              result.Device = serial;
+              resolve(result);
+            },
+            (result) => reject(result)
+          );
+        });
       },
-      Refresh: () => {
-        if(This.Users.Timer != null) {
-          clearTimeout(This.Users.Timer);
-          This.Users.Timer = null;
-        }
-        This.Users.getUsers().then(
-          (result) => {
-            This.Users.Headers = result[0];
-            This.Users.Items.splice(0);
-            This.Users.Objects.splice(0);
-            This.Users.Loading = false;
-            for(var i = 1; i < result.length; i++) {
-              This.Users.Items.push(result[i]);
-              let Item = {};
-              for(var n = 0; n < result[0].length; n++) Item[result[0][n]] = result[i][n];
-              This.Users.Objects.push(Item);
-            }
-            This.Users.Timer = setTimeout(This.Users.Refresh, 5000);
-          },
-          () => { This.Users.Timer = setTimeout(This.Users.Refresh, 5000); }
-        );
+      setDevice: (settings) => {
+        return This.API.Post('setDevice', settings);
       },
       getUsers: () => {
-        return This.Post('getUsers', {});
+        return This.API.Post('getUsers', {});
+      },
+      getUser: (userName) => {
+        return new Promise(function(resolve, reject) {
+          This.API.Post('getUser', { User: userName }).then(
+            (result) => {
+              result.User = userName;
+              resolve(result);
+            },
+            (result) => reject(result)
+          );
+        });
       },
       logOut: () => {
-        This.Post('logOut', {}).then(
+        This.API.Post('logOut', {}).then(
           () => {
             localStorage.removeItem("UserName");
-            This.Users.User = null;
+            This.User.clear();
             resolve();
           },
           () => reject()
@@ -155,159 +85,148 @@ const openZmeter = {
       },
       logIn: (user, password) => {
         return new Promise(function(resolve, reject) {
-          This.Post('logIn', { User: user, Password: password, UpdateLastLogin: true }).then(
+          This.API.Post('logIn', { User: user, Password: password, UpdateLastLogin: true }).then(
             (result) => {
               localStorage.setItem('LastLogin', result.LastLogin);
               localStorage.setItem('UserName', user);
-              resolve();
+              This.User.getCurrent().then(resolve, reject);
             },
             () => reject()
           );
         });
       },
-      getCurrentUser: () => {
-        return new Promise(function(resolve, reject) {
-          let UserName = localStorage.getItem("UserName");
-          if(UserName == null) {
-            reject();
-          } else if(This.Users.User != null) {
-            resolve();
-          } else {
-            This.Users.getUser(UserName).then(
-              (result) => {
-                This.Users.User = result;
-                Notify.create({ message: 'Logged in', timeout: 3000, color: 'green', position: 'bottom-right' });
-                resolve(result)
-              },
-              (result) => {
-                if(result != null) Notify.create({ message: 'Failed to login', caption: result.message, timeout: 3000, color: 'red', position: 'bottom-right' });
-                reject(result)
-              }
-            );
-          }
-        });
+      getTariffs: () => {
+        return This.API.Post('getTariffs', {});
       },
-      getUser: (userName) => {
+      getAnalyzers: () => {
+        return This.API.Post('getAnalyzers', {});
+      },
+      getAnalyzer: (serial) => {
         return new Promise(function(resolve, reject) {
-          This.Post('getUser', { User: userName }).then(
-            (result) => resolve(result),
+          This.API.Post('getAnalyzer', { Analyzer: serial }).then(
+            (result) => {
+              result.Analyzer = serial;
+              resolve(result);
+            },
             (result) => reject(result)
           );
         });
       }
     });
 
-    This.Analyzers = reactive({
-      Timer: null,
-      Listeners: 0,
-      Headers: [],
-      Items: [],
-      Objects: [],
-      Loading: false,
-      RegisterListener: () => {
-        This.Analyzers.Listeners++;
-        if(This.Analyzers.Listeners == 1) {
-          This.Analyzers.Loading = true;
-          This.Analyzers.Refresh();
-        }
-      },
-      UnregisterListener: () => {
-        This.Analyzers.Listeners--;
-        if(This.Analyzers.Listeners == 0) {
-          This.Analyzers.Items.splice(0);
-          This.Analyzers.Objects.splice(0);
-          if(This.Analyzers.Timer != null) {
-            clearTimeout(This.Analyzers.Timer);
-            This.Analyzers.Timer = null;
+    This.APIList = (method, interval) => {
+      let APIList = reactive({ Timer: null, Interval: (interval == null) ? 5000 : interval, Method: method, Loading: true, Rows: [],
+        Stop: () => {
+          APIList.Rows.splice(0);
+          if(APIList.Timer != null) {
+            clearTimeout(APIList.Timer);
+            APIList.Timer = null;
           }
-        }
-      },
-      Refresh: () => {
-        if(This.Analyzers.Timer != null) {
-          clearTimeout(This.Analyzers.Timer);
-          This.Analyzers.Timer = null;
-        }
-        This.Analyzers.getAnalyzers().then(
-          (result) => {
-            This.Analyzers.Headers = result[0];
-            This.Analyzers.Items.splice(0);
-            This.Analyzers.Objects.splice(0);
-            This.Analyzers.Loading = false;
-            for(var i = 1; i < result.length; i++) {
-              This.Analyzers.Items.push(result[i]);
-              let Item = {};
-              for(var n = 0; n < result[0].length; n++) Item[result[0][n]] = result[i][n];
-              This.Analyzers.Objects.push(Item);
+        },
+        Refresh: () => {
+          if(APIList.Timer != null) {
+            clearTimeout(APIList.Timer);
+            APIList.Timer = null;
+          }
+          APIList.Method().then(
+            (result) => {
+              APIList.Rows.splice(0);
+              APIList.Loading = false;
+              for(let i = 1; i < result.length; i++) {
+                let Item = { };
+                for(let n = 0; n < result[0].length; n++) Item[result[0][n]] = result[i][n];
+                APIList.Rows.push(Item);
+              }
+              APIList.Timer = setTimeout(APIList.Refresh, APIList.Interval);
+            },
+            () => {
+              APIList.Loading = false;
+              APIList.Timer = setTimeout(APIList.Refresh, APIList.Interval);
             }
-            This.Analyzers.Timer = setTimeout(This.Analyzers.Refresh, 5000);
-          },
-          () => { This.Analyzers.Timer = setTimeout(This.Analyzers.Refresh, 5000); }
-        );
+          );
+        }
+      });
+      APIList.Refresh();
+      return APIList;
+    };
+
+    This.User = reactive({
+      clear: () => {
+        for(let param in This.User) {
+          if(This.User[param] instanceof Function) continue;
+          delete This.User[param];
+        }
       },
-      getAnalyzers: () => {
-        return This.Post('getAnalyzers', {});
+      getCurrent: () => {
+        return new Promise(function(resolve, reject) {
+          This.User.clear();
+          let UserName = localStorage.getItem("UserName");
+          if(UserName == null) {
+            reject();
+          } else {
+            This.API.getUser(UserName).then(
+              (result) => {
+                Object.assign(This.User, result);
+                resolve(result);
+              },
+              (result) => {
+                if(result != null) localStorage.removeItem('UserName');
+                reject(result);
+              }
+            );
+          }
+        });
       }
     });
 
-    This.Tariffs = reactive({
-      Timer: null,
-      Listeners: 0,
-      Headers: [],
-      Items: [],
-      Objects: [],
-      Loading: false,
-      RegisterListener: () => {
-        This.Tariffs.Listeners++;
-        if(This.Tariffs.Listeners == 1) {
-          This.Tariffs.Loading = true;
-          This.Tariffs.Refresh();
+    This.Analyzer = reactive({
+      clear: () => {
+        for(let param in This.Analyzer) {
+          if(This.Analyzer[param] instanceof Function) continue;
+          delete This.Analyzer[param];
         }
       },
-      UnregisterListener: () => {
-        This.Tariffs.Listeners--;
-        if(This.Tariffs.Listeners == 0) {
-          This.Tariffs.Items.splice(0);
-          This.Tariffs.Objects.splice(0);
-          if(This.Tariffs.Timer != null) {
-            clearTimeout(This.Tariffs.Timer);
-            This.Tariffs.Timer = null;
+      getCurrent: () => {
+        return new Promise(function(resolve, reject) {
+          This.Analyzer.clear();
+          let Analyzer = localStorage.getItem('Analyzer');
+          if(Analyzer == null) {
+            reject();
+          } else {
+            This.API.getAnalyzer(Analyzer).then(
+              (result) => {
+                Object.assign(This.Analyzer, result);
+                resolve(result)
+              },
+              (result) => {
+                if(result != null) localStorage.removeItem('Analyzer');
+//                Notify.create({ message: 'Previous analyzer not found, choose new one', timeout: 3000, color: 'red', position: 'bottom-right' });
+                reject(result)
+              }
+            );
           }
-        }
+        });
+      },
+      setCurrent: (serial) => {
+        localStorage.setItem('Analyzer', serial);
+        return This.Analyzer.getCurrent();
+      }
+    });
+
+    This.SeriesNow = reactive({
+      Timer: null,
+      Suscribe: (series) => {
+
+      },
+      Unsuscribe: (series) => {
+
       },
       Refresh: () => {
-        if(This.Tariffs.Timer != null) {
-          clearTimeout(This.Tariffs.Timer);
-          This.Tariffs.Timer = null;
-        }
-        This.Tariffs.getTariffs().then(
-          (result) => {
-            This.Tariffs.Headers = result[0];
-            This.Tariffs.Items.splice(0);
-            This.Tariffs.Objects.splice(0);
-            This.Tariffs.Loading = false;
-            for(var i = 1; i < result.length; i++) {
-              This.Tariffs.Items.push(result[i]);
-              let Item = {};
-              for(var n = 0; n < result[0].length; n++) Item[result[0][n]] = result[i][n];
-              This.Tariffs.Objects.push(Item);
-            }
-            This.Tariffs.Timer = setTimeout(This.Tariffs.Refresh, 5000);
-          },
-          () => { This.Tariffs.Timer = setTimeout(This.Tariffs.Refresh, 5000); }
-        );
-      },
-      getTariffs: () => {
-        return This.Post('getTariffs', {});
+
       }
     });
 
 
-
-    This.Analyzer = reactive({ Loaded: false });
-
-
-    This.CBOR = CBOR;
-    This.PostToastError = null;
 
 
 

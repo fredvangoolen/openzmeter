@@ -29,8 +29,8 @@
   import Dygraph from 'JS/dygraph.js';
   import Graph from 'Components/Graph.vue';
   export default {
-    props: { analyzer: Object, data: Object, paused: Boolean },
-    data() {
+    props: { data: Object, paused: Boolean },
+    data: function() {
       return { MouseOver: false, Options: null, Phases: null, VOffset: 0, COffset: 0, Expanded: false, DialogHeight: 300 };
     },
     computed: {

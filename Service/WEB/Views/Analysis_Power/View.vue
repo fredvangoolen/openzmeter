@@ -31,7 +31,7 @@
           </div>
         </div>
       </div>
-      <div class="col-lg-12" v-if="analyzer.NominalFrequency!=0">
+      <div class="col-lg-12" v-if="Analyzer.NominalFrequency!=0">
         <div class="panel panel-reactive-power">
           <div class="panel-heading">
             <div class="header-text">Fund. Reactive Power</div>
@@ -55,7 +55,7 @@
           </div>
         </div>
       </div>
-      <div class="col-lg-12" v-if="analyzer.NominalFrequency!=0">
+      <div class="col-lg-12" v-if="Analyzer.NominalFrequency!=0">
         <div class="panel panel-reactive-power">
           <div class="panel-heading">
             <div class="header-text">Apparent Power</div>
@@ -108,7 +108,6 @@
 //  import Distribution from './Distribution.vue';
   import Lissajou from './Lissajou.vue';
   export default {
-    props: { analyzer: { type: Object } },
     data: function() {
       return { ActiveTab: null, Aggreg: null, Range: null, ActiveHeight: 300, ReactiveHeight: 300, ExpandedActive: false, ExpandedReactive: false, DialogHeight: 300, Paused: false, ShowContracted: true,
                ExpandedApparent: false, AppaerentHeight: 300,
@@ -164,7 +163,7 @@
         var ReactiveCol = this.TransferGraph.Data.Headers.indexOf("Reactive_Power");
         for(var i = 0; i < this.TransferGraph.Data.Rows.length; i++) {
           if(this.TransferGraph.Data.Rows[i][ActiveCol] == null) continue;
-          Data.push([this.analyzer.FormatDateTime(this.TransferGraph.Data.Rows[i][TimeCol]), this.Round(this.TransferGraph.Data.Rows[i][ActiveCol], 3), this.Round(this.TransferGraph.Data.Rows[i][ReactiveCol], 3), this.Round(Math.sqrt(Math.pow(this.TransferGraph.Data.Rows[i][ReactiveCol], 2.0) + Math.pow(this.TransferGraph.Data.Rows[i][ActiveCol], 2.0)), 3)]);
+          Data.push([this.Analyzer.FormatDateTime(this.TransferGraph.Data.Rows[i][TimeCol]), this.Round(this.TransferGraph.Data.Rows[i][ActiveCol], 3), this.Round(this.TransferGraph.Data.Rows[i][ReactiveCol], 3), this.Round(Math.sqrt(Math.pow(this.TransferGraph.Data.Rows[i][ReactiveCol], 2.0) + Math.pow(this.TransferGraph.Data.Rows[i][ActiveCol], 2.0)), 3)]);
         }
         return Object.seal(Data);
       }

@@ -23,9 +23,9 @@
         </template>
       </vuetable>
     </div>
-    <event-dialog v-if="(View=='RMS')||(View=='RAW')" :mode="View" :analyzer="analyzer" :event="Event" @close="View=null"></event-dialog>
-    <event-notes v-if="View=='Notes'" :analyzer="analyzer" :event="Event" @close="UpdateEvent"></event-notes>
-    <event-delete :analyzer="analyzer" :event="Delete" v-if="Delete!=null" @close="UpdateEvent"></event-delete>
+    <event-dialog v-if="(View=='RMS')||(View=='RAW')" :mode="View" :event="Event" @close="View=null"></event-dialog>
+    <event-notes v-if="View=='Notes'" :event="Event" @close="UpdateEvent"></event-notes>
+    <event-delete :event="Delete" v-if="Delete!=null" @close="UpdateEvent"></event-delete>
   </div>
 </template>
 
@@ -34,7 +34,7 @@
   import EventNotes from './EventNotes.vue';
   import EventDelete from './EventDelete.vue';
   export default {
-    props: { analyzer: Object, events: Object, pagesize: Number },
+    props: { events: Object, pagesize: Number },
     data: function() {
       return { Event: null, View: null, Events: [], FilterEvents: [], ShowSpinner: false, Delete: null,
                Columns: [
@@ -75,7 +75,7 @@
     },
     methods: {
       FormatDate: function(val) {
-        return this.analyzer.FormatDateTime(val);
+        return this.Analyzer.FormatDateTime(val);
       },
       DurationFormat: function(val) {
         return (val.Duration == 0) ? 'RUNNNING' : this.Round(val.Duration / val.SampleRate, 2, false);
@@ -113,7 +113,7 @@
       },
       RMS: function(evt) {
         this.ShowSpinner = true;
-        this.Post('getEvent', { StartTime: evt.StartTime, Analyzer: this.analyzer.Analyzer, Samples: 'RMS' }).then(
+        this.Post('getEvent', { StartTime: evt.StartTime, Analyzer: this.Analyzer.Analyzer, Samples: 'RMS' }).then(
           (result) => {
             this.ShowSpinner = false;
             this.Event = Object.freeze(result);
@@ -126,7 +126,7 @@
       },
       RAW: function(evt) {
         this.ShowSpinner = true;
-        this.Post('getEvent', { StartTime: evt.StartTime, Analyzer: this.analyzer.Analyzer, Samples: 'RAW' }).then(
+        this.Post('getEvent', { StartTime: evt.StartTime, Analyzer: this.Analyzer.Analyzer, Samples: 'RAW' }).then(
           (result) => {
             this.ShowSpinner = false;
             this.Event = Object.freeze(result);

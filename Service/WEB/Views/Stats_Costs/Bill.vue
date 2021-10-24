@@ -67,7 +67,7 @@
   import moment from 'moment';
   import Graph from 'Components/Graph.vue';
   export default {
-    props: { bill: Object, analyzer: Object },
+    props: { bill: Object },
     data: function() {
       return { Expanded: false, DialogHeight: 200, GraphSeries: 'Energy', Aggreg: null, TransferGraph: this.PriceTransfer(['Active_Energy', 'Active_Power', 'Color', 'Period', 'Contracted', 'Energy_Cost', 'Power_Cost']),
         ColumnsCost: [

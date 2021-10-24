@@ -8,8 +8,8 @@
   import Graph from 'Components/Graph.vue';
   import Dygraph from 'JS/dygraph.js';
   export default {
-    props: { data: Object, serie: String, height: Number, analyzer: Object, showContracted: Boolean },
-    data () {
+    props: { data: Object, serie: String, height: Number, showContracted: Boolean },
+    data: function() {
       return { };
     },
     computed: {
@@ -30,13 +30,13 @@
         Opt.interactionModel = Graph.InteractionModels.Scrollable(this);
         Opt.underlayCallback = (ctx, area, dygraph) => { Graph.Callbacks.Underlay_DrawPeriods(ctx, area, dygraph, this.data); };
         Opt.labels = (this.serie == 'Active_Power') ? ['Time', 'Active Power', 'Contracted Power'] : ['Time', 'Reactive Power'];
-        Opt.colors = [this.analyzer.SerieColor(this.serie), '#318ce7'];
+        Opt.colors = [this.Analyzer.SerieColor(this.serie), '#318ce7'];
         Opt.xAxisHeight = 12;
         Opt.selectMode = 'euclidian';
         Opt.axes.y.pixelsPerLabel = 15;
         Opt.axes.y.axisLabelWidth = 34;
-        Opt.axes.x.valueFormatter = (x) => { return Graph.Formatters.X_Hourly(x, this.analyzer.TimeZone,  ((this.data != null) && (this.data.Aggreg == '1H')) ? false : true); };
-        Opt.axes.x.ticker = (min, max, pixels) => { return Graph.Formatters.X_HourlyFull(min, max, pixels, (this.analyzer != null) ? this.analyzer.TimeZone : null); };
+        Opt.axes.x.valueFormatter = (x) => { return Graph.Formatters.X_Hourly(x, this.Analyzer.TimeZone,  ((this.data != null) && (this.data.Aggreg == '1H')) ? false : true); };
+        Opt.axes.x.ticker = (min, max, pixels) => { return Graph.Formatters.X_HourlyFull(min, max, pixels, (this.analyzer != null) ? this.Analyzer.TimeZone : null); };
         Opt.axes.y.valueFormatter = (x, opts, seriesName) => { return Graph.Formatters.Y_UnitScale(x, (this.serie == 'Active_Power') ? 'W' : (this.serie == 'Reactive_Power') ? 'var' : 'va', 2, true);  };
         Opt.axes.y.axisLabelFormatter = (x, gran, opts, g) => { return Graph.Formatters.Y_UnitScaleFull(x, gran, opts, g, '', 2, true); };
         Opt.series = { 'Contracted Power': { strokeWidth: 1, fillGraph: false, plotter: (e) => { Graph.Plotters.LineOffset(e, 900000); } } };

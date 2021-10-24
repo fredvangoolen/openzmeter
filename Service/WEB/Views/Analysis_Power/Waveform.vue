@@ -25,8 +25,8 @@
 <script>
   import Graph from 'Components/Graph.vue';
   export default {
-    props: { analyzer: Object, data: Object, paused: Boolean },
-    data() {
+    props: { data: Object, paused: Boolean },
+    data: function() {
       return { MouseOver: false, Phase: null, Expanded: false, DialogHeight: 300, CurrentMult: 1.0 };
     },
     computed: {

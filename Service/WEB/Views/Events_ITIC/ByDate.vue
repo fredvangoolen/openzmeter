@@ -12,7 +12,7 @@
   import Graph from 'Components/Graph.vue';
   import moment from 'moment';
   export default {
-    props: { data: Object, analyzer: Object },
+    props: { data: Object },
     data: function() {
       return { };
     },
@@ -46,7 +46,7 @@
         if(this.data != null) {
           var StartCol = this.data.Headers.indexOf('StartTime');
           for(var i = 0; i < this.data.Rows.length; i++) {
-            var Month = moment(this.data.Rows[i][StartCol]).tz(this.analyzer.TimeZone).month();
+            var Month = moment(this.data.Rows[i][StartCol]).tz(this.Analyzer.TimeZone).month();
             Opt.file[Month][1] = Opt.file[Month][1] + 1;
           }
         }

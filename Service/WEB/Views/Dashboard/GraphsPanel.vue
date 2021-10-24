@@ -21,7 +21,7 @@
     <div class="panel-footer clearfix">
       <router-link :to="Link"><span class="pull-left">View Details</span></router-link>
       <portal to="fs-toolbar" :disabled="!Expanded" class="header-buttons">
-        <toolbar-phases :analyzer="analyzer" v-model="Phases" v-if="serie != 'Frequency'" :storage="'Dashboard_' + serie" :current="serie=='Current'" :multi="true"></toolbar-phases>
+        <toolbar-phases v-model="Phases" v-if="serie != 'Frequency'" :storage="'Dashboard_' + serie" :current="serie=='Current'" :multi="true"></toolbar-phases>
         <div class="btn-group">
           <button-export :rows="Export" :file="analyzer.SerieName(serie)"></button-export>
           <button-expand v-model="Expanded"></button-expand>
@@ -39,8 +39,8 @@
   import moment from 'moment';
   import 'JS/dygraph-crosshair.js';
   export default {
-    props: { serie: String, analyzer: Object, data: Object, last: Object, paused: Boolean },
-    data() {
+    props: { serie: String, data: Object, last: Object, paused: Boolean },
+    data: function() {
       return { ShowSpinner: true, Phases: null, Expanded: false, DialogHeight: 300 };
     },
     computed: {

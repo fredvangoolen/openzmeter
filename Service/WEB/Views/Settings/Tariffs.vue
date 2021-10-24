@@ -13,10 +13,10 @@
         <q-input dense debounce="300" label="Search" v-model="Filter" class="q-mr-sm">
           <template v-slot:prepend><q-icon name="search" /></template>
         </q-input>
-        <q-btn stretch unelevated color="primary" size="sm" @click="Add">Add</q-btn>
+        <q-btn stretch unelevated color="primary" @click="Add">Add</q-btn>
       </q-toolbar>
       <q-separator />
-      <q-table flat dense :columns="ColumnsTariffs" :rows="Tariffs.Objects" :filter="Filter" row-key="user" class="q-ma-xs">
+      <q-table flat dense :columns="ColumnsTariffs" :rows="Tariffs.Rows" :filter="Filter" row-key="user" class="q-ma-xs">
         <template v-slot:no-data="data">
           <div class="full-width row flex-center q-gutter-sm">{{ data.message }}</div>
         </template>
@@ -55,7 +55,7 @@
   let EspEsios = () => import('./Tariffs/EspEsios.vue');
   export default {
     data: function() {
-      return { FirstLoad: true, ShowSpinner: false, Filter: '', ShowDialog: false, Tariff: null, SourceTariff: null, Module: null, Tab: 'templates',
+      return { ShowSpinner: false, Filter: '', ShowDialog: false, Tariff: null, SourceTariff: null, Module: null, Tab: 'templates', Tariffs: this.APIList(this.API.getTariffs),
         Modules: [
           { Name: 'ESP_ESIOS', Description: 'Fetch hourly prices from spanish ESIOS (Sistema de informacion del operador del sistema)' }
         ],
@@ -73,23 +73,14 @@
     },
     watch: {
       'Tariffs.Loading': function(val) {
-        if((val == false) && this.FirstLoad) {
-          this.$emit('done');
-          this.FirstLoad = false;
-        }
+        this.$emit('done');
       }
     },
     mounted: function() {
-      this.Tariffs.RegisterListener();
-      this.FirstLoad = true;
       this.$emit('queries', 1);
-      if((this.Tariffs.Loading == false) && this.FirstLoad) {
-        this.$emit('done');
-        this.FirstLoad = false;
-      }
     },
     unmounted: function() {
-      this.Tariffs.UnregisterListener();
+      this.Tariffs.Stop();
     },
     methods: {
       Add: function() {

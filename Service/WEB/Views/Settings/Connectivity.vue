@@ -71,7 +71,7 @@
         for(var n in this.Modules) this.LoadModule(this.Modules[n], false);
       },
       LoadModule: function(module, full) {
-        this.Post(module.Method, { Full: full }).then(
+        this.API.Post(module.Method, { Full: full }).then(
           (result) => {
             module.Enabled = result.Enabled;
             module.Avaliable = true;

@@ -1,12 +1,14 @@
 <template>
-  <q-item class="q-pa-none expandable" dark :class="{ expanded: expanded }">
-    <q-item-section side class="q-pa-none">
+  <q-item clickable class="q-pa-xs" dark @click="ShowDialog = true" style="width: 300px">
+    <q-item-section side class="q-pr-xs">
       <img class="icon" :src="require('Imgs/user32.png')">
     </q-item-section>
-    <q-btn dense unelevated color="primary" stretch icon="toc" />
-    <q-item-section class="q-ml-xs">
-      <q-item-label class="ellipsis">{{ Users.User.User || '-' }}</q-item-label>
-      <q-item-label caption class="ellipsis">{{ Users.User.Name || '-' }}</q-item-label>
+    <q-item-section>
+      <q-item-label class="ellipsis">{{ User.User ? User.User : '-' }}</q-item-label>
+      <q-item-label caption class="ellipsis">{{ User.Name ? User.Name : '-' }}</q-item-label>
+    </q-item-section>
+    <q-item-section side>
+      <q-icon name="menu" />
     </q-item-section>
     <!--div class="btn-group">
       <button type="button" class="btn btn-default btn-xs" title="User logout" @click="Logout"><img :src="require('Imgs/user_go.png')"></button>
@@ -16,9 +18,8 @@
 </template>
 
 <script>
-  import UserEdit from './User/Dialog.vue';
+  import UserDialog from './User/Dialog.vue';
   export default {
-    props: { expanded: Boolean },
     data() {
       return { ShowDialog: false };
     },
@@ -37,25 +38,14 @@
 //        );
 //      }
 //    },
-    components: { UserEdit }
+    components: { UserDialog }
   }
 </script>
 
 <style scoped>
-  .expandable {
-    margin-left: 0;
-    width: 300px;
-    transition: margin-left 0.1s ease-in-out;
-    justify-content: start !important;
-  }
-  .expandable.expanded {
-    margin-left: -48px;
-    width: 348px;
-    transition: margin-left 0.1s ease-in-out;
-  }
   .icon {
     height: 24px;
     width: 24px;
-    margin: 14px 12px;
+    margin: 0px 3px;
   }
 </style>

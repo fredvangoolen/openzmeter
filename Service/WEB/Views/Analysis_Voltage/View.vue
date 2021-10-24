@@ -6,8 +6,8 @@
 
             <portal to="fs-toolbar" :disabled="!Expanded" class="header-buttons">
               <toolbar-aggregation storage="Aggregation" :options="['3S', '1M', '10M', '1H']" v-model="Aggreg"></toolbar-aggregation>
-              <toolbar-period storage="Period" v-model="Range" :analyzer="analyzer"></toolbar-period>
-              <toolbar-phases storage="ViewPhases" :analyzer="analyzer" :current="false" :multi="true" v-model="Phases"></toolbar-phases>
+              <toolbar-period storage="Period" v-model="Range" ></toolbar-period>
+              <toolbar-phases storage="ViewPhases" current="false" :multi="true" v-model="Phases"></toolbar-phases>
               <div class="btn-group">
                 <button-export file="Voltage" :rows="Export"></button-export>
                 <button-expand v-model="Expanded"></button-expand>
@@ -17,11 +17,11 @@
       </q-toolbar>
           <div class="panel-body">
             <div class="row">
-              <counters class="col-md-6 col-lg-4 col-xl-3" :analyzer="analyzer" :data10M="Transfer10M.LastData" :dataGraph="TransferGraph.Data" :height.sync="Height"></counters>
+              <counters class="col-md-6 col-lg-4 col-xl-3" :data10M="Transfer10M.LastData" :dataGraph="TransferGraph.Data" :height.sync="Height"></counters>
               <div class="col-md-6 col-lg-8 col-xl-9">
                 <portal to="fs-body" :disabled="!Expanded" class="panel-body">
                   <spinner v-if="TransferGraph.Data==null"></spinner>
-                  <voltage :phases="Phases" :analyzer="analyzer" :data="TransferGraph.Data" :height="Expanded?DialogHeight:Height" @range="Range=$event"></voltage>
+                  <voltage :phases="Phases" :data="TransferGraph.Data" :height="Expanded?DialogHeight:Height" @range="Range=$event"></voltage>
                 </portal>
               </div>
             </div>
@@ -41,13 +41,13 @@
         <q-tab-panels v-model="ActiveTab">
           <detail-tabs v-if="analyzer.NominalFrequency>0" :tabs="['Waveform', 'Harmonics', 'Evolution', 'Advanced', 'Phasors', 'Parameters', 'Events']" storage="Voltage.Details.Tabs.AC" v-model="ActiveTab"></detail-tabs>
           <detail-tabs v-if="analyzer.NominalFrequency==0" :tabs="['Waveform', 'Advanced']" storage="Voltage.Details.Tabs.DC" v-model="ActiveTab"></detail-tabs>
-          <q-tab-panel name="waveform" class="q-pa-none"><waveform :data="TransferNow.Data" :analyzer="analyzer" :paused.sync="Paused" /></q-tab-panel>
-          <harmonics v-if="ActiveTab=='Harmonics'" :data="TransferNow.Data" :analyzer="analyzer" :paused.sync="Paused"></harmonics>
-          <evolution v-if="ActiveTab=='Evolution'" :data="TransferCubism.Data" :analyzer="analyzer"></evolution>
-          <advanced v-if="ActiveTab=='Advanced'" :data="TransferNow.Data" :analyzer="analyzer" :paused.sync="Paused"></advanced>
+          <q-tab-panel name="waveform" class="q-pa-none"><waveform :data="TransferNow.Data" :paused.sync="Paused" /></q-tab-panel>
+          <harmonics v-if="ActiveTab=='Harmonics'" :data="TransferNow.Data" :paused.sync="Paused"></harmonics>
+          <evolution v-if="ActiveTab=='Evolution'" :data="TransferCubism.Data"></evolution>
+          <advanced v-if="ActiveTab=='Advanced'" :data="TransferNow.Data" :paused.sync="Paused"></advanced>
           <parameters v-if="ActiveTab=='Parameters'" :data="TransferCubism.Data" :dataNow="TransferNow.Data" :analyzer="analyzer" :paused.sync="Paused"></parameters>
-          <phasors v-if="ActiveTab=='Phasors'" :data="TransferNow.Data" :analyzer="analyzer" :paused.sync="Paused"></phasors>
-          <events v-if="ActiveTab=='Events'" :analyzer="analyzer" :events="TransferEvents.Data" @eventschanged="UpdateEvents" :pagesize="10"></events>
+          <phasors v-if="ActiveTab=='Phasors'" :data="TransferNow.Data" :paused.sync="Paused"></phasors>
+          <events v-if="ActiveTab=='Events'" :events="TransferEvents.Data" @eventschanged="UpdateEvents" :pagesize="10"></events>
         </q-tab-panels>
     </q-card>
     <dlg-fs v-if="Expanded" title="Voltage" :height.sync="DialogHeight"></dlg-fs>
@@ -65,7 +65,6 @@
   import Events from '../Events_Disturbances/Events.vue';
   import Phasors from './Phasors.vue';
   export default {
-    props: { analyzer: { type: Object } },
     data: function() {
       return { ActiveTab: null, Aggreg: null, Range: null, Phases: null, Height: 300, Paused: false, Expanded: false, DialogHeight: 300,
                TransferGraph: this.SeriesTransfer(['Voltage']),

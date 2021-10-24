@@ -20,7 +20,7 @@
         <color-bar :width="140" :height="10" :range="Range" units="Wh"></color-bar>
       </q-card-section>
       <q-separator />
-      <heatmap-table :data="Data" :aggreg="Aggreg" :analyzer="analyzer" :range.sync="Range" @update:export="ExportData=$event" class="q-ma-xs" />
+      <heatmap-table :data="Data" :aggreg="Aggreg" :range.sync="Range" @update:export="ExportData=$event" class="q-ma-xs" />
       <q-inner-loading :showing="!Loaded" v-if="Queries>0">
         <q-circular-progress show-value font-size="12px" :value="(Queries-Pending)/Queries*100" size="50px" :thickness="0.3" color="orange-10">{{ Math.trunc(((Queries-Pending)/Queries)*100, 0) }} %</q-circular-progress>
       </q-inner-loading>
@@ -33,7 +33,6 @@
   import * as oZm from 'JS/openZmeter.js';
   import HeatmapTable from './HeatmapTable.vue';
   export default {
-    props: { analyzer: Object },
     data: function() {
       return { Aggreg: '1H', Range: [0, 1], Data: null, Year: 0, ShowSpinner: true, Progress: 0, ExportData: null };
     },
@@ -50,9 +49,9 @@
         let Blocks = [];
         if((this.Year == null) || (this.analyzer == null)) return;
         let GetMonth = (month) => {
-          let To = moment.tz(this.analyzer.TimeZone).year(this.Year).month(month).endOf('month').valueOf();
-          let From = moment.tz(this.analyzer.TimeZone).year(this.Year).month(month).startOf('month').valueOf();
-          this.Post('getSeries', { From: From, To: To, Aggreg: '15M', Series: ['Active_Energy'], Analyzer: this.analyzer.Analyzer }).then(
+          let To = moment.tz(this.Analyzer.TimeZone).year(this.Year).month(month).endOf('month').valueOf();
+          let From = moment.tz(this.Analyzer.TimeZone).year(this.Year).month(month).startOf('month').valueOf();
+          this.Post('getSeries', { From: From, To: To, Aggreg: '15M', Series: ['Active_Energy'], Analyzer: this.Analyzer.Analyzer }).then(
             (result) => {
               Blocks[month] = (month == 0) ? result : result.slice(1);
               Count++;

@@ -11,7 +11,7 @@
 
 <script>
   export default {
-    props: { analyzer: Object, value: Object, serie: String, grouped: Boolean },
+    props: { value: Object, serie: String, grouped: Boolean },
     data: function() {
       return { };
     },

@@ -22,7 +22,7 @@
   import * as oZm from 'JS/openZmeter.js';
   import Dygraph from 'JS/dygraph.js';
   export default {
-    props: { analyzer: Object, data: Object, dataNow: Object },
+    props: { data: Object, dataNow: Object },
     data: function() {
       return { Phase: null, MouseOver: false };
     },

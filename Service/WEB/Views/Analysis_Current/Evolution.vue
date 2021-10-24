@@ -23,8 +23,8 @@
   import moment from 'moment';
   import Dygraph from 'JS/dygraph.js';
   export default {
-    props: { analyzer: Object, data: Object },
-    data() {
+    props: { data: Object },
+    data: function() {
       return { MouseOver: false, Options: null, Phase: null, Names: [] };
     },
     computed: {

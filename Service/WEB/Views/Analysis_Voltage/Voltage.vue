@@ -10,8 +10,8 @@
   import * as oZm from 'JS/openZmeter.js';
   import Dygraph from 'JS/dygraph.js';
   export default {
-    props: { analyzer: Object, data: Object, phases: Array, height: Number },
-    data() {
+    props: { data: Object, phases: Array, height: Number },
+    data: function() {
       return { MouseOver: false };
     },
     computed: {

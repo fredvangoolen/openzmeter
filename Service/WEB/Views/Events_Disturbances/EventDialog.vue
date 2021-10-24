@@ -19,7 +19,7 @@
   import Dygraph from 'JS/dygraph.js';
   import * as oZm from 'JS/openZmeter.js';
   export default {
-    props: { analyzer: Object, mode: String, event: Object },
+    props: { mode: String, event: Object },
     data: function() {
       return { Phases: null, DialogHeight: 300 };
     },
@@ -204,10 +204,10 @@
     },
     methods: {
        Export: function() {
-         var Rows = [['Sample'].concat(this.analyzer.SerieNames('Voltage'))];
+         var Rows = [['Sample'].concat(this.Analyzer.SerieNames('Voltage'))];
          for(var i = 0; i < this.event.Samples.length; i++) {
           var Row = [i];
-          for(var ch = 0; ch < this.analyzer.VoltageChannels; ch++) Row.push(this.Round(this.event.Samples[i][ch], 2));
+          for(var ch = 0; ch < this.Analyzer.VoltageChannels; ch++) Row.push(this.Round(this.event.Samples[i][ch], 2));
           Rows.push(Row);
           if((this.event.Samples.length == (4 * this.event.Length)) && (i == (2 * this.event.Length))) Rows.push(new Array(this.event.Samples[0].length + 1).fill('- GAP -'));
         }

@@ -1,18 +1,8 @@
 <template>
-  <q-item class="q-pa-none expandable" dark :class="{ expanded: expanded }">
-    <q-item-section side class="q-pa-none">
+  <q-item clickable class="q-pa-xs" dark @click="ShowDialog = true">
+    <q-item-section side class="q-pr-xs">
       <img class="icon" :src="require('Imgs/disconnect32.png')">
-    </q-item-section>
-    <q-btn dense unelevated color="primary" stretch icon="toc" @click="Dialog = true" />
-    <q-item-section class="q-ml-xs">
-      <q-item-label class="ellipsis">{{ (Analyzer.Loaded == false) ? 'No analyzer selected' : Analyzer.Name }}</q-item-label>
-      <q-item-label caption class="ellipsis">{{ (Analyzer.Loaded == false) ? 'Select one before continue' : 'Serial: ' + Analyzer.Analyzer }}</q-item-label>
-    </q-item-section>
-
-
-
-
-    <!--div class="collapse-icon">
+      <!--div class="collapse-icon">
       <img class="icon" :src="require('Imgs/disconnect32.png')">
       <span v-if="(status!=null)&&(status.State!=null)&&(status.PendingActions!=null)&&(status.PendingActions>0)">
         <span class="badge badge-menu badge-green" v-if="status.State=='ONLINE'">{{ status.PendingActions }}</span>
@@ -25,44 +15,48 @@
         <img class="badge-icon" :src="require('Imgs/bullet_red.png')" v-if="status.State=='OFFLINE'">
       </span>
       <img class="badge-icon" :src="require('Imgs/bullet_red.png')" v-else>
-    </div>
-    <div class="btn-group">
-      <button type="button" class="btn btn-default btn-xs" @click="Dialog='Table'" title="Select and configure avaliable analyzers"><img :src="require('Imgs/magnifier.png')"></button>
-      <button type="button" class="btn btn-default btn-xs" :disabled="analyzer==null" @click="Dialog='Info'" title="Analyzer information and status"><img :src="require('Imgs/system_monitor.png')"></button>
     </div-->
-    <analyzer-table v-if="Dialog" @close="Dialog=false" />
+    </q-item-section>
+    <q-item-section>
+      <q-item-label class="ellipsis">{{ Analyzer.Name ? Analyzer.Name : 'No analyzer selected' }}</q-item-label>
+      <q-item-label caption class="ellipsis">{{ Analyzer.Analyzer ? Analyzer.Analyzer : 'Select one before continue' }}</q-item-label>
+    </q-item-section>
+    <q-item-section side>
+      <q-icon name="menu" />
+    </q-item-section>
+    <analyzer-dialog v-if="ShowDialog" @close="ShowDialog = false" />
   </q-item>
 </template>
 
 <script>
-  import AnalyzerTable from './Analyzer/Table.vue';
-  import AnalyzerInfo from './Analyzer/Info.vue';
-  import moment from 'moment';
-  import 'moment-timezone';
+  import { defineAsyncComponent } from 'vue';
+  let AnalyzerDialog = defineAsyncComponent(() => import('./Analyzer/Dialog.vue'));
+//  import moment from 'moment';
+//  import 'moment-timezone';
   export default {
-    props: { expanded: Boolean, status: Object },
+    props: { status: Object },
     data() {
-      return { Dialog: false };
+      return { ShowDialog: false };
     },
     created: function() {
-      if(localStorage.getItem("Analyzer") == null) {
-        this.SetAnalyzer(null);
-        this.Dialog = 'Table';
-      } else {
-        this.Post('getAnalyzer', { Analyzer: localStorage.getItem("Analyzer") }).then(
-          (result) => {
-            result.Analyzer = localStorage.getItem("Analyzer");
-            this.SetAnalyzer(result);
-          },
-          (fail) => {
-            if(fail != null) {
+//      if(localStorage.getItem("Analyzer") == null) {
+//        this.SetAnalyzer(null);
+//        this.Dialog = 'Table';
+//      } else {
+//        this.Post('getAnalyzer', { Analyzer: localStorage.getItem("Analyzer") }).then(
+//          (result) => {
+//            result.Analyzer = localStorage.getItem("Analyzer");
+//            this.SetAnalyzer(result);
+//          },
+//          (fail) => {
+//            if(fail != null) {
 //              this.$toast.open({type:'error', message: "Previous analyzer not found, choose new one", duration: 3000});
-              this.SetAnalyzer(null);
-              this.Dialog = 'Table';
-            }
-          }
-        );
-      }
+//              this.SetAnalyzer(null);
+//              this.Dialog = 'Table';
+//            }
+//          }
+//        );
+//      }
     },
     methods: {
       SetAnalyzer: function(analyzer) {
@@ -194,25 +188,14 @@
         this.$router.push({path: '/Events/Disturbances'});
       }
     },
-    components: { AnalyzerTable, AnalyzerInfo }
+    components: { AnalyzerDialog }
   }
 </script>
 
 <style scoped>
-  .expandable {
-    margin-left: 0px;
-    width: 300px;
-    transition: margin-left 0.1s ease-in-out;
-    justify-content: start !important;
-  }
-  .expandable.expanded {
-    margin-left: -48px;
-    width: 348px;
-    transition: margin-left 0.1s ease-in-out;
-  }
   .icon {
     height: 24px;
     width: 24px;
-    margin: 14px 12px;
+    margin: 0px 3px;
   }
 </style>

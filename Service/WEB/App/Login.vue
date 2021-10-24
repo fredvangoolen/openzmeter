@@ -23,14 +23,14 @@
 
 <script>
   export default {
-    data() {
+    data: function() {
       return { UserName: null, Password: null };
     },
     methods: {
       Login: function(event) {
         event.preventDefault();
-        this.logIn(this.UserName, this.Password).then(
-          () => this.$router.replace('/Dashboard'),
+        this.API.logIn(this.UserName, this.Password).then(
+          () => this.$q.notify({ message: 'Logged in', timeout: 3000, color: 'green', position: 'bottom-right' }),
           () => this.$q.notify({ message: 'Failed to login', caption: 'Invalid user name or password', timeout: 3000, color: 'red', position: 'bottom-right' })
         );
       }

@@ -116,6 +116,8 @@ void DeviceVirtual::Config(const json &config) {
 void DeviceVirtual::GetDevice(HTTPRequest &req) {
   if(req.UserName() != "admin") return req.Error("", HTTP_FORBIDDEN);
   json Config = ConfigFile::ReadConfig("/Devices/" + pSerial);
+  Config["Serial"] = pSerial;
+  Config["Driver"] = pDriver;
   Config.erase("Analyzer");
   req.Success(Config);
 }

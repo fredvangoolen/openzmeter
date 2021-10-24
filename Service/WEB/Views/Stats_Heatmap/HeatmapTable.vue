@@ -46,7 +46,7 @@
   import * as oZm from 'JS/openZmeter.js';
   var DaysNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
   export default {
-    props: { analyzer: Object, data: Array, aggreg: String },
+    props: { data: Array, aggreg: String },
     data: function() {
       return { Days: {} };
     },
@@ -67,7 +67,7 @@
         let TimeCol   = Headers.indexOf('Time');
         let EnergyCol = Headers.indexOf('Active_Energy');
         for(let i = 0; i < Rows.length; i++) {
-          let RowDate = moment(Rows[i][TimeCol]).tz(this.analyzer.TimeZone);
+          let RowDate = moment(Rows[i][TimeCol]).tz(this.Analyzer.TimeZone);
           if(Tmp.Date != RowDate.format('DD/MM/YYYY')) {
             this.Days.push(Object.assign({}, Tmp));
             Tmp = { };

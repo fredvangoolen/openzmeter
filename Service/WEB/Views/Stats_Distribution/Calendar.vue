@@ -23,7 +23,7 @@
 //  } (jQuery));
 
   export default {
-    props: { data: Array, analyzer: Object, year: Number },
+    props: { data: Array, year: Number },
     data: function() {
       return { };
     },

@@ -4,7 +4,7 @@
       <div class="header-text">Main variables</div>
       <div class="float-right">
         <span v-if="data!=null">From {{ analyzer.FormatAggregation(data.Aggreg) }} aggregation {{ Paused ? '(Paused)' : '' }}</span>
-        <toolbar-phases storage="DetailsPhases" :analyzer="analyzer" v-model="Phase"></toolbar-phases>
+        <toolbar-phases storage="DetailsPhases" v-model="Phase"></toolbar-phases>
         <div class="btn-group">
           <button-export file="Main_Variables" :rows="Export"></button-export>
         </div>
@@ -27,8 +27,8 @@
   import Dygraph from 'JS/dygraph.js';
   import 'JS/dygraph-synchronizer.js';
   export default {
-    props: { analyzer: { type: Object }, data: Object, dataNow: Object },
-    data() {
+    props: { data: Object, dataNow: Object },
+    data: function() {
       return { Linked: false, Phase: null, Paused: false };
     },
     computed: {

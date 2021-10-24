@@ -23,7 +23,7 @@
 <script>
   import Graph from 'Components/Graph.vue';
   export default {
-    props: { data: Object, analyzer: Object, ranges: Array },
+    props: { data: Object, ranges: Array },
     data: function() {
       return { };
     },
@@ -51,21 +51,21 @@
         Opt.axes.x.valueFormatter = (x) => {
           if((x < 0) || (x >= this.ranges.length - 1)) return "";
           if(x == 0) {
-            return "Less than " + this.Round(this.analyzer.NominalVoltage * (1 + this.ranges[x + 1] / 100.0)) + ' V';
+            return "Less than " + this.Round(this.Analyzer.NominalVoltage * (1 + this.ranges[x + 1] / 100.0)) + ' V';
           } else if(x == (this.ranges.length - 2)) {
-            return "More than " + this.Round(this.analyzer.NominalVoltage * (1 + this.ranges[x] / 100.0)) + ' V';
+            return "More than " + this.Round(this.Analyzer.NominalVoltage * (1 + this.ranges[x] / 100.0)) + ' V';
           } else {
-            return "From " + this.Round(this.analyzer.NominalVoltage * (1 + this.ranges[x] / 100.0), 2) + " to " + this.Round(this.analyzer.NominalVoltage * (1 + this.ranges[x + 1] / 100.0), 2) + ' V';
+            return "From " + this.Round(this.Analyzer.NominalVoltage * (1 + this.ranges[x] / 100.0), 2) + " to " + this.Round(this.Analyzer.NominalVoltage * (1 + this.ranges[x + 1] / 100.0), 2) + ' V';
           }
         };
         Opt.axes.x.axisLabelFormatter = (x) => {
           if((x < 0) || (x >= this.ranges.length - 1)) return "";
           if(x == 0) {
-            return '≤' + this.Round(this.analyzer.NominalVoltage * (1 + this.ranges[x + 1] / 100.0), 2);
+            return '≤' + this.Round(this.Analyzer.NominalVoltage * (1 + this.ranges[x + 1] / 100.0), 2);
           } else if(x == (this.ranges.length - 2)) {
-            return '≥' + this.Round(this.analyzer.NominalVoltage * (1 + this.ranges[x] / 100.0));
+            return '≥' + this.Round(this.Analyzer.NominalVoltage * (1 + this.ranges[x] / 100.0));
           } else {
-            return this.Round(this.analyzer.NominalVoltage * (1 + this.ranges[x] / 100.0), 2) + "<br/>" + this.Round(this.analyzer.NominalVoltage * (1 + this.ranges[x + 1] / 100.0), 2);
+            return this.Round(this.Analyzer.NominalVoltage * (1 + this.ranges[x] / 100.0), 2) + "<br/>" + this.Round(this.Analyzer.NominalVoltage * (1 + this.ranges[x + 1] / 100.0), 2);
           }
         };
         if(this.data != null) {

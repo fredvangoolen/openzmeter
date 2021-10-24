@@ -7,12 +7,13 @@
 
 <script>
   import marked from 'marked';
+  import axios from 'axios';
   export default {
    data: function() {
      return { ShowSpinner: true, Content: ''};
    },
    mounted: function() {
-     this.$http.get('Changelog.md').then(
+     axios.get('Changelog.md').then(
        (result) => {
          this.Content = marked(result.data, { });
          this.ShowSpinner = false;

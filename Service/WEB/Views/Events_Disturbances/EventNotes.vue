@@ -19,7 +19,7 @@
 
 <script>
   export default {
-    props: { analyzer: Object, event: Object },
+    props: { event: Object },
     data: function() {
       return { ShowSpinner: false, Error: null, Event: null };
     },
@@ -29,7 +29,7 @@
     methods: {
       Save: function() {
         this.ShowSpinner = true;
-        this.Post('setEvent', { Analyzer: this.analyzer.Analyzer, Notes: this.Event.Notes, StartTime: this.Event.StartTime }).then(
+        this.Post('setEvent', { Analyzer: this.Analyzer.Analyzer, Notes: this.Event.Notes, StartTime: this.Event.StartTime }).then(
           (result) => { this.$emit('close', false); },
           (fail) =>  {
             this.Error = 'Failed to save analyzer!';

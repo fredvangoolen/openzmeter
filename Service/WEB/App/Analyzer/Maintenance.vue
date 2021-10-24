@@ -48,8 +48,8 @@
             <td>Delete table data
               <div style="display:flex">
                 <input type="checkbox" v-model="Del3SRanged">
-                <label>From:</label><date-picker :options="{ format: 'DD/MM/YYYY', viewMode: 'months', timeZone: analyzer.TimeZone }" :disabled="!Del3SRanged" v-model="From" style="flex-grow:2"></date-picker>
-                <label>To:</label><date-picker :options="{ format: 'DD/MM/YYYY', viewMode: 'months', timeZone: analyzer.TimeZone }" :disabled="!Del3SRanged" v-model="To" style="flex-grow:2"></date-picker>
+                <label>From:</label><date-picker :options="{ format: 'DD/MM/YYYY', viewMode: 'months', timeZone: Analyzer.TimeZone }" :disabled="!Del3SRanged" v-model="From" style="flex-grow:2"></date-picker>
+                <label>To:</label><date-picker :options="{ format: 'DD/MM/YYYY', viewMode: 'months', timeZone: Analyzer.TimeZone }" :disabled="!Del3SRanged" v-model="To" style="flex-grow:2"></date-picker>
               </div>
             </td>
             <td class="action"><button type="button" class="btn btn-danger btn-xs" @click="Delete('3S', Del3SRanged)">Execute</button></td>
@@ -58,8 +58,8 @@
             <td>Download table data to a file
               <div style="display:flex">
                 <input type="checkbox" v-model="Get3SRanged">
-                <label>From:</label><date-picker :options="{ format: 'DD/MM/YYYY', viewMode: 'months', timeZone: analyzer.TimeZone }" :disabled="!Get3SRanged" v-model="From" style="flex-grow:2"></date-picker>
-                <label>To:</label><date-picker :options="{ format: 'DD/MM/YYYY', viewMode: 'months', timeZone: analyzer.TimeZone }" :disabled="!Get3SRanged" v-model="To" style="flex-grow:2"></date-picker>
+                <label>From:</label><date-picker :options="{ format: 'DD/MM/YYYY', viewMode: 'months', timeZone: Analyzer.TimeZone }" :disabled="!Get3SRanged" v-model="From" style="flex-grow:2"></date-picker>
+                <label>To:</label><date-picker :options="{ format: 'DD/MM/YYYY', viewMode: 'months', timeZone: Analyzer.TimeZone }" :disabled="!Get3SRanged" v-model="To" style="flex-grow:2"></date-picker>
               </div>
             </td>
             <td class="action">
@@ -86,8 +86,8 @@
             <td>Delete table data
               <div style="display:flex">
                 <input type="checkbox" v-model="Del1MRanged">
-                <label>From:</label><date-picker :options="{ format: 'DD/MM/YYYY', viewMode: 'months', timeZone: analyzer.TimeZone }" :disabled="!Del1MRanged" v-model="From" style="flex-grow:2"></date-picker>
-                <label>To:</label><date-picker :options="{ format: 'DD/MM/YYYY', viewMode: 'months', timeZone: analyzer.TimeZone }" :disabled="!Del1MRanged" v-model="To" style="flex-grow:2"></date-picker>
+                <label>From:</label><date-picker :options="{ format: 'DD/MM/YYYY', viewMode: 'months', timeZone: Analyzer.TimeZone }" :disabled="!Del1MRanged" v-model="From" style="flex-grow:2"></date-picker>
+                <label>To:</label><date-picker :options="{ format: 'DD/MM/YYYY', viewMode: 'months', timeZone: Analyzer.TimeZone }" :disabled="!Del1MRanged" v-model="To" style="flex-grow:2"></date-picker>
               </div>
             </td>
             <td class="action"><button type="button" class="btn btn-danger btn-xs" @click="Delete('1M', Del1MRanged)">Execute</button></td>
@@ -96,8 +96,8 @@
             <td>Download table data to a file
               <div style="display:flex">
                 <input type="checkbox" v-model="Get1MRanged">
-                <label>From:</label><date-picker :options="{ format: 'DD/MM/YYYY', viewMode: 'months', timeZone: analyzer.TimeZone }" :disabled="!Get1MRanged" v-model="From" style="flex-grow:2"></date-picker>
-                <label>To:</label><date-picker :options="{ format: 'DD/MM/YYYY', viewMode: 'months', timeZone: analyzer.TimeZone }" :disabled="!Get1MRanged" v-model="To" style="flex-grow:2"></date-picker>
+                <label>From:</label><date-picker :options="{ format: 'DD/MM/YYYY', viewMode: 'months', timeZone: Analyzer.TimeZone }" :disabled="!Get1MRanged" v-model="From" style="flex-grow:2"></date-picker>
+                <label>To:</label><date-picker :options="{ format: 'DD/MM/YYYY', viewMode: 'months', timeZone: Analyzer.TimeZone }" :disabled="!Get1MRanged" v-model="To" style="flex-grow:2"></date-picker>
               </div>
             </td>
             <td class="action">
@@ -125,8 +125,8 @@
               Delete table data
               <div style="display:flex">
                 <input type="checkbox" v-model="Del10MRanged">
-                <label>From:</label><date-picker :options="{ format: 'DD/MM/YYYY', viewMode: 'months', timeZone: analyzer.TimeZone }" :disabled="!Del10MRanged" v-model="From" style="flex-grow:2"></date-picker>
-                <label>To:</label><date-picker :options="{ format: 'DD/MM/YYYY', viewMode: 'months', timeZone: analyzer.TimeZone }" :disabled="!Del10MRanged" v-model="To" style="flex-grow:2"></date-picker>
+                <label>From:</label><date-picker :options="{ format: 'DD/MM/YYYY', viewMode: 'months', timeZone: Analyzer.TimeZone }" :disabled="!Del10MRanged" v-model="From" style="flex-grow:2"></date-picker>
+                <label>To:</label><date-picker :options="{ format: 'DD/MM/YYYY', viewMode: 'months', timeZone: Analyzer.TimeZone }" :disabled="!Del10MRanged" v-model="To" style="flex-grow:2"></date-picker>
               </div>
             </td>
             <td class="action">
@@ -138,8 +138,8 @@
               Download table data to a file
               <div style="display:flex">
                 <input type="checkbox" v-model="Get10MRanged">
-                <label>From:</label><date-picker :options="{ format: 'DD/MM/YYYY', viewMode: 'months', timeZone: analyzer.TimeZone }" :disabled="!Get10MRanged" v-model="From" style="flex-grow:2"></date-picker>
-                <label>To:</label><date-picker :options="{ format: 'DD/MM/YYYY', viewMode: 'months', timeZone: analyzer.TimeZone }" :disabled="!Get10MRanged" v-model="To" style="flex-grow:2"></date-picker>
+                <label>From:</label><date-picker :options="{ format: 'DD/MM/YYYY', viewMode: 'months', timeZone: Analyzer.TimeZone }" :disabled="!Get10MRanged" v-model="From" style="flex-grow:2"></date-picker>
+                <label>To:</label><date-picker :options="{ format: 'DD/MM/YYYY', viewMode: 'months', timeZone: Analyzer.TimeZone }" :disabled="!Get10MRanged" v-model="To" style="flex-grow:2"></date-picker>
               </div>
             </td>
             <td class="action">
@@ -171,8 +171,8 @@
               Delete table data
               <div style="display:flex">
                 <input type="checkbox" v-model="Del15MRanged">
-                <label>From:</label><date-picker :options="{ format: 'DD/MM/YYYY', viewMode: 'months', timeZone: analyzer.TimeZone }" :disabled="!Del15MRanged" v-model="From" style="flex-grow:2"></date-picker>
-                <label>To:</label><date-picker :options="{ format: 'DD/MM/YYYY', viewMode: 'months', timeZone: analyzer.TimeZone }" :disabled="!Del15MRanged" v-model="To" style="flex-grow:2"></date-picker>
+                <label>From:</label><date-picker :options="{ format: 'DD/MM/YYYY', viewMode: 'months', timeZone: Analyzer.TimeZone }" :disabled="!Del15MRanged" v-model="From" style="flex-grow:2"></date-picker>
+                <label>To:</label><date-picker :options="{ format: 'DD/MM/YYYY', viewMode: 'months', timeZone: Analyzer.TimeZone }" :disabled="!Del15MRanged" v-model="To" style="flex-grow:2"></date-picker>
               </div>
             </td>
             <td class="action">
@@ -184,8 +184,8 @@
               Download table data to a file
               <div style="display:flex">
                 <input type="checkbox" v-model="Get15MRanged">
-                <label>From:</label><date-picker :options="{ format: 'DD/MM/YYYY', viewMode: 'months', timeZone: analyzer.TimeZone }" :disabled="!Get15MRanged" v-model="From" style="flex-grow:2"></date-picker>
-                <label>To:</label><date-picker :options="{ format: 'DD/MM/YYYY', viewMode: 'months', timeZone: analyzer.TimeZone }" :disabled="!Get15MRanged" v-model="To" style="flex-grow:2"></date-picker>
+                <label>From:</label><date-picker :options="{ format: 'DD/MM/YYYY', viewMode: 'months', timeZone: Analyzer.TimeZone }" :disabled="!Get15MRanged" v-model="From" style="flex-grow:2"></date-picker>
+                <label>To:</label><date-picker :options="{ format: 'DD/MM/YYYY', viewMode: 'months', timeZone: Analyzer.TimeZone }" :disabled="!Get15MRanged" v-model="To" style="flex-grow:2"></date-picker>
               </div>
             </td>
             <td class="action">
@@ -217,8 +217,8 @@
               Delete table data
               <div style="display:flex">
                 <input type="checkbox" v-model="Del1HRanged">
-                <label>From:</label><date-picker :options="{ format: 'DD/MM/YYYY', viewMode: 'months', timeZone: analyzer.TimeZone }" :disabled="!Del1HRanged" v-model="From" style="flex-grow:2"></date-picker>
-                <label>To:</label><date-picker :options="{ format: 'DD/MM/YYYY', viewMode: 'months', timeZone: analyzer.TimeZone }" :disabled="!Del1HRanged" v-model="To" style="flex-grow:2"></date-picker>
+                <label>From:</label><date-picker :options="{ format: 'DD/MM/YYYY', viewMode: 'months', timeZone: Analyzer.TimeZone }" :disabled="!Del1HRanged" v-model="From" style="flex-grow:2"></date-picker>
+                <label>To:</label><date-picker :options="{ format: 'DD/MM/YYYY', viewMode: 'months', timeZone: Analyzer.TimeZone }" :disabled="!Del1HRanged" v-model="To" style="flex-grow:2"></date-picker>
               </div>
             </td>
             <td class="action">
@@ -230,8 +230,8 @@
               Download table data to a file
               <div style="display:flex">
                 <input type="checkbox" v-model="Get1HRanged">
-                <label>From:</label><date-picker :options="{ format: 'DD/MM/YYYY', viewMode: 'months', timeZone: analyzer.TimeZone }" :disabled="!Get1HRanged" v-model="From" style="flex-grow:2"></date-picker>
-                <label>To:</label><date-picker :options="{ format: 'DD/MM/YYYY', viewMode: 'months', timeZone: analyzer.TimeZone }" :disabled="!Get1HRanged" v-model="To" style="flex-grow:2"></date-picker>
+                <label>From:</label><date-picker :options="{ format: 'DD/MM/YYYY', viewMode: 'months', timeZone: Analyzer.TimeZone }" :disabled="!Get1HRanged" v-model="From" style="flex-grow:2"></date-picker>
+                <label>To:</label><date-picker :options="{ format: 'DD/MM/YYYY', viewMode: 'months', timeZone: Analyzer.TimeZone }" :disabled="!Get1HRanged" v-model="To" style="flex-grow:2"></date-picker>
               </div>
             </td>
             <td class="action">
@@ -263,8 +263,8 @@
               Delete events data
               <div style="display:flex">
                 <input type="checkbox" v-model="DelEventsRanged">
-                <label>From:</label><date-picker :options="{ format: 'DD/MM/YYYY', viewMode: 'months', timeZone: analyzer.TimeZone }" :disabled="!DelEventsRanged" v-model="From"></date-picker>
-                <label>To:</label><date-picker :options="{ format: 'DD/MM/YYYY', viewMode: 'months', timeZone: analyzer.TimeZone }" :disabled="!DelEventsRanged" v-model="To"></date-picker>
+                <label>From:</label><date-picker :options="{ format: 'DD/MM/YYYY', viewMode: 'months', timeZone: Analyzer.TimeZone }" :disabled="!DelEventsRanged" v-model="From"></date-picker>
+                <label>To:</label><date-picker :options="{ format: 'DD/MM/YYYY', viewMode: 'months', timeZone: Analyzer.TimeZone }" :disabled="!DelEventsRanged" v-model="To"></date-picker>
                 <label>Mode:</label><option-picker style="width: 136px" :options="[{name: 'All', value: 'ALL'}, {name: 'Only samples', value: 'SAMPLES_ONLY'}, {name: 'RMS samples only', value: 'SAMPLES_RMS'}, {name: 'RAW samples only', value: 'SAMPLES_RAW'}]" v-model="DelEventsMode"></option-picker>
               </div>
             </td>
@@ -277,8 +277,8 @@
               Download table data to a file
               <div style="display:flex">
                 <input type="checkbox" v-model="GetEventsRanged">
-                <label>From:</label><date-picker :options="{ format: 'DD/MM/YYYY', viewMode: 'months', timeZone: analyzer.TimeZone }" :disabled="!GetEventsRanged" v-model="From" style="flex-grow:2"></date-picker>
-                <label>To:</label><date-picker :options="{ format: 'DD/MM/YYYY', viewMode: 'months', timeZone: analyzer.TimeZone }" :disabled="!GetEventsRanged" v-model="To" style="flex-grow:2"></date-picker>
+                <label>From:</label><date-picker :options="{ format: 'DD/MM/YYYY', viewMode: 'months', timeZone: Analyzer.TimeZone }" :disabled="!GetEventsRanged" v-model="From" style="flex-grow:2"></date-picker>
+                <label>To:</label><date-picker :options="{ format: 'DD/MM/YYYY', viewMode: 'months', timeZone: Analyzer.TimeZone }" :disabled="!GetEventsRanged" v-model="To" style="flex-grow:2"></date-picker>
                 <label>Mode:</label><option-picker style="width: 136px" :options="[{name: 'All', value: 'ALL'}, {name: 'Only description', value: 'DESCRIPTOR_ONLY'}, {name: 'With RMS samples', value: 'SAMPLES_RMS'}, {name: 'With RAW samples', value: 'SAMPLES_RAW'}]" v-model="DelEventsMode"></option-picker>
               </div>
             </td>
@@ -311,8 +311,8 @@
               Delete registered alarms
               <div style="display:flex">
                 <input type="checkbox" v-model="DelAlarmsRanged">
-                <label>From:</label><date-picker :options="{ format: 'DD/MM/YYYY', viewMode: 'months', timeZone: analyzer.TimeZone }" :disabled="!DelAlarmsRanged" v-model="From" style="flex-grow:2"></date-picker>
-                <label>To:</label><date-picker :options="{ format: 'DD/MM/YYYY', viewMode: 'months', timeZone: analyzer.TimeZone }" :disabled="!DelAlarmsRanged" v-model="To" style="flex-grow:2"></date-picker>
+                <label>From:</label><date-picker :options="{ format: 'DD/MM/YYYY', viewMode: 'months', timeZone: Analyzer.TimeZone }" :disabled="!DelAlarmsRanged" v-model="From" style="flex-grow:2"></date-picker>
+                <label>To:</label><date-picker :options="{ format: 'DD/MM/YYYY', viewMode: 'months', timeZone: Analyzer.TimeZone }" :disabled="!DelAlarmsRanged" v-model="To" style="flex-grow:2"></date-picker>
               </div>
             </td>
             <td class="action">
@@ -324,8 +324,8 @@
               Download registered alarms
               <div style="display:flex">
                 <input type="checkbox" v-model="GetAlarmsRanged">
-                <label>From:</label><date-picker :options="{ format: 'DD/MM/YYYY', viewMode: 'months', timeZone: analyzer.TimeZone }" :disabled="!GetAlarmsRanged" v-model="From" style="flex-grow:2"></date-picker>
-                <label>To:</label><date-picker :options="{ format: 'DD/MM/YYYY', viewMode: 'months', timeZone: analyzer.TimeZone }" :disabled="!GetAlarmsRanged" v-model="To" style="flex-grow:2"></date-picker>
+                <label>From:</label><date-picker :options="{ format: 'DD/MM/YYYY', viewMode: 'months', timeZone: Analyzer.TimeZone }" :disabled="!GetAlarmsRanged" v-model="From" style="flex-grow:2"></date-picker>
+                <label>To:</label><date-picker :options="{ format: 'DD/MM/YYYY', viewMode: 'months', timeZone: Analyzer.TimeZone }" :disabled="!GetAlarmsRanged" v-model="To" style="flex-grow:2"></date-picker>
               </div>
             </td>
             <td class="action">
@@ -395,19 +395,19 @@
       ActiveTab: function(tab) {
         if((tab == '3S') || (tab == '1M') || (tab == '10M') || (tab == '15M') || (tab == '1H')) {
           this.ShowSpinner = true;
-          this.Post('getSeriesRange', { Analyzer: this.analyzer.Analyzer, Aggreg: tab }).then(
+          this.Post('getSeriesRange', { Analyzer: this.Analyzer.Analyzer, Aggreg: tab }).then(
             (result) => { this.ShowSpinner = false; this.From = result.From; this.To = result.To; },
             (fail) => { this.ShowSpinner = false; }
           );
         } else if(tab == 'Events') {
           this.ShowSpinner = true;
-          this.Post('getEventsRange', { Analyzer: this.analyzer.Analyzer }).then(
+          this.Post('getEventsRange', { Analyzer: this.Analyzer.Analyzer }).then(
             (result) => { this.ShowSpinner = false; this.From = result.From; this.To = result.To; },
             (fail) => { this.ShowSpinner = false; }
           );
         } else if(tab == 'Alarms') {
           this.ShowSpinner = true;
-          this.Post('getAlarmsRange', { Analyzer: this.analyzer.Analyzer }).then(
+          this.Post('getAlarmsRange', { Analyzer: this.Analyzer.Analyzer }).then(
             (result) => { this.ShowSpinner = false; this.From = result.From; this.To = result.To; },
             (fail) => { this.ShowSpinner = false; }
           );
@@ -432,7 +432,7 @@
       GetStorage: function() {
         this.Rate = null;
         this.ShowSpinner = true;
-        this.Post('getStatus', { Analyzer: this.analyzer.Analyzer, Series: ['Storage'] }).then(
+        this.Post('getStatus', { Analyzer: this.Analyzer.Analyzer, Series: ['Storage'] }).then(
           (result) => {
             this.Storage = result.Storage;
             this.ShowSpinner = false;
@@ -446,7 +446,7 @@
         this.ShowSpinner = true;
         var From = (all) ? 0 : this.From;
         var To   = (all) ? Number.MAX_SAFE_INTEGER : this.To;
-        this.Post('delSeriesRange', { Analyzer: this.analyzer.Analyzer, From: From, To: To, Aggreg: aggreg}).then(
+        this.Post('delSeriesRange', { Analyzer: this.Analyzer.Analyzer, From: From, To: To, Aggreg: aggreg}).then(
           (res) => { this.ShowSpinner = false; this.ActiveTab = aggreg; },
           (fail) => { this.ShowSpinner = false; }
         );
@@ -477,15 +477,15 @@
         if(From == null) From = 0;
         if(To == null) To = 0;
         if(aggreg == 'Analyzer') {
-          fetch('getAnalyzer', { method: 'POST', body: this.CBOR.encode({ Analyzer: this.analyzer.Analyzer }), headers: { 'Content-Type': 'application/cbor', 'Accept': encoding } }).then(
+          fetch('getAnalyzer', { method: 'POST', body: this.CBOR.encode({ Analyzer: this.Analyzer.Analyzer }), headers: { 'Content-Type': 'application/cbor', 'Accept': encoding } }).then(
             (res) => { this.CreateFile('Analyzer', res.body.getReader()); }
           );
         } else if(aggreg == 'Alarms') {
-          fetch('getAlarms', { method: 'POST', body: this.CBOR.encode({ Analyzer: this.analyzer.Analyzer, From: From, To: To, Update: false, ChangeTime: 0 }), headers: { 'Content-Type': 'application/cbor', 'Accept': encoding } }).then(
+          fetch('getAlarms', { method: 'POST', body: this.CBOR.encode({ Analyzer: this.Analyzer.Analyzer, From: From, To: To, Update: false, ChangeTime: 0 }), headers: { 'Content-Type': 'application/cbor', 'Accept': encoding } }).then(
             (res) => { this.CreateFile('Alarms', res.body.getReader()); }
           );
         } else if(aggreg == 'Events') {
-          fetch('getEvents', { method: 'POST', body: this.CBOR.encode({ Analyzer: this.analyzer.Analyzer, From: From, To: To, ChangeTime: 0, Update: false, Samples: 'All' }), headers: { 'Content-Type': 'application/cbor', 'Accept': encoding } }).then(
+          fetch('getEvents', { method: 'POST', body: this.CBOR.encode({ Analyzer: this.Analyzer.Analyzer, From: From, To: To, ChangeTime: 0, Update: false, Samples: 'All' }), headers: { 'Content-Type': 'application/cbor', 'Accept': encoding } }).then(
             (res) => { this.CreateFile('Events', res.body.getReader()); }
           );
         } else {
@@ -496,7 +496,7 @@
           if(aggreg == '10M')   Series = ['Frequency', 'Flag', 'Voltage', 'Current'];
           if(aggreg == '15M')   Series = ['Active_Power', 'Reactive_Power'];
           if(aggreg == '1H')    Series = ['Frequency', 'Flag', 'Voltage', 'Current', 'Active_Power', 'Reactive_Power', 'Voltage_Stats', 'Frequency_Stats', 'Voltage_THD_Stats', 'Voltage_Harmonics_Stats', 'Unbalance_Stats'];
-          fetch('getSeries', { method: 'POST', body: this.CBOR.encode({ Analyzer: this.analyzer.Analyzer, From: From, To: To, Aggreg: aggreg, Series: Series}), headers: { 'Content-Type': 'application/cbor', 'Accept': encoding } }).then(
+          fetch('getSeries', { method: 'POST', body: this.CBOR.encode({ Analyzer: this.Analyzer.Analyzer, From: From, To: To, Aggreg: aggreg, Series: Series}), headers: { 'Content-Type': 'application/cbor', 'Accept': encoding } }).then(
             (res) => { this.CreateFile(aggreg, res.body.getReader(), encoding); }
           );
         }
@@ -506,17 +506,17 @@
         if(aggreg == 'Alarms') {
           var From = (all) ? 0 : this.From;
           var To   = (all) ? Number.MAX_SAFE_INTEGER : this.To;
-          this.Post('delAlarmsRange', { Analyzer: this.analyzer.Analyzer, From: From, To: To }).then(
+          this.Post('delAlarmsRange', { Analyzer: this.Analyzer.Analyzer, From: From, To: To }).then(
             () => { this.ShowSpinner = false; },
             () => { this.ShowSpinner = false; }
           );
         } else if(aggreg == 'Events') {
-          this.Post('delEventsRange', { Analyzer: this.analyzer.Analyzer, From: From, To: To, Mode: DelEventsMode }).then(
+          this.Post('delEventsRange', { Analyzer: this.Analyzer.Analyzer, From: From, To: To, Mode: DelEventsMode }).then(
             () => { this.ShowSpinner = false; },
             () => { this.ShowSpinner = false; }
           );
         } else {
-          this.Post('delSeriesRange', { Analyzer: this.analyzer.Analyzer, From: From, To: To, Aggreg: aggreg }).then(
+          this.Post('delSeriesRange', { Analyzer: this.Analyzer.Analyzer, From: From, To: To, Aggreg: aggreg }).then(
             () => { this.ShowSpinner = false; },
             () => { this.ShowSpinner = false; }
           );

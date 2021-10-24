@@ -46,8 +46,8 @@
 <script>
   import * as oZm from 'JS/openZmeter.js';
   export default {
-    props: { analyzer: Object, serie: String, data15M: Object, data1H: Object, dataGraph: Object },
-    data () {
+    props: { serie: String, data15M: Object, data1H: Object, dataGraph: Object },
+    data: function() {
       return { };
     },
     updated: function() {
