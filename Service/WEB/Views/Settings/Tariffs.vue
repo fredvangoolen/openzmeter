@@ -8,7 +8,7 @@
       </q-tabs>
     </q-toolbar>
     <q-card-section v-if="Tab=='templates'" class="q-pa-none">
-      <q-toolbar class="bg-grey-2 q-pa-none">
+      <q-toolbar class="bg-grey-3 q-pa-none">
         <q-space />
         <q-input dense debounce="300" label="Search" v-model="Filter" class="q-mr-sm">
           <template v-slot:prepend><q-icon name="search" /></template>
@@ -51,11 +51,11 @@
 </template>
 
 <script>
-  let Tariff = () => import('./Tariffs/Tariff.vue');
-  let EspEsios = () => import('./Tariffs/EspEsios.vue');
+  import Tariff from './Tariffs/Tariff.vue';
+  import EspEsios from './Tariffs/EspEsios.vue';
   export default {
     data: function() {
-      return { ShowSpinner: false, Filter: '', ShowDialog: false, Tariff: null, SourceTariff: null, Module: null, Tab: 'templates', Tariffs: this.APIList(this.API.getTariffs),
+      return { ShowSpinner: false, Filter: '', ShowDialog: false, Tariff: null, SourceTariff: null, Module: null, Tab: 'templates', Tariffs: this.APIList(this.API.GetTariffs),
         Modules: [
           { Name: 'ESP_ESIOS', Description: 'Fetch hourly prices from spanish ESIOS (Sistema de informacion del operador del sistema)' }
         ],

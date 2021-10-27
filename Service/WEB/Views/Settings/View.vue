@@ -8,11 +8,10 @@
 </template>
 
 <script>
-  import { defineAsyncComponent } from 'vue';
-  let Users = defineAsyncComponent(() => import('./Users.vue'));
-  let Devices = defineAsyncComponent(() => import('./Devices.vue'));
-  let Tariffs = defineAsyncComponent(() => import('./Tariffs.vue'));
-  let Connectivity = defineAsyncComponent(() => import('./Connectivity.vue'));
+  import Users from './Users.vue';
+  import Devices from './Devices.vue';
+  import Tariffs from './Tariffs.vue';
+  import Connectivity from './Connectivity.vue';
   export default {
     data: function() {
       return { Queries: 0, Pending: 0, Loaded: null };

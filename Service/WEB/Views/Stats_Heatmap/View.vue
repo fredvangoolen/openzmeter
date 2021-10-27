@@ -3,20 +3,21 @@
     <q-card>
       <q-toolbar class="bg-indigo-9 text-white q-pr-none">
         <q-toolbar-title>Energy Heatmap</q-toolbar-title>
-        <q-btn stretch flat size="sm"><div>Aggregation<br><strong>sdf</strong></div></q-btn>
+        <toolbar-select name="Aggregation" storage="Stats_Heatmap.Aggreg" :options="Aggregations" :values="['15M', '1H']" v-model="Aggreg" />
         <q-separator dark vertical />
-        <q-btn stretch flat size="sm"><div>Year<br><strong>sdf</strong></div></q-btn>
+        <q-btn stretch flat size="sm"><div>Year<br><strong>2021</strong></div></q-btn>
         <q-separator dark vertical />
-        <q-btn stretch flat icon="menu">
+        <q-btn stretch dense flat icon="menu">
           <q-menu>
             <q-list dense>
               <q-item clickable v-close-popup>Reload</q-item>
-              <q-item clickable v-close-popup>Export</q-item>
+              <q-item clickable v-close-popup>Export CSV</q-item>
+              <q-item clickable v-close-popup>Export SVG</q-item>
             </q-list>
           </q-menu>
         </q-btn>
       </q-toolbar>
-      <q-card-section class="bg-grey-2 q-pa-xs">
+      <q-card-section class="bg-grey-3 q-pa-xs">
         <color-bar :width="140" :height="10" :range="Range" units="Wh"></color-bar>
       </q-card-section>
       <q-separator />

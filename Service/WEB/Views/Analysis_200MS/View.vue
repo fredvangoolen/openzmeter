@@ -6,7 +6,7 @@
           <div class="panel-heading">
             <div class="header-text">200ms parameters</div>
             <div class="header-buttons clearfix">
-              <toolbar-period-b storage="HiResPeriod" v-model="Range" :analyzer="analyzer"></toolbar-period-b>
+              <toolbar-period-b storage="HiResPeriod" v-model="Range"></toolbar-period-b>
               <option-adder v-if="AvaliableSeries.length>0" :options="AvaliableSeries" @add="AddSerie"></option-adder>
             </div>
           </div>
@@ -18,7 +18,7 @@
                 </div>
               </div>
               <div class="col-lg-12" v-for="(serie, idx) in Series" :key="serie">
-                <graphs-panel :analyzer="analyzer" :serie="serie" :ref="'graph' + idx" :range="Range" :paused.sync="Paused" @remove="RemoveSerie"></graphs-panel>
+                <graphs-panel :serie="serie" :ref="'graph' + idx" :range="Range" :paused.sync="Paused" @remove="RemoveSerie"></graphs-panel>
               </div>
             </div>
           </div>

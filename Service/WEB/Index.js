@@ -15,7 +15,10 @@ App.use(openZmeter);
 import 'quasar/dist/quasar.css';
 import 'material-icons/iconfont/material-icons.css';
 import 'CSS/openZmeter.css';
-//Define routes---------------------------------------------------------------------------------------------------------
+//Custom components ----------------------------------------------------------------------------------------------------
+import ToolbarSelect from 'Components/ToolbarSelect.vue';
+App.component('ToolbarSelect', ToolbarSelect);
+//Define routes --------------------------------------------------------------------------------------------------------
 import About from 'Views/About/View.vue';
 const ViewRouter = createRouter({
   history: createWebHistory(),

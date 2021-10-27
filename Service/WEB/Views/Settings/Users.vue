@@ -3,7 +3,7 @@
     <q-toolbar class="bg-grey-9 text-white">
       <q-toolbar-title>Users</q-toolbar-title>
     </q-toolbar>
-    <q-toolbar class="bg-grey-2 q-pa-none">
+    <q-toolbar class="bg-grey-3 q-pa-none">
       <q-space />
       <q-input dense debounce="300" label="Search" v-model="Filter" class="q-mr-sm">
         <template v-slot:prepend>
@@ -36,7 +36,7 @@
   let UserEdit = () => import('App/User/Dialog.vue');
   export default {
     data: function() {
-      return { ShowSpinner: false, Filter: '', ShowDialog: false, Enabled: false, User: null, Users: this.APIList(this.API.getUsers),
+      return { ShowSpinner: false, Filter: '', ShowDialog: false, Enabled: false, User: null, Users: this.APIList(this.API.GetUsers),
         Columns: [
           { name: 'user', label: 'User name', field: row => row.User, align: 'left' },
           { name: 'uame', label: 'Name', field: row => row.Name, align: 'left' },

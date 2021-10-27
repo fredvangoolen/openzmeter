@@ -3,7 +3,7 @@
     <div class="panel-heading clearfix">
       <div class="header-text">From {{ (data!=null) ? analyzer.FormatAggregation(data.Aggreg) : '-' }} aggregation {{ MouseOver ? '(Graph paused)' : '' }}</div>
       <div class="header-buttons">
-        <toolbar-phases storage="DetailsPhases" :analyzer="analyzer" :multi="false" :current="false" v-model="Phase"></toolbar-phases>
+        <toolbar-phases storage="DetailsPhases" :multi="false" :current="false" v-model="Phase"></toolbar-phases>
         <toolbar-options storage="DetailsOptions" :options="['Log']" v-model="Options"></toolbar-options>
         <div class="btn-group">
           <button type="button" class="btn btn-default btn-xs" v-if="Names.length==20" title="Show full 50 harmonics view" @click="ShowAll"><img :src="require('Imgs/table_rows_insert_below_word.png')"></button>

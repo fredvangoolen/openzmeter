@@ -20,7 +20,7 @@ const openZmeter = {
             },
             (error) => {
               This.API.Fail++;
-              if(error.status == 0) {
+              if(error instanceof Error) {
                 This.API.Online = false;
                 reject(null);
               } else if(error.status == 403) {
@@ -42,10 +42,10 @@ const openZmeter = {
           );
         });
       },
-      getDevices: () => {
+      GetDevices: () => {
         return This.API.Post('getDevices', {});
       },
-      getDevice: (serial) => {
+      GetDevice: (serial) => {
         return new Promise(function(resolve, reject) {
           This.API.Post('getDevice', { Serial: serial }).then(
             (result) => {
@@ -56,13 +56,13 @@ const openZmeter = {
           );
         });
       },
-      setDevice: (settings) => {
+      GetDevice: (settings) => {
         return This.API.Post('setDevice', settings);
       },
-      getUsers: () => {
+      GetUsers: () => {
         return This.API.Post('getUsers', {});
       },
-      getUser: (userName) => {
+      GetUser: (userName) => {
         return new Promise(function(resolve, reject) {
           This.API.Post('getUser', { User: userName }).then(
             (result) => {
@@ -73,7 +73,7 @@ const openZmeter = {
           );
         });
       },
-      logOut: () => {
+      LogOut: () => {
         This.API.Post('logOut', {}).then(
           () => {
             localStorage.removeItem("UserName");
@@ -83,25 +83,25 @@ const openZmeter = {
           () => reject()
         );
       },
-      logIn: (user, password) => {
+      LogIn: (user, password) => {
         return new Promise(function(resolve, reject) {
           This.API.Post('logIn', { User: user, Password: password, UpdateLastLogin: true }).then(
             (result) => {
               localStorage.setItem('LastLogin', result.LastLogin);
               localStorage.setItem('UserName', user);
-              This.User.getCurrent().then(resolve, reject);
+              This.User.GetCurrent().then(resolve, reject);
             },
             () => reject()
           );
         });
       },
-      getTariffs: () => {
+      GetTariffs: () => {
         return This.API.Post('getTariffs', {});
       },
-      getAnalyzers: () => {
+      GetAnalyzers: () => {
         return This.API.Post('getAnalyzers', {});
       },
-      getAnalyzer: (serial) => {
+      GetAnalyzer: (serial) => {
         return new Promise(function(resolve, reject) {
           This.API.Post('getAnalyzer', { Analyzer: serial }).then(
             (result) => {
@@ -110,6 +110,11 @@ const openZmeter = {
             },
             (result) => reject(result)
           );
+        });
+      },
+      GetSeriesNow: (analyzer, series) => {
+        return new Promise(function(resolve, reject) {
+          This.API.Post('getSeriesNow', { Analyzer: analyzer, Series: series }).then(resolve, reject);
         });
       }
     });
@@ -151,20 +156,20 @@ const openZmeter = {
     };
 
     This.User = reactive({
-      clear: () => {
+      Clear: () => {
         for(let param in This.User) {
           if(This.User[param] instanceof Function) continue;
           delete This.User[param];
         }
       },
-      getCurrent: () => {
+      GetCurrent: () => {
         return new Promise(function(resolve, reject) {
-          This.User.clear();
+          This.User.Clear();
           let UserName = localStorage.getItem("UserName");
           if(UserName == null) {
             reject();
           } else {
-            This.API.getUser(UserName).then(
+            This.API.GetUser(UserName).then(
               (result) => {
                 Object.assign(This.User, result);
                 resolve(result);
@@ -180,22 +185,86 @@ const openZmeter = {
     });
 
     This.Analyzer = reactive({
-      clear: () => {
+      NowSeries: {
+        Loading: true,
+        Timer: null,
+        Interval: 3000,
+        GetSusbribed: () => {
+          let Series = [];
+          for(let param in This.Analyzer.NowSeries) {
+            if((param == 'Timer') || (param == 'Interval') || (param == 'Loading')) continue;
+            if(This.Analyzer.NowSeries[param] instanceof Function) continue;
+            Series.push(param);
+          }
+          return Series;
+        },
+        Suscribe: (series) => {
+          series.forEach(serie => {
+            if(This.Analyzer.NowSeries[serie] == null) {
+              This.Analyzer.NowSeries.Loading = false;
+              This.Analyzer.NowSeries[serie] = { Suscribers: 0, Value: null };
+            }
+            This.Analyzer.NowSeries[serie].Suscribers++;
+          });
+          This.Analyzer.NowSeries.Refresh();
+        },
+        Unsuscribe: (series) => {
+          series.forEach(serie => {
+            This.Analyzer.NowSeries[serie].Subscribers--;
+            if(This.Analyzer.NowSeries[serie].Suscribers == 0) delete This.Analyzer.NowSeries[serie];
+          });
+        },
+        Refresh: () => {
+          if(This.Analyzer.NowSeries.Timer != null) {
+            clearTimeout(This.Analyzer.NowSeries.Timer);
+            This.Analyzer.NowSeries.Timer = null;
+          }
+          let Series = This.Analyzer.NowSeries.GetSusbribed();
+          if(Series.length == 0) return;
+          This.API.GetSeriesNow(This.Analyzer.Analyzer, Series).then(
+            (result) => {
+              This.Analyzer.NowSeries.Loading = false;
+              Series.forEach(serie => This.Analyzer.NowSeries[serie].Value = result[serie]);
+              This.Analyzer.NowSeries.Timer = setTimeout(This.Analyzer.NowSeries.Refresh, This.Analyzer.NowSeries.Interval);
+            },
+            () => {
+              This.Analyzer.NowSeries.Loading = false;
+              This.Analyzer.NowSeries.Timer = setTimeout(This.Analyzer.NowSeries.Refresh, This.Analyzer.NowSeries.Interval);
+            }
+          );
+        },
+        Clear: () => {
+          if(This.Analyzer.NowSeries.Timer != null) {
+            clearTimeout(This.Analyzer.NowSeries.Timer);
+            This.Analyzer.NowSeries.Timer = null;
+          }
+          This.Analyzer.NowSeries.Loading = true;
+          for(let param in This.Analyzer.NowSeries) {
+            if((param == 'Timer') || (param == 'Interval') || (param == 'Loading')) continue;
+            if(This.Analyzer.NowSeries[param] instanceof Function) continue;
+            This.Analyzer.NowSeries[param].Value = null;
+          }
+        }
+      },
+      Clear: () => {
+        This.Analyzer.NowSeries.Clear();
         for(let param in This.Analyzer) {
+          if(param == 'NowSeries') continue;
           if(This.Analyzer[param] instanceof Function) continue;
           delete This.Analyzer[param];
         }
       },
-      getCurrent: () => {
+      GetCurrent: () => {
         return new Promise(function(resolve, reject) {
-          This.Analyzer.clear();
+          This.Analyzer.Clear();
           let Analyzer = localStorage.getItem('Analyzer');
           if(Analyzer == null) {
             reject();
           } else {
-            This.API.getAnalyzer(Analyzer).then(
+            This.API.GetAnalyzer(Analyzer).then(
               (result) => {
                 Object.assign(This.Analyzer, result);
+                This.Analyzer.NowSeries.Refresh();
                 resolve(result)
               },
               (result) => {
@@ -207,37 +276,97 @@ const openZmeter = {
           }
         });
       },
-      setCurrent: (serial) => {
+      SetCurrent: (serial) => {
         localStorage.setItem('Analyzer', serial);
-        return This.Analyzer.getCurrent();
-      }
+        return This.Analyzer.GetCurrent();
+      },
     });
 
-    This.SeriesNow = reactive({
-      Timer: null,
-      Suscribe: (series) => {
+    This.Aggregations = [{value: '3S',  name: '3 seconds'}, {value: '1M',  name: '1 minute'}, {value: '10M', name: '10 minutes'}, {value: '15M', name: '15 minutes'}, {value: '1H',  name: '1 hour'}, {value: '1D',  name: '1 day'}];
 
-      },
-      Unsuscribe: (series) => {
-
-      },
-      Refresh: () => {
-
+    This.SerieViewColor = (serie) => {
+      if(serie == 'Frequency') return '#5CB85C';
+      if(serie == 'Voltage') return '#D9534F';
+      if(serie == 'Current') return '#428BCA';
+      if(serie == 'Active_Power') return '#F0AD4E';
+      if(serie == 'Reactive_Power') return '#DF842A';
+      if(serie == 'Apparent_Power') return '#DF842A';
+      if(serie == 'Active_Energy') return '#3D3D8B';
+      if(serie == 'Reactive_Energy') return '#643D8B';
+    };
+    This.SerieUnits = (serie) => {
+      if(serie == 'Voltage') return 'V';
+      if(serie == 'Current') return 'A';
+      if(serie == 'Active_Power') return 'W';
+      if(serie == 'Active_Energy') return 'Wh';
+      if(serie == 'Frequency') return 'Hz';
+    };
+    This.BestUnits = (val) => {
+      return (Math.abs(val) > 1000000) ? 'M' : (Math.abs(val) > 1000) ? 'k' : '';
+    };
+    This.ScaleUnits = (val, units) => {
+      return (units == 'M') ? val / 1000000 : (units == 'k') ? val / 1000 : val;
+    };
+    This.Round = (val, decimals, html) => {
+      if((val == null) || (isFinite(val) == false)) return '~';
+      if(decimals == null) decimals = 2;
+      if(html == null) html = false;
+      var Exponent = Math.pow(10, decimals);
+      val = Math.round(val * Exponent);
+      var Integer = Math.trunc(val / Exponent);
+      var Fraction = Math.abs(val % Exponent);
+      Fraction = Fraction.toString();
+      while(Fraction.length < decimals) Fraction = '0' + Fraction;
+      return (((Integer == 0) && (val < 0.0)) ? '-' : '') + Integer.toString() + (html ? "<span style='font-size:80%'>." + Fraction + '</span>' : '.' + Fraction);
+    };
+    This.BestUnitsBin = (val, dec, html) => {
+      if(val > 1024 * 1024 * 1024) {
+        return Vue.prototype.Round(val / (1024 * 1024 * 1024), dec, html) + ' GB';
+      } else if(val > 1024 * 1024) {
+        return Vue.prototype.Round(val / (1024 * 1024), dec, html) + ' MB';
+      } else if(val > 1024) {
+        return Vue.prototype.Round(val / 1024) + ' kB';
+      } else {
+        return val + ' B';
       }
-    });
-
-
-
-
-
-
-
+    };
+    This.ArrayAbsMax = (array) => {
+      let Max = 0;
+      for(var i in array) Max = Math.max(Max, Array.isArray(array[i]) ? ArrayMax(array[i]) : Math.abs(array[i]));
+      return Max;
+    };
+    This.ArrayRMS = (array) => {
+      let Val = 0.0;
+      array.forEach(val => Val += Math.pow(val, 2.0));
+      return Math.sqrt(Val / array.length);
+    };
+    This.ArraySUM = (array) => {
+      let Val = 0.0;
+      array.forEach(val => Val += val);
+      return Val;
+    };
+    This.BinPower = (complex) => {
+      return Math.sqrt(Math.pow(complex[0], 2.0) + Math.pow(complex[1], 2.0));
+    }
 
     This.GetConfig = (key, def, options) => {
-      //Leo key, si no existe guardo def y devuelvo dev
-      //Si existe y options == undefined devuelvo value
-      //Si options == [] busco que la opcion esta en el array
+      if(key == null) return def;
+      var Stored = localStorage.getItem(key);
+      if(Stored == null) {
+        localStorage.setItem(key, def);
+        return def;
+      } else {
+        if(options == null) return Stored;
+        if(options.includes(Stored)) {
+          return Stored;
+        } else {
+          localStorage.setItem(key, def);
+          return def;
+        }
+      }
     };
+
+
     This.SetConfig = (key, value) => {
 
     };
@@ -374,7 +503,7 @@ const openZmeter = {
         if((Transfer.Analyzer != null) && (Transfer.Analyzer.Analyzer != analyzer.Analyzer)) Transfer.Data = null;
         Transfer.Analyzer  = analyzer;
         Transfer.CancelFunc = () => { Cancelled = true; };
-        Vue.Post('getSeriesNow', { Analyzer: analyzer.Analyzer, Series: series }).then(
+        This.API.Post('getSeriesNow', { Analyzer: analyzer.Analyzer, Series: series }).then(
           (result) => {
             if(Cancelled == true) return;
             Transfer.Data = Object.seal(result);
@@ -429,10 +558,10 @@ const openZmeter = {
         Transfer.Aggreg   = aggreg;
         Transfer.Range    = range;
         if((Transfer.Data == null) || (Transfer.Data.Rows.length == 0)) {
-          Promises.push(Vue.Post('getSeries', { Analyzer: analyzer.Analyzer, Aggreg: aggreg, From: ReqRange[0], To: ReqRange[1], Series: series }));
+          Promises.push(This.API.Post('getSeries', { Analyzer: analyzer.Analyzer, Aggreg: aggreg, From: ReqRange[0], To: ReqRange[1], Series: series }));
         } else {
-          Promises.push(Vue.Post('getSeries', { Analyzer: analyzer.Analyzer, Aggreg: aggreg, From: ReqRange[0], To: Transfer.Data.Rows[0][0] - 1, Series: series }));
-          Promises.push(Vue.Post('getSeries', { Analyzer: analyzer.Analyzer, Aggreg: aggreg, From: Transfer.Data.Rows.slice(-1)[0][0] + 1, To: ReqRange[1], Series: series }));
+          Promises.push(This.API.Post('getSeries', { Analyzer: analyzer.Analyzer, Aggreg: aggreg, From: ReqRange[0], To: Transfer.Data.Rows[0][0] - 1, Series: series }));
+          Promises.push(This.API.Post('getSeries', { Analyzer: analyzer.Analyzer, Aggreg: aggreg, From: Transfer.Data.Rows.slice(-1)[0][0] + 1, To: ReqRange[1], Series: series }));
         }
         Transfer.CancelFunc = () => { Cancelled = true; };
         Promise.all(Promises).then(
@@ -638,43 +767,6 @@ const openZmeter = {
         }
       }
       return [LowerRange, UpperRange];
-    },
-    This.BestUnits = (val) => {
-      return (Math.abs(val) > 1000000) ? 'M' : (Math.abs(val) > 1000) ? 'k' : '';
-    },
-    This.ScaleUnits = (val, units) => {
-      return (units == 'M') ? val / 1000000 : (units == 'k') ? val / 1000 : val;
-    },
-    This.Round = (val, decimals, html) => {
-      if((val == null) || (isFinite(val) == false)) return '~';
-      if(decimals == null) decimals = 2;
-      if(html == null) html = false;
-      var Exponent = Math.pow(10, decimals);
-      val = Math.round(val * Exponent);
-      var Integer = Math.trunc(val / Exponent);
-      var Fraction = Math.abs(val % Exponent);
-      Fraction = Fraction.toString();
-      while(Fraction.length < decimals) Fraction = '0' + Fraction;
-      return (((Integer == 0) && (val < 0.0)) ? '-' : '') + Integer.toString() + (html ? "<span style='font-size:80%'>." + Fraction + '</span>' : '.' + Fraction);
-    },
-    This.BestUnitsBin = (val, dec, html) => {
-      if(val > 1024 * 1024 * 1024) {
-        return Vue.prototype.Round(val / (1024 * 1024 * 1024), dec, html) + ' GB';
-      } else if(val > 1024 * 1024) {
-        return Vue.prototype.Round(val / (1024 * 1024), dec, html) + ' MB';
-      } else if(val > 1024) {
-        return Vue.prototype.Round(val / 1024) + ' kB';
-      } else {
-        return val + ' B';
-      }
-    },
-    This.ArrayAbsMax = (array) => {
-      var Max = 0;
-      for(var i in array) Max = Math.max(Max, Array.isArray(array[i]) ? ArrayMax(array[i]) : Math.abs(array[i]));
-      return Max;
-    },
-    This.BinPower = (complex) => {
-      return Math.sqrt(Math.pow(complex[0], 2.0) + Math.pow(complex[1], 2.0));
     }
   }
 };

@@ -1,34 +1,32 @@
 <template>
-  <q-page>
-    <div class="row">
-      <div class="col-lg-12">
-        <div class="panel panel-active-energy">
-          <div class="panel-heading">
-            <div class="header-text">Energy consumption</div>
+  <q-page class="q-gutter-sm">
+    <q-card>
+      <q-toolbar class="bg-indigo-9 text-white">
+        <q-toolbar-title>Energy consumption</q-toolbar-title>
             <portal to="fs-toolbar" :disabled="!Expanded" class="header-buttons">
               <toolbar-aggregation storage="AggregationEnergy" v-model="Aggreg" :options="['15M', '1H']"></toolbar-aggregation>
-              <toolbar-period storage="Period" v-model="Range" :analyzer="analyzer"></toolbar-period>
+              <toolbar-period storage="Period" v-model="Range"></toolbar-period>
               <div class="btn-group">
                 <button-export file="Energy" :rows="Export"></button-export>
                 <button-expand v-model="Expanded"></button-expand>
               </div>
             </portal>
-          </div>
-          <div class="panel-body">
+      </q-toolbar>
+
             <div class="row">
-              <counters class="col-md-5 col-lg-4 col-xl-3" :analyzer="analyzer" :height.sync="Height" :data="TransferGraph.Data"></counters>
+              <counters class="col-md-5 col-lg-4 col-xl-3" :height.sync="Height" :data="TransferGraph.Data"></counters>
               <div class="col-md-7 col-lg-8 col-xl-9">
                 <portal to="fs-body" :disabled="!Expanded" class="panel-body">
                   <spinner v-if="TransferGraph.Data==null"></spinner>
-                  <!--energy :analyzer="analyzer" :height="Expanded?DialogHeight:Height-10" :data="TransferGraph.Data" @range="Range=$event"></energy-->
+                  <!--energy :height="Expanded?DialogHeight:Height-10" :data="TransferGraph.Data" @range="Range=$event"></energy-->
                 </portal>
               </div>
             </div>
-          </div>
-        </div>
-      </div>
-      <dlg-fs v-if="Expanded" title="Energy consumption" :height.sync="DialogHeight"></dlg-fs>
-    </div>
+
+
+    </q-card>
+    <!--dlg-fs v-if="Expanded" title="Energy consumption" :height.sync="DialogHeight"></dlg-fs-->
+
     <div class="row">
       <div class="col-lg-6 col-md-12">
         <!--graphs ref="g0" serie="Voltage" :data="Transfer3S.Data" :last="Transfer3S.LastData" :paused.sync="Paused3S"></graphs-->
@@ -52,8 +50,7 @@
 </template>
 
 <script>
-  import { defineAsyncComponent } from 'vue';
-  let Energy = defineAsyncComponent(() => import('./Energy.vue'));
+  import Energy from './Energy.vue';
   import Counters from './Counters.vue';
   import Graphs from './GraphsPanel.vue';
   import Variables from './Variables.vue';

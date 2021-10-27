@@ -29,8 +29,7 @@
 </template>
 
 <script>
-  import { defineAsyncComponent } from 'vue';
-  let AnalyzerDialog = defineAsyncComponent(() => import('./Analyzer/Dialog.vue'));
+  import AnalyzerDialog from './Analyzer/Dialog.vue';
 //  import moment from 'moment';
 //  import 'moment-timezone';
   export default {

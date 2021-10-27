@@ -63,7 +63,7 @@
       </div>
     </div>
     <q-separator />
-    <q-card-actions align="right" class="bg-grey-2">
+    <q-card-actions align="right" class="bg-grey-3">
       <q-btn unelevated color="primary" @click="Save" label="Save" />
       <q-btn unelevated color="primary" @click="$emit('close')" label="Cancel" />
     </q-card-actions>

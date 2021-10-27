@@ -7,7 +7,7 @@
             <div class="huge header-text">Frequency</div>
             <portal to="fs-toolbar" :disabled="!Expanded" class="header-buttons">
               <toolbar-aggregation storage="Aggregation" :options="['3S', '1M', '10M', '1H']" v-model="Aggreg"></toolbar-aggregation>
-              <toolbar-period storage="Period" v-model="Range" :analyzer="analyzer"></toolbar-period>
+              <toolbar-period storage="Period" v-model="Range"></toolbar-period>
               <div class="btn-group">
                 <button-export :rows="Export" file="Frequency"></button-export>
                 <button-expand v-model="Expanded"></button-expand>
@@ -16,11 +16,11 @@
           </div>
           <div class="panel-body">
             <div class="row">
-              <counters class="col-md-6 col-lg-4 col-xl-3" :analyzer="analyzer" :dataNow="TransferNow.LastData" :dataGraph="TransferGraph.Data" :height.sync="Height"></counters>
+              <counters class="col-md-6 col-lg-4 col-xl-3" :dataNow="TransferNow.LastData" :dataGraph="TransferGraph.Data" :height.sync="Height"></counters>
               <div class="col-md-6 col-lg-8 col-xl-9">
                 <portal to="fs-body" :disabled="!Expanded" class="panel-body">
                   <spinner v-if="TransferGraph.Data==null"></spinner>
-                  <frequency :analyzer="analyzer" :data="TransferGraph.Data" :height="Expanded?DialogHeight:Height" @range="Range=$event"></frequency>
+                  <frequency :data="TransferGraph.Data" :height="Expanded?DialogHeight:Height" @range="Range=$event"></frequency>
                 </portal>
               </div>
             </div>

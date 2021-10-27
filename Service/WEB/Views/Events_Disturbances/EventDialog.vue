@@ -2,7 +2,7 @@
   <div>
     <dlg-fs :title="'Event » ' + mode" :height.sync="DialogHeight"></dlg-fs>
     <portal to="fs-toolbar" class="header-buttons">
-      <toolbar-phases :analyzer="analyzer" v-model="Phases" storage="Events" :current="false" :multi="true"></toolbar-phases>
+      <toolbar-phases v-model="Phases" storage="Events" :current="false" :multi="true"></toolbar-phases>
       <div class="btn-group">
         <button-export :rows="Export" :file="'Event_' + mode"></button-export>
         <button type="button" class="btn btn-default btn-xs" @click="$emit('close')"><img :src="require('Imgs/arrow_undo.png')"></button>

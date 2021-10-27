@@ -1,6 +1,6 @@
 <template>
   <div>
-    <q-toolbar class="bg-grey-2 q-pr-none">
+    <q-toolbar class="bg-grey-3 q-pr-none">
       <div>{{ (LastUpdate==null) ? 'Loading data...' : 'Last update at ' + FormatDate(LastUpdate) }}</div>
       <q-space></q-space>
       <q-btn stretch flat size="sm"><div>Level<br><strong>Warnings</strong></div></q-btn>

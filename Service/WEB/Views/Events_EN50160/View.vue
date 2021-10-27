@@ -7,7 +7,7 @@
             <span class="header-text">EN50160</span>
             <div class="header-buttons clearfix">
               <toolbar-weeks :weeks="Weeks" v-model="Index"></toolbar-weeks>
-              <toolbar-years :analyzer="analyzer" v-model="Year" aggreg="1H" storage="StatsYear"></toolbar-years>
+              <toolbar-years v-model="Year" aggreg="1H" storage="StatsYear"></toolbar-years>
             </div>
           </div>
           <div class="panel-body main">
@@ -19,16 +19,16 @@
     </div>
     <div class="row" v-if="Ready">
       <div :class="[(analyzer.VoltageChannels==1) ? 'col-lg-4' : 'col-lg-6', 'col-md-12']">
-        <frequency :data="Weeks[Index]" :analyzer="analyzer" :ranges="Frequencies"></frequency>
+        <frequency :data="Weeks[Index]" :ranges="Frequencies"></frequency>
       </div>
       <div :class="[(analyzer.VoltageChannels==1) ? 'col-lg-4' : 'col-lg-6', 'col-md-12']">
-        <voltage :data="Weeks[Index]" :analyzer="analyzer" :ranges="Voltages"></voltage>
+        <voltage :data="Weeks[Index]" :ranges="Voltages"></voltage>
       </div>
       <div :class="[(analyzer.VoltageChannels==1) ? 'col-lg-4' : 'col-lg-6', 'col-md-12']">
-        <thd :data="Weeks[Index]" :analyzer="analyzer" :ranges="THDs"></thd>
+        <thd :data="Weeks[Index]" :ranges="THDs"></thd>
       </div>
       <div v-if="analyzer.VoltageChannels>1" class="col-lg-6 col-md-12">
-        <unbalance :data="Weeks[Index]" :analyzer="analyzer" :ranges="Unbalances"></unbalance>
+        <unbalance :data="Weeks[Index]" :ranges="Unbalances"></unbalance>
       </div>
     </div>
   </q-page>

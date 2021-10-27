@@ -4,7 +4,7 @@
       <div class="header-text">{{ (data==null) ? 'Loading data...' : 'Last update at ' + analyzer.FormatTimeMS(data.Sampletime) }} {{ paused ? '(Paused)' : MouseOver ? '(Graph paused)' : '' }}</div>
       <div v-if="RmsCurrent<analyzer.MinCurrent" class="title-warning"><img :src="require('Imgs/exclamation.png')">No current or current too low</div>
       <portal to="fs-toolbar" :disabled="!Expanded" class="header-buttons">
-        <toolbar-phases storage="DetailsPhases" :multi="false" :analyzer="analyzer" v-model="Phase"></toolbar-phases>
+        <toolbar-phases storage="DetailsPhases" :multi="false" v-model="Phase"></toolbar-phases>
         <div class="btn-group">
           <button-export file="Lissajou" :rows="Export"></button-export>
           <button-expand v-model="Expanded"></button-expand>

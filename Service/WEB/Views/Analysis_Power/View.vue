@@ -10,7 +10,7 @@
             <div class="huge header-text">Active Power</div>
             <portal to="fs-toolbar" :disabled="!ExpandedActive" class="header-buttons">
               <toolbar-aggregation storage="AggregationEnergy" :options="['15M', '1H']" v-model="Aggreg"></toolbar-aggregation>
-              <toolbar-period storage="Period" v-model="Range" :analyzer="analyzer"></toolbar-period>
+              <toolbar-period storage="Period" v-model="Range"></toolbar-period>
               <div class="btn-group">
                 <button type="button" class="btn btn-default btn-xs" :class="{ active: ShowContracted }" @click="ShowContracted=!ShowContracted" title="Scale includes contracted power limit"><img :src="require('Imgs/tag_blue.png')"></button>
                 <button-export file="Power" :rows="Export"></button-export>
@@ -21,10 +21,10 @@
           <div class="panel-body">
             <spinner v-if="TransferGraph.Data==null"></spinner>
             <div class="row">
-              <counters class="col-md-6 col-lg-4 col-xl-3" serie="Active_Power" :analyzer="analyzer" :data3S="Transfer3S.LastData" :data1M="Transfer1M.LastData" :dataGraph="TransferGraph.Data" :height.sync="ActiveHeight"></counters>
+              <counters class="col-md-6 col-lg-4 col-xl-3" serie="Active_Power" :data3S="Transfer3S.LastData" :data1M="Transfer1M.LastData" :dataGraph="TransferGraph.Data" :height.sync="ActiveHeight"></counters>
               <div class="col-md-6 col-lg-8 col-xl-9">
                 <portal to="fs-body" :disabled="!ExpandedActive" class="panel-body">
-                  <power serie="Active_Power" :analyzer="analyzer" :data="TransferGraph.Data" :showContracted="ShowContracted" :height="ExpandedActive?DialogHeight:ActiveHeight" @range="Range=$event"></power>
+                  <power serie="Active_Power" :data="TransferGraph.Data" :showContracted="ShowContracted" :height="ExpandedActive?DialogHeight:ActiveHeight" @range="Range=$event"></power>
                 </portal>
               </div>
             </div>
@@ -45,10 +45,10 @@
           <div class="panel-body">
             <spinner v-if="TransferGraph.Data==null"></spinner>
             <div class="row">
-              <counters class="col-md-6 col-lg-4 col-xl-3" serie="Reactive_Power" :analyzer="analyzer" :data3S="Transfer3S.LastData" :data1M="Transfer1M.LastData" :dataGraph="TransferGraph.Data" :height.sync="ReactiveHeight"></counters>
+              <counters class="col-md-6 col-lg-4 col-xl-3" serie="Reactive_Power" :data3S="Transfer3S.LastData" :data1M="Transfer1M.LastData" :dataGraph="TransferGraph.Data" :height.sync="ReactiveHeight"></counters>
               <div class="col-md-6 col-lg-8 col-xl-9">
                 <portal to="fs-body" :disabled="!ExpandedReactive" class="panel-body">
-                  <power serie="Reactive_Power" :analyzer="analyzer" :data="TransferGraph.Data" :height="ExpandedReactive?DialogHeight:ReactiveHeight" @range="Range=$event"></power>
+                  <power serie="Reactive_Power" :data="TransferGraph.Data" :height="ExpandedReactive?DialogHeight:ReactiveHeight" @range="Range=$event"></power>
                 </portal>
               </div>
             </div>
@@ -69,10 +69,10 @@
           <div class="panel-body">
             <spinner v-if="TransferGraph.Data==null"></spinner>
             <div class="row">
-              <counters class="col-md-6 col-lg-4 col-xl-3" serie="Apparent_Power" :analyzer="analyzer" :data3S="Transfer3S.LastData" :data1M="Transfer1M.LastData" :dataGraph="TransferGraph.Data" :height.sync="ReactiveHeight"></counters>
+              <counters class="col-md-6 col-lg-4 col-xl-3" serie="Apparent_Power" :data3S="Transfer3S.LastData" :data1M="Transfer1M.LastData" :dataGraph="TransferGraph.Data" :height.sync="ReactiveHeight"></counters>
               <div class="col-md-6 col-lg-8 col-xl-9">
                 <portal to="fs-body" :disabled="!ExpandedApparent" class="panel-body">
-                  <power serie="Apparent_Power" :analyzer="analyzer" :data="TransferGraph.Data" :height="ExpandedApparent?DialogHeight:AppaerentHeight" @range="Range=$event"></power>
+                  <power serie="Apparent_Power" :data="TransferGraph.Data" :height="ExpandedApparent?DialogHeight:AppaerentHeight" @range="Range=$event"></power>
                 </portal>
               </div>
             </div>
@@ -82,13 +82,13 @@
       <div class="col-lg-12">
         <detail-tabs v-if="analyzer.NominalFrequency!=0" :tabs="['Waveform', 'Harmonics', /*'GA',*/ 'Evolution', /*'Distribution',*/ 'Parameters', 'Lissajou']" storage="Power.Detail.Tab.AC" v-model="ActiveTab"></detail-tabs>
         <detail-tabs v-if="analyzer.NominalFrequency==0" :tabs="['Waveform']" storage="Power.Details.Tabs.DC" v-model="ActiveTab"></detail-tabs>
-        <waveform v-if="ActiveTab=='Waveform'" :data="TransferNow.Data" :analyzer="analyzer" :paused.sync="Paused"></waveform>
-        <harmonics v-if="ActiveTab=='Harmonics'" :data="TransferNow.Data" :analyzer="analyzer" :paused.sync="Paused"></harmonics>
-        <ga v-if="ActiveTab=='GA'" :data="TransferNow.Data" :analyzer="analyzer" :paused.sync="Paused"></ga>
-        <evolution v-if="ActiveTab=='Evolution'" :data="TransferCubism.Data" :analyzer="analyzer"></evolution>
-        <distribution v-if="ActiveTab=='Distribution'" :analyzer="analyzer"></distribution>
-        <parameters v-if="ActiveTab=='Parameters'" :data="TransferCubism.Data" :dataNow="TransferNow.Data" :analyzer="analyzer" :paused.sync="Paused"></parameters>
-        <lissajou v-if="ActiveTab=='Lissajou'" :data="TransferNow.Data" :analyzer="analyzer" :paused.sync="Paused"></lissajou>
+        <waveform v-if="ActiveTab=='Waveform'" :data="TransferNow.Data" :paused.sync="Paused"></waveform>
+        <harmonics v-if="ActiveTab=='Harmonics'" :data="TransferNow.Data" :paused.sync="Paused"></harmonics>
+        <ga v-if="ActiveTab=='GA'" :data="TransferNow.Data" :paused.sync="Paused"></ga>
+        <evolution v-if="ActiveTab=='Evolution'" :data="TransferCubism.Data" ></evolution>
+        <distribution v-if="ActiveTab=='Distribution'"></distribution>
+        <parameters v-if="ActiveTab=='Parameters'" :data="TransferCubism.Data" :dataNow="TransferNow.Data" :paused.sync="Paused"></parameters>
+        <lissajou v-if="ActiveTab=='Lissajou'" :data="TransferNow.Data" :paused.sync="Paused"></lissajou>
       </div>
     </div>
     <dlg-fs v-if="ExpandedActive" title="Active Power" :height.sync="DialogHeight"></dlg-fs>

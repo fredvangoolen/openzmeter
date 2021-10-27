@@ -8,7 +8,7 @@
       </q-tabs>
     </q-toolbar>
     <q-card-section v-if="Tab == 'all'" class="q-pa-none">
-      <q-toolbar class="bg-grey-2 q-pa-none">
+      <q-toolbar class="bg-grey-3 q-pa-none">
         <q-space />
         <q-input dense debounce="300" label="Search" v-model="Filter" class="q-mr-sm">
           <template v-slot:prepend><q-icon name="search" /></template>
@@ -54,7 +54,7 @@
 <script>
   export default {
     data() {
-      return { Tab: 'all', Filter: '', ShowSpinner: false, Analyzers: this.APIList(this.API.getAnalyzers),
+      return { Tab: 'all', Filter: '', ShowSpinner: false, Analyzers: this.APIList(this.API.GetAnalyzers),
         Columns: [
           { name: 'state', label: '', width: '20px', titleClass: 'text-center', dataClass: 'text-center' },
           { name: 'user', label: 'Owner', field: row => row.User },
@@ -70,7 +70,7 @@
     methods: {
       Select: function(analyzer) {
         this.ShowSpinner = true;
-        this.Analyzer.setCurrent(analyzer).then(
+        this.Analyzer.SetCurrent(analyzer).then(
 //        localStorage.setItem('Analyzer', analyzer);
 //        this.Post('getAnalyzer', { Analyzer: analyzer }).then(
           (result) => {

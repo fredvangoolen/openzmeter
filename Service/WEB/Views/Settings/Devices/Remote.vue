@@ -4,7 +4,7 @@
       <q-card-actions class="bg-grey-9 text-white">
         <div class="text-h6">Device &raquo; {{ Settings.Serial }}</div>
       </q-card-actions>
-      <q-toolbar class="bg-grey-2 q-pa-none">
+      <q-toolbar class="bg-grey-3 q-pa-none">
         <q-input v-model="Filter" debounce="300" label="Add/Search analyzer" dense class="q-px-sm q-py-xs full-width" />
         <q-btn stretch unelevated color="primary" :disable="!CanAdd" label="Add" />
       </q-toolbar>

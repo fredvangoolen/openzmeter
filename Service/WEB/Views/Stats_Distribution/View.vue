@@ -14,7 +14,7 @@
           </q-menu>
         </q-btn>
       </q-toolbar>
-      <q-card-section class="bg-grey-2 q-pa-xs">
+      <q-card-section class="bg-grey-3 q-pa-xs">
         <color-bar :width="140" :height="10" :range="Range" units="Wh"></color-bar>
       </q-card-section>
       <q-separator />

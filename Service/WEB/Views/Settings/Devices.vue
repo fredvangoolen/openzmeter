@@ -35,7 +35,7 @@
   let DeviceRemote = defineAsyncComponent(() => import('./Devices/Remote.vue'));
   export default {
     data: function() {
-      return { ShowSpinner: false, Device: null, Devices: this.APIList(this.API.getDevices),
+      return { ShowSpinner: false, Device: null, Devices: this.APIList(this.API.GetDevices),
         Columns: [
           { name: 'driver', label: 'Driver', field: row => row.Driver, align: 'center', style: 'width: 80px' },
           { name: 'name', label: 'Name', field: row => row.Name, align: 'left' },

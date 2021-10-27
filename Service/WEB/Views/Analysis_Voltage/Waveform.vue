@@ -1,6 +1,6 @@
 <template>
   <q-card-section class="q-pa-none">
-    <q-toolbar class="bg-grey-2">
+    <q-toolbar class="bg-grey-3">
     <div class="panel-heading clearfix">
       <div class="header-text">{{ (data==null) ? 'Loading data...' : 'Last update at ' + analyzer.FormatTimeMS(data.Sampletime) }} {{ paused ? '(Paused)' : MouseOver ? '(Graph paused)' : '' }}</div>
       <div v-if="RmsCurrent<analyzer.MinCurrent" class="title-warning"><img :src="require('Imgs/exclamation.png')">No current or current too low</div>
