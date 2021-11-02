@@ -98,7 +98,7 @@
     methods: {
       FormatHTML: function(val) {
         var Units = this.BestUnits(val);
-        return this.Round(oZm.ScaleToUnits(val, Units), 2, true) + ' ' + Units + 'A';
+        return this.Round(this.ScaleToUnits(val, Units), 2, true) + ' ' + Units + 'A';
       },
       FormatRMS: function(val) {
         var Sum = 0;

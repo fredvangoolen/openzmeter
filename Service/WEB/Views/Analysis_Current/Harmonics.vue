@@ -34,7 +34,7 @@
       return { MouseOver: false, Options: null, Phases: null, VOffset: 0, COffset: 0, Expanded: false, DialogHeight: 300 };
     },
     computed: {
-      RmsCurrent: function() { return (this.data == null) ? 0.0 : oZm.ArrayAbsMax(this.data.Current); },
+      RmsCurrent: function() { return (this.data == null) ? 0.0 : this.ArrayAbsMax(this.data.Current); },
       GraphOptions: function() {
         if((this.analyzer == null) || (this.Phases == null) || (this.Options == null)) return { };
         var Opt = { visibility: [], series: {}, axes: { y: {}, y2: {}, x: {} }, file: [] };

@@ -32,7 +32,7 @@
       return { MouseOver: false, Options: null, Phases: null, Expanded: false, DialogHeight: 300 };
     },
     computed: {
-      RmsCurrent: function() { return (this.data == null) ? 0.0 : oZm.ArrayAbsMax(this.data.Current); },
+      RmsCurrent: function() { return (this.data == null) ? 0.0 : this.ArrayAbsMax(this.data.Current); },
       GraphOptions: function() {
         var Opt = { file: [] };
         Opt.showRangeSelector = false;

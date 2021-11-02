@@ -86,7 +86,7 @@
     methods: {
       FormatHTML: function(val) {
         var Units = this.BestUnits(val);
-        return oZm.RoundHTML(oZm.ScaleToUnits(val, Units), 2) + ' ' + Units + ((this.serie == 'Active_Energy') ? 'Wh' : 'VArh');
+        return oZm.RoundHTML(this.ScaleToUnits(val, Units), 2) + ' ' + Units + ((this.serie == 'Active_Energy') ? 'Wh' : 'VArh');
       },
       FormatSum: function(val) {
         var Sum = 0;
@@ -94,7 +94,7 @@
         return this.FormatHTML(Sum);
       },
       FormatPhases: function(val, div) {
-        var Units = this.BestUnits(oZm.ArrayAbsMax(val[this.serie]));
+        var Units = this.BestUnits(this.ArrayAbsMax(val[this.serie]));
         var Result = [];
         for(var n = 0; n < this.analyzer.VoltageChannels; n++) Result.push(this.FormatHTML(val[this.serie][n]));
         return Result;

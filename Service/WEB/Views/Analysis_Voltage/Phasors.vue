@@ -82,7 +82,7 @@
       };
     },
     computed: {
-      RmsCurrent: function() { return (this.data == null) ? 0.0 : oZm.ArrayAbsMax(this.data.Current); },
+      RmsCurrent: function() { return (this.data == null) ? 0.0 : this.ArrayAbsMax(this.data.Current); },
       CommonOptions: function() {
         var Opt = { axes: { x: {}, y: {} } };
         Opt.highlightCircleSize = 0;

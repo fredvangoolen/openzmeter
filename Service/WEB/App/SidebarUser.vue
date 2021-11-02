@@ -1,5 +1,5 @@
 <template>
-  <q-item clickable class="q-pa-xs" dark @click="ShowDialog = true" style="width: 300px">
+  <q-item clickable class="q-pa-xs" dark @click="ShowDialog = true">
     <q-item-section side class="q-pr-xs">
       <img class="icon" :src="require('Imgs/user32.png')">
     </q-item-section>

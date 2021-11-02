@@ -108,7 +108,7 @@
       },
       SetData(result) {
         var Analyzer = this.$root.SelectedAnalyzer;
-        this.ShowWarning = (oZm.ArrayAbsMax(result.Current) < Analyzer.MinCurrent);
+        this.ShowWarning = (this.ArrayAbsMax(result.Current) < Analyzer.MinCurrent);
         this.Time = 'Last update at ' + moment(result.Sampletime).format('HH:mm:ss.SSS');
         var Total = result.Active_Power[0];
         var Fundamental = result['Power_Harmonics'][0][0];

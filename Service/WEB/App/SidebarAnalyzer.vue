@@ -83,29 +83,12 @@
         }
         this.$emit('update:analyzer', analyzer);
       },
-      SerieColor: function(serie) {
-        if(serie == 'Frequency') return '#5cb85c';
-        if(serie == 'Voltage') return '#d9534f';
-        if(serie == 'Current') return '#428bca';
-        if(serie == 'Active_Power') return '#f0ad4e';
-        if(serie == 'Reactive_Power') return '#DF842A';
-        if(serie == 'Apparent_Power') return '#DF842A';
-        if(serie == 'Active_Energy') return '#3d3d8b';
-        if(serie == 'Reactive_Energy') return '#643d8b';
-      },
       SerieColors: function(serie) {
         if((this.analyzer.PhaseNames.length == 1) || (serie == 'Frequency')) return [this.SerieColor(serie)];
         let Colors = [];
         Colors = ['#d9534f', '#5cb85c', '#318ce7'].slice(0, this.analyzer.PhaseNames.length);
         if((serie == 'Current') && (this.analyzer.NeutralName != null)) Colors.push('#333333');
         return Colors;
-      },
-      SerieUnits: function(serie) {
-        if(serie == 'Voltage') return 'V';
-        if(serie == 'Current') return 'A';
-        if(serie == 'Active_Power') return 'W';
-        if(serie == 'Active_Energy') return 'Wh';
-        if(serie == 'Frequency') return 'Hz';
       },
       SerieName: function(serie) {
         if(serie == 'Voltage') return 'Voltage';
@@ -144,44 +127,7 @@
         var Colors = ['#d9534f', '#5cb85c', '#318ce7', '#333333'];
         return { Colors: Colors.slice(0, this.analyzer.Channels[serie]), Width: (primary == true) ? 0.5 : 1.5 }
       },
-      CalcRange: function(range, aggreg) {
-        var Now = moment().tz(this.analyzer.TimeZone);
-        if(range == 'LastSamples') {
-          var Period = (aggreg == '3S') ? 3000 : (aggreg == '1M') ? 60000 : (aggreg == '10M') ? 600000 : (aggreg == '15M') ? 900000 : 3600000;
-          return [Now.valueOf() - Period * 2, Now.valueOf()];
-        } else if(range == 'LastMinute')
-          return [Now.valueOf() - 60000, Now.valueOf()];
-        else if(range == 'Last5Minutes')
-          return [Now.valueOf() - 300000, Now.valueOf()];
-        else if(range == 'Last10Minutes')
-          return [Now.valueOf() - 600000, Now.valueOf()];
-        else if(range == 'Last15Minutes')
-          return [Now.valueOf() - 900000, Now.valueOf()];
-        else if(range == 'Last30Minutes')
-          return [Now.valueOf() - 1800000, Now.valueOf()];
-        else if(range == 'LastHour')
-          return [Now.valueOf() - 3600000, Now.valueOf()];
-        else if(range == 'LastHours')
-          return [Now.valueOf() - 7200000, Now.valueOf()];
-        else if(range == 'LastDay')
-          return [Now.valueOf() - 86400000, Now.valueOf()];
-        else if(range == 'LastWeek')
-          return [Now.valueOf() - 604800000, Now.valueOf()];
-        else if(range == 'LastMonth')
-          return [Now.valueOf() - 2592000000, Now.valueOf()];
-        else if(range == 'LastYear')
-          return [Now.valueOf() - 31536000000, Now.valueOf()];
-        else if(range == 'Day')
-          return [Now.startOf('day').valueOf(), Now.endOf('day').valueOf()];
-        else if(range == 'Week')
-          return [Now.startOf('week').valueOf(), Now.endOf('week').valueOf()];
-        else if(range == 'Month')
-          return [Now.startOf('month').valueOf(), Now.endOf('month').valueOf()];
-        else if(range == 'Year')
-          return [Now.startOf('year').valueOf(), Now.endOf('year').valueOf()];
-        else if(Array.isArray(range))
-          return Array.from(range);
-      },
+
       ShowDisturbances: function() {
         localStorage.setItem('Period', JSON.stringify({Period: moment().valueOf() - parseInt(localStorage.getItem('LastLogin')), To: moment().valueOf() }));
         this.$router.push({path: '/Events/Disturbances'});
@@ -195,6 +141,6 @@
   .icon {
     height: 24px;
     width: 24px;
-    margin: 0px 3px;
+    margin-left: 3px;
   }
 </style>

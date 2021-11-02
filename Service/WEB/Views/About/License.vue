@@ -15,7 +15,7 @@
    mounted: function() {
      axios.get('License.md').then(
        (result) => {
-         this.Content = marked(result.data, { sanitize: true });
+         this.Content = marked(result.data);
          this.ShowSpinner = false;
        },
        (fail) => { }

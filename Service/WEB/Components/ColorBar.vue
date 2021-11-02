@@ -23,8 +23,8 @@
     methods: {
       CalcRange: function() {
         this.Prefix = this.BestUnits(Math.max(Math.abs(this.range[0]), Math.abs(this.range[1])));
-        this.Min = this.Round(oZm.ScaleToUnits(this.range[0], this.Prefix), 2, true);
-        this.Max = this.Round(oZm.ScaleToUnits(this.range[1], this.Prefix), 2, true);
+        this.Min = this.Round(this.ScaleToUnits(this.range[0], this.Prefix), 2, true);
+        this.Max = this.Round(this.ScaleToUnits(this.range[1], this.Prefix), 2, true);
       }
     },
     created: function() {

@@ -13,8 +13,8 @@
         <q-separator />
       </div>
     </q-header>
-    <q-drawer v-if="(User.User != null) && (UserLoaded == true)" ref="Sidebar" v-model="Expanded" persistent mini-to-overlay :mini="MiniState" @mouseover="MiniState=false" @mouseout="MiniState=true" :width="300" :mini-width="38" dark class="bg-grey-9">
-      <q-list style="width: 300px" class="justify-left">
+    <q-drawer v-if="(User.User != null) && (UserLoaded == true)" ref="Sidebar" v-model="Expanded" mini-to-overlay :mini="MiniState" @mouseover="MiniState=false" @mouseout="MiniState=true" :width="300" :mini-width="38" dark class="bg-grey-9">
+      <q-list>
         <q-separator />
         <sidebar-analyzer :status="TransferStatus" />
         <q-separator />
@@ -42,15 +42,20 @@
     data: function() {
       return { TwoRows: true, UserLoaded: false ,MiniState: false, Expanded: false, DesktopMode: false, NoNetwork: false, TransferStatus: this.StatusTransfer(['Events', 'Alarms']) };
     },
+    watch: {
+      'User.User': function(val) {
+        if(val == null) return;
+        this.Analyzer.GetCurrent().then(
+          () => {},
+          () => this.$q.notify({ message: 'Previous analyzer not found, choose new one', timeout: 3000, color: 'red', position: 'bottom-right' })
+        );
+      }
+    },
     mounted: function() {
       this.$q.iconSet.set(IconSet);
       this.User.GetCurrent().then(
         () => this.UserLoaded = true,
         () => this.UserLoaded = true
-      );
-      this.Analyzer.GetCurrent().then(
-        () => {},
-        () => {}
       );
 //      window.EventBus.$on('UserUnathorized', () => {
 //        localStorage.setItem("UserName", undefined);
