@@ -264,7 +264,7 @@ const openZmeter = {
               else if(Suscriber.Range == 'Month') ReqRange = [Now.startOf('month').valueOf(), Now.endOf('month').valueOf()];
               else if(Suscriber.Range == 'Year') ReqRange = [Now.startOf('year').valueOf(), Now.endOf('year').valueOf()];
               else if(Array.isArray(Suscriber.Range)) ReqRange = Array.from(Suscriber.Range);
-              Suscriber.Rows.filter(val => (val[0] >= ReqRange[0]) && (val[0] <= ReqRange[1]));
+              Suscriber.Rows = Suscriber.Rows.filter(val => (val[0] >= ReqRange[0]) && (val[0] <= ReqRange[1]));
               if(ReqRange == null) {
                 throw new Exception('No valid range');
               } else if(Suscriber.Rows.length == 0) {
@@ -272,7 +272,7 @@ const openZmeter = {
               } else {
                 ReqRange = [[ReqRange[0], Suscriber.Rows[0][0] - 1], [Suscriber.Rows.slice(-1)[0][0] + 1, ReqRange[1]]];
               }
-              ReqRange.filter(val => val[0] < val[1]);
+              ReqRange = ReqRange.filter(val => val[0] < val[1]);
               ReqRange.forEach(val => {
                 if(Suscriber.Type == 'Series') {
                   let MS = 200 * 1000;
@@ -324,7 +324,7 @@ const openZmeter = {
             },
             Stop: () => {
               Suscriber.Clear();
-              This.Analyzer.Queries.Subscribers.filter(val => val != Suscriber);
+              This.Analyzer.Queries.Subscribers = This.Analyzer.Queries.Subscribers.filter(val => val != Suscriber);
             },
             Clear: () => {
               Suscriber.CancelPrev();
@@ -544,6 +544,19 @@ const openZmeter = {
     };
 
 
+    This.SaveSvg = (svgEl, name) => {
+      svgEl.setAttribute("xmlns", "http://www.w3.org/2000/svg");
+      var svgData = svgEl.outerHTML;
+      var preface = '<?xml version="1.0" standalone="no"?>\r\n';
+      var svgBlob = new Blob([preface, svgData], {type:"image/svg+xml;charset=utf-8"});
+      var svgUrl = URL.createObjectURL(svgBlob);
+      var downloadLink = document.createElement("a");
+      downloadLink.href = svgUrl;
+      downloadLink.download = name;
+      document.body.appendChild(downloadLink);
+      downloadLink.click();
+      document.body.removeChild(downloadLink);
+    };
 
 
 

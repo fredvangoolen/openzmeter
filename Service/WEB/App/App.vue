@@ -78,7 +78,7 @@
     },
     methods: {
       onResize: function(val) {
-        this.MiniState = false;
+        this.MiniState = true;
         this.TwoRows = (val.width < 768);
         if(val.width > 1023) {
           this.Expanded = true;
@@ -87,7 +87,7 @@
           this.Expanded = false;
           this.DesktopMode = false;
         }
-        setTimeout(() => { this.MiniState = true; }, 500)
+//        setTimeout(() => { this.MiniState = true; }, 500)
       }
     },
     components: { Login, TopbarIndicators, SidebarUser, SidebarAnalyzer, SidebarMenu }

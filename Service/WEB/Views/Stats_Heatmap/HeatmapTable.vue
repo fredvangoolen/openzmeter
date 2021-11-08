@@ -8,318 +8,114 @@
 <script>
   import * as d3 from 'd3';
   import moment from 'moment';
-//  import chroma from 'chroma-js';
-//  import * as oZm from 'JS/openZmeter.js';
-//  var DaysNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
-//const CANVAS = {
-//  margin: {
-//    top: 20,
-//    right: 40,
-//    bottom: 100,
-//    left: 100,
-//  },
-//  xLabel: 'Years',
-//  yLabel: 'Months',
-//  barColors: [
-//    [0, '#5e4fa2'],
-//    [2.7, '#3288bd'],
-//    [3.9, '#66c2a5'],
-//    [5, '#abdda4'],
-//    [6.1, '#e6f598'],
-//    [7.2, '#ffffbf'],
-//    [8.3, '#fee08b'],
-//    [9.4, '#fdae61'],
-//    [10.5, '#f46d43'],
-//
-//    [11.6, '#d53e4f'],
-//    [12.7, '#9e0142'],
-//  ],
-//};
   export default {
     props: { data: Object, year: Number },
     data: function() {
-      return { Height: 300, Width: 300, MarginTop: 30, MarginLeft: 30 };
+      return { Width: 300, MarginTop: 50, MarginLeft: 60 };
     },
     mounted: function() {
       this.SVG = d3.select(this.$refs.d3).append('svg');
-      this.xScale = d3.scalePoint().domain(['00', '01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23', '']);
-      this.xAxis = d3.axisTop(this.xScale).ticks(24);
-      this.SVG.append("g").attr("class", "x-axis").attr("transform", "translate(0," + this.MarginTop +")");
-      this.yScale = d3.scaleLinear();
-      this.yAxis = d3.axisLeft(this.yScale).tickSizeOuter(0);
-      this.SVG.append("g").attr("class", "y-axis").attr("transform", "translate(" + this.MarginLeft + ",0)");
+      this.xScale = d3.scaleLinear().domain([0, 96]);
+      this.xAxis = d3.axisTop(this.xScale).tickSize(2).ticks(96).tickFormat(d => ((d < 96) && (d % 4 == 0)) ? (d / 4).toString().padStart(2, '0') : '');
+      this.yScale = d3.scaleBand();
+      this.yAxis = d3.axisLeft(this.yScale).tickSize(2).tickFormat(d => moment(this.Year).dayOfYear(d + 1).format('dd - DD/MM'));
+      this.SVG.append('g').attr('class', 'points').attr('transform', 'translate(0, 0)').on('mouseover', this.onMouseOver).on('mouseout', this.onMouseOut);
+      this.SVG.append('g').attr('class', 'legend').attr('transform', 'translate(0, 0)');
+      this.SVG.append('g').attr('class', 'x-axis').attr('transform', 'translate(0, ' + this.MarginTop + ')');
+      this.SVG.append('g').attr('class', 'y-axis').attr('transform', 'translate(' + this.MarginLeft + ', 0)');
     },
     watch: {
-      year: function() { this.Redraw(); },
       'data.Rows': function() {
-        this.Redraw();
-  //    console.log('pintando');
-      // X values and scaling function
-      //Aqui iria de 0 a 23
-  //    let xArray = this.data.Rows.map(a => a[0]);
-  //    this.axis.x.values = d3.scaleLinear().domain(d3.extent(xArray)).range([0, this.chartWidth]);
-
-      // this.axis.x.scale becomes a function that converts a x value to a x position
-  //    this.axis.x.scale = d3.scaleBand().domain([...(new Set(xArray))])
-  //      .paddingInner(0)
-  //      .paddingOuter(0)
-        // d3.min(xArray) is mapping to this.chartWidth
-        // d3.max(xArray) + 5 (same as above) is mapping to starting of axis
-  //      .range([0, this.chartWidth]);
-
-      // Y values and scaling function
-      //esto seria el dia
-  //    let yArray = this.data.Rows.map(a => a[0]);
-  //    this.axis.y.values = d3
-  //      .scaleLinear()
-        // Labels on axis, should be equal to or larger than dataset
-  //      .domain(d3.extent(yArray))
-        // Together with yGuide translate below, determines where to start drawing the axis
-  //      .range([0, this.chartHeight]);
-
-      // this.axis.y.scale becomes a function that converts a y value to a y position
-  //    this.axis.y.scale = d3
-  //      .scaleLinear()
-  //      .domain(d3.extent(yArray))
-        // Smallest value is mapping to margin-top
-  //      .range([CANVAS.margin.top, CANVAS.margin.top + this.chartHeight - this.barHeight]);
-
-
-      // Colors
-  //    let tArray = this.data.Rows.map(a => this.ArraySUM(a[1]));
-  //    this.color.scale = d3
-  //      .scaleLinear()
-        // .scaleSequential()
-        // .domain([d3.min(tArray), d3.mean(tArray), d3.max(tArray)])
-  //      .domain(CANVAS.barColors.map(d => d[0]))
-        // .interpolator(d3.interpolateRainbow)
-  //      .range(CANVAS.barColors.map(d => d[1]));
-
-
-//      this.drawGuide();
-//      this.drawData();
-//      this.drawLegends();
-//      this.addListeners();
+        console.log("redraw");
+      this.Redraw();
       }
     },
     methods: {
+      onMouseOver: function(d) {
+        d3.select(d.toElement).transition().duration(10).style("fill-opacity", 0.3);
+      },
+      onMouseOut: function(d) {
+        d3.select(d.fromElement).transition().duration(200).style("fill-opacity", 1);
+      },
       onResize: function(val) {
-        this.Height = val.height;
+        if(this.Width == val.width) return;
         this.Width = val.width;
         this.SVG.attr('width', val.width);
-        this.SVG.attr('height', 500);
-
-        this.xScale.range([this.MarginLeft, this.Width]);
-        d3.select('.x-axis').call(this.xAxis);
-        this.yScale.range([this.MarginTop, this.Height]);
-        d3.select('.y-axis').call(this.yAxis);
-
         this.Redraw();
       },
       Redraw: function() {
+        let Max = 0;
+        if(this.data.Headers == null) {
+          this.SVG.attr('height', 500);
+          d3.select('.x-axis').html('');
+          d3.select('.y-axis').html('');
+          return;
+        }
         this.Cells = [];
-        if((this.year != null) && (this.data.Aggreg != null)) {
-          let Days = moment([this.year, 11, 31]).dayOfYear();
-          for(let i = 0; i < Days; i++) {
-            for(let n = 0; n < 24; n++) {
-              if(this.data.Aggreg == '1H') {
-                this.Cells.push({ Value: null, Day: i, Hour: n });
-              } else {
-                for(let q = 1; q < 5; q++) this.Cells.push({ Value: null, Day: i, Hour: n, Quarter: q });
-              }
-            }
+        this.Days = [];
+        let TimeCol   = this.data.Headers.indexOf('Time');
+        let EnergyCol = this.data.Headers.indexOf('Active_Energy');
+        let Days = moment([this.year, 11, 31]).dayOfYear();
+        for(let i = 0; i < Days; i++) {
+          this.Days.push(i);
+          if(this.data.Aggreg == '1H') {
+            for(let n = 0; n < 24; n++) this.Cells.push({ Value: null, Day: i, Block: n });
+          } else {
+            for(let n = 0; n < 96; n++) this.Cells.push({ Value: null, Day: i, Block: n });
           }
-//          if(this.data.Headers != null) {
-//            let Max = -Infinity;
-//            let Min =  Infinity;
-//            let TimeCol = this.data.Headers.indexOf('Time');
-//            let EnergyCol = this.data.Headers.indexOf('Active_Energy');
-//            this.data.Rows.forEach(row => {
-//              let RowDate = moment(row[TimeCol]).tz(this.Analyzer.TimeZone);
-//            if(Tmp.Date != RowDate.format('DD/MM/YYYY')) {
-//              Days.push(Tmp);
-//              Tmp = new Object;
-//            }
-//            if(Tmp.Date == null) {
-//              Tmp = { DayOfWeek: DaysNames[RowDate.day()], Date: RowDate.format('DD/MM/YYYY'), Cells: [] };
-//              for(let n = 0; n < 24; n++) {
-//                if(this.data.Aggreg == '1H') {
-//                  Tmp.Cells.push({ Value: null, Date: 'Hour ' + n });
-//                } else {
-//                  for(let q = 1; q < 5; q++) Tmp.Cells.push({ Value: undefined, Date: 'Hour ' + n + '(' + q + 'Q)' });
-//                }
-//              }
-//            }
-//              let Cell = (this.data.Aggreg == '15M') ? RowDate.dayOfYear() RowDate.hour() * 4 + Math.trunc(RowDate.minute() / 15) : RowDate.hour();
-//            let CellVal = this.ArraySum(row[EnergyCol]);
-//            Max = Math.max(Max, CellVal);
-//            Min = Math.min(Min, CellVal);
-//            Tmp.Cells[Cell].Value = (Tmp.Cells[Cell].Value ?? 0) + CellVal;
-//          });
-//          if(Tmp.Date != null) Days.push(Tmp);
-//          this.Cells = [];
-//          Days.forEach(day => {
-//
-//          });
-
-//          this.$emit('update:range', [Min, Max]);
-//          var ColorScale = chroma.bezier(['#00429d', '#96ffea', '#ffffe0', '#ff005e', '#93003a']);
-//          var Export = [];
-//          var Row = ['Day', 'Date'];
-//          for(var h = 0; h < 24; h++) {
-//            if(this.aggreg == '15M') {
-//              for(var q = 1; q < 5; q++) Row.push(("0" + h).slice(-2) + ' Q' + q);
-//            } else {
-//              Row.push(("0" + h).slice(-2));
-//            }
-//
-          }
-          let Points = this.SVG.selectAll('.points').data(this.Cells);
-            Points.exit()
-    .transition()
-    .duration(1000)
-    .attr("background-color", '#FFF')
-    .remove();
-            Points.enter()
-                .append("rect")
-    .attr("class", "points")
-    .attr("x", /*this.xScale(0)*/ + 1)
-    .attr("y", function(d) {
-      return 0//yScale(d.title)
-    })
-    .attr("width", 0)
-    .attr("height", 12/*yScale.bandwidth()*/)
-    .attr("fill", function(d) {
-      return /*color(letters.indexOf(d.title) + 1)*/ '#400'
-    })
-    .merge(Points).transition()
-    .duration(1000)
-    .attr("y", function(d) {
-      return 0//yScale(d.title)
-    })
-    .attr("width", function(d) {
-      return /*xScale(100)*/ - this.MarginLeft
-    });
-          console.log(Points);
-
+        }
+        this.SVG.attr('height', 12 * Days + 30);
+        this.xScale.range([this.MarginLeft, this.Width]);
+        this.yScale.range([this.MarginTop, 12 * Days + 30]);
+        this.yScale.domain(this.Days);
+        d3.select('.x-axis').call(this.xAxis);
+        d3.select('.y-axis').call(this.yAxis);
+        this.data.Rows.forEach(row => {
+          let RowDate = moment(row[TimeCol]).tz(this.Analyzer.TimeZone);
+          let Cell = (this.data.Aggreg == '1H') ? (RowDate.dayOfYear() - 1) * 24 + RowDate.hour() : (RowDate.dayOfYear() - 1) * 96 + RowDate.hour() * 4 + Math.trunc(RowDate.minute() / 15);
+          this.Cells[Cell].Value = (this.Cells[Cell].Value == null) ? this.ArraySUM(row[EnergyCol]) : this.Cells[Cell].Value + this.ArraySUM(row[EnergyCol]);
+          Max = Math.max(Max, Math.abs(this.Cells[Cell].Value));
+        });
+        this.SVG.select('.points').selectAll('.point').data(this.Cells).join(
+          enter => enter.append("rect")
+            .attr("class", "point")
+            .attr("x", d => this.xScale((this.data.Aggreg == '1H') ? d.Block * 4 : d.Block))
+            .attr("y", d => this.yScale(d.Day))
+            .attr("width", ((this.Width - this.MarginLeft) / ((this.data.Aggreg == '1H') ? 24 : 96)) - 0.1)
+            .attr("height", 12 - 0.1)
+            .attr("fill", d => (d.Value == null) ? '#eee' : d3.interpolateRdYlBu(1 - ((d.Value / (2.0 * Max)) + 0.5)))
+          ,
+          update => update
+            .attr("x", d => this.xScale((this.data.Aggreg == '1H') ? d.Block * 4 : d.Block))
+            .attr("y", d => this.yScale(d.Day))
+            .attr("width", ((this.Width - this.MarginLeft) / ((this.data.Aggreg == '1H') ? 24 : 96)) - 0.1)
+            .attr("fill", d => (d.Value == null) ? '#eee' : d3.interpolateRdYlBu(1 - ((d.Value / (2.0 * Max)) + 0.5)))
+          ,
+          exit => exit.remove()
+        );
+        d3.select('.legend').html('');
+        var Colors = [];
+        for(let n = 0; n < 100; n++) {
+          this.SVG.select('.legend').append("rect")
+            .attr("x", (n / 100.0) * this.Width)
+            .attr("y", 12)
+            .attr("width", this.Width / 100.0)
+            .attr("height", 12)
+            .attr("fill", d3.interpolateRdYlBu(1 - (n / 100.0)));
+        }
+        this.SVG.select('.legend')
+          .append("text")
+          .attr("text-anchor", "start")
+          .attr("x", 1)
+          .attr("y", 10).attr('font-size', 10)
+          .text("a");
+        this.SVG.select('.legend')
+          .append("text")
+          .attr("text-anchor", "end")
+          .attr("x", this.Width - 1)
+          .attr("y", 10).attr('font-size', 10)
+          .text("b");
       },
-
-
-      drawLegends: function() {
-        let height = 20;
-        let width = 35;
-        let top = this.graphHeight - (height * 3);
-        let left = this.graphWidth - CANVAS.margin.right - CANVAS.margin.left - (width * 11);
-
-        this.createD3Element({ data: CANVAS.barColors, type: 'rect' })
-          .attr('fill', d => d[1])
-          .attr('height', _ => height)
-          .attr('width', _ => width)
-          .attr('x', (_, i) => i * width + left)
-          .attr('y', _ => top);
-        this.createD3Element({ data: CANVAS.barColors, type: 'text' })
-          .text(d => d[0])
-          .attr('height', _ => height)
-          .attr('width', _ => width)
-          .attr('x', (_, i) => i * width + left + width / 2)
-          .attr('y', _ => top + height * 2)
-          .style('font-size', '13px')
-          .attr('text-anchor', 'middle')
-          .style('fill', '#333');
-      },
-      drawData: function() {
-        // translate(x, y) specifies where bar begins, +1 to move right of y axis
-        this.ddd.chart = this
-          .createD3Element({
-            data: this.d3Data.map(d => ({
-              x: d.x,
-              y: d.y,
-              temperature: d.temperature,
-            })),
-            type: 'rect',
-          })
-          .attr('fill', d => this.color.scale(d.temperature))
-          .attr('height', _ => this.barHeight)
-          .attr('width', _ => this.axis.x.scale.bandwidth())
-          .attr('x', d => this.axis.x.scale(d.x))
-          .attr('y', d => this.axis.y.scale(d.y));
-        // console.log('remove', this.d3Data.map(d => this.axis.y.scale(d.y)))
-        // console.log('remove 2', this.axis.x.scale.bandwidth())
-      },
-      drawGuide: function() {
-        this.createD3Element({ data: [...Array(12)].map((_, i) => {
-            return {
-              x: -10,
-              y: (i + 1) * this.barHeight,
-              text: moment((i + 1), 'M').format('MMMM'),
-            }
-          }),
-          type: 'text',
-        })
-        .text(d => d.text)
-        .attr('x', d => d.x)
-        .attr('y', d => d.y)
-        .attr('text-anchor', 'end')
-        .style('font-size', '0.7rem');
-
-        // Vertical line
-        this
-          .createD3Element()
-          .append('path')
-          .attr('d', d3.line()([[0, CANVAS.margin.top], [0, CANVAS.margin.top + this.chartHeight]]))
-          .style('stroke', '#ccc')
-          .style('stroke-width', '2')
-          .style('stroke-linecap', 'round')
-
-
-        let yLabel = [{ x: -(this.chartHeight / 2), y: -75, text: CANVAS.yLabel } ];
-        this.createD3Element({ data: yLabel, type: 'text' })
-          .text(d => d.text)
-          .attr("transform", "rotate(-90)")
-          .attr('x', d => d.x)
-          .attr('y', d => d.y)
-          .style('font-size', '15px')
-          .style('font-weight', 'bold')
-          .attr('text-anchor', 'middle')
-          .style('fill', '#6D4C41');
-
-        this.createD3Element({ transformX: CANVAS.margin.left, transformY: CANVAS.margin.top + this.chartHeight })
-          .call(d3
-            .axisBottom(this.axis.x.values)
-            .ticks(26)
-            .tickFormat(d => d.toString())
-          );
-        let xLabel = [
-          { x: Math.floor(this.chartWidth / 2), y: this.graphHeight - (CANVAS.margin.bottom - 45), text: CANVAS.xLabel, },
-        ];
-        this.createD3Element({ data: xLabel, type: 'text' })
-          .text(d => d.text)
-          .attr('x', d => d.x)
-          .attr('y', d => d.y)
-          .style('font-size', '15px')
-          .style('font-weight', 'bold')
-          .attr('text-anchor', 'middle')
-          .style('fill', '#6D4C41');
-        },
-    createD3Element ({
-      data = [],
-      transformX = CANVAS.margin.left + 1,
-      transformY = 0,
-      type = '',
-    } = {}) {
-      let result = this.svg
-        .append('g')
-        .attr('transform', `translate(${transformX}, ${transformY})`);
-      if (type) {
-        result = result
-          .selectAll(type)
-          .data(data)
-          .enter()
-          .append(type);
-      }
-      return result;
-    },
-
 
 
 /*    addListeners () {

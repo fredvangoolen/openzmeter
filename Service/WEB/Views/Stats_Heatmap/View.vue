@@ -12,7 +12,7 @@
             <q-list dense>
               <q-item clickable v-close-popup>Reload</q-item>
               <q-item clickable v-close-popup>Export CSV</q-item>
-              <q-item clickable v-close-popup>Export SVG</q-item>
+              <q-item clickable v-close-popup @click="ExportSVG">Export SVG</q-item>
             </q-list>
           </q-menu>
         </q-btn>
@@ -24,7 +24,7 @@
       </q-card-section>
       <q-separator /-->
 
-      <heatmap-table :data="Data" :year="Year" @update:export="ExportData=$event" class="q-ma-xs" />
+      <heatmap-table ref="map" :data="Data" :year="Year" class="q-ma-xs" />
       <!--q-inner-loading :showing="!Loaded" v-if="Queries>0">
         <q-circular-progress show-value font-size="12px" :value="(Queries-Pending)/Queries*100" size="50px" :thickness="0.3" color="orange-10">{{ Math.trunc(((Queries-Pending)/Queries)*100, 0) }} %</q-circular-progress>
       </q-inner-loading-->
@@ -38,7 +38,7 @@
   import HeatmapTable from './HeatmapTable.vue';
   export default {
     data: function() {
-      return { Data: this.Analyzer.Queries.Suscribe('Series', ['Active_Energy']), Aggregs: this.Aggregations(['15M', '1H']),
+      return { Data: this.Analyzer.Queries.Suscribe('Series', ['Active_Energy'], 60000), Aggregs: this.Aggregations(['15M', '1H']),
                Aggreg: null, Year: null, ShowSpinner: true, Progress: 0, ExportData: null };
     },
     unmounted: function() {
@@ -75,17 +75,20 @@
       }
     },
     watch: {
-      Aggreg: function(val) {
+      Aggreg: function(val, prev) {
         if(val == null) return;
         this.Data.SetAggreg(val);
       },
-      Year: function(val) {
+      Year: function(val, prev) {
         if(val == null) return;
         let YearDate = moment.tz(this.Analyzer.TimeZone).year(val);
         this.Data.SetRange([YearDate.startOf('year').valueOf(), YearDate.endOf('year').valueOf()]);
       }
     },
     methods: {
+      ExportSVG: function() {
+        this.SaveSvg(this.$refs.map.$refs.d3.childNodes[0], "Heatmap.svg");
+      },
       Update: function() {
         this.ShowSpinner = true;
         this.Progress = 0;
