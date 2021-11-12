@@ -264,7 +264,12 @@ const openZmeter = {
               else if(Suscriber.Range == 'Month') ReqRange = [Now.startOf('month').valueOf(), Now.endOf('month').valueOf()];
               else if(Suscriber.Range == 'Year') ReqRange = [Now.startOf('year').valueOf(), Now.endOf('year').valueOf()];
               else if(Array.isArray(Suscriber.Range)) ReqRange = Array.from(Suscriber.Range);
-              Suscriber.Rows = Suscriber.Rows.filter(val => (val[0] >= ReqRange[0]) && (val[0] <= ReqRange[1]));
+              for(let n = Suscriber.Rows.length - 1; n >= 0; n--) {
+                if((Suscriber.Rows[n][0] < ReqRange[0]) || (Suscriber.Rows[n][0] > ReqRange[1])) Suscriber.Rows.splice(n, 1);
+              }
+
+
+//              Suscriber.Rows = Suscriber.Rows.filter(val => (val[0] >= ReqRange[0]) && (val[0] <= ReqRange[1]));
               if(ReqRange == null) {
                 throw new Exception('No valid range');
               } else if(Suscriber.Rows.length == 0) {
@@ -310,7 +315,7 @@ const openZmeter = {
                       Before = Before.concat(val);
                     }
                   });
-                  Suscriber.Rows = Before.concat(Suscriber.Rows);
+                  if(Before.length > 0) Suscriber.Rows = Before.concat(Suscriber.Rows);
                   Suscriber.Timer = setTimeout(Suscriber.Refresh, Suscriber.Interval);
                   Suscriber.Progress = null;
                   console.log(Suscriber.Rows.length);

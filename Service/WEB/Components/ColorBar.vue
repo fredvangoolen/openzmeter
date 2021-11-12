@@ -1,65 +1,68 @@
 <template>
-  <div class="color-bar" :style="{ width: width }">
-    <div class="left-val" v-html="Min"></div>
-    <div class="right-val" v-html="Max"></div>
-    <div class="units">{{ Prefix }}{{ units }}</div>
-    <div class="bar" :style="{ width: width + 'px', height: height + 'px' }">
-      <div v-for="(div, idx) in Divs" :key="idx" :style="{ background: div }"></div>
-    </div>
-  </div>
+  <div />
 </template>
 
 <script>
-  import chroma from 'chroma-js';
-  import * as oZm from 'JS/openZmeter.js';
+  import * as d3 from 'd3';
   export default {
     props: { width: Number, height: Number, range: Array, units: String },
     data() {
-      return { Divs: [], Prefix: '', Min: '', Max: '' };
+      return { };
+    },
+    mounted: function() {
+      this.SVG = d3.select(this.$el).append('svg');
+      this.SVG.append('g').attr('class', 'legend');
+      this.Redraw();
     },
     watch: {
-      range: function() { this.CalcRange(); },
+      range: function() { this.Redraw(); },
+      units: function() { this.Redraw(); },
+      width: function() { this.Redraw(); },
+      height: function() { this.Redraw(); }
     },
     methods: {
-      CalcRange: function() {
-        this.Prefix = this.BestUnits(Math.max(Math.abs(this.range[0]), Math.abs(this.range[1])));
-        this.Min = this.Round(this.ScaleToUnits(this.range[0], this.Prefix), 2, true);
-        this.Max = this.Round(this.ScaleToUnits(this.range[1], this.Prefix), 2, true);
+      Redraw: function() {
+        if(this.SVG == null) return;
+        this.SVG.attr('width', this.width);
+        this.SVG.attr('height', 12 + this.height);
+        d3.select('.legend').html('');
+        let Prefix = this.BestUnits(Math.max(Math.abs(this.range[0]), Math.abs(this.range[1])));
+        let Min = this.Round(this.ScaleUnits(this.range[0], Prefix), 2);
+        let Max = this.Round(this.ScaleUnits(this.range[1], Prefix), 2);
+        for(let n = 0; n < 100; n++) {
+          this.SVG.select('.legend').append("rect")
+            .attr("x", (n / 100.0) * this.width)
+            .attr("y", 12)
+            .attr("width", this.width / 100.0)
+            .attr("height", this.height)
+            .attr("fill", d3.interpolateRdYlBu(1 - (n / 100.0)));
+        }
+        this.SVG.select('.legend')
+          .append("text")
+          .attr("text-anchor", "start")
+          .attr("x", 1)
+          .attr("y", 10).attr('font-size', 10)
+          .text(Min);
+        this.SVG.select('.legend')
+          .append("text")
+          .attr("text-anchor", "end")
+          .attr("x", this.width - 1)
+          .attr("y", 10).attr('font-size', 10)
+          .text(Max);
+        this.SVG.select('.legend')
+          .append("text")
+          .attr("text-anchor", "end")
+          .attr("x", this.width / 2)
+          .attr("y", 10).attr('font-size', 10)
+          .text(Prefix + this.units);
+        this.SVG.select('.legend').append("rect")
+          .attr("x", 0)
+          .attr("y", 12)
+          .attr("width", this.width)
+          .attr("height", this.height)
+          .attr('fill', 'none')
+          .attr("stroke", 'black');
       }
-    },
-    created: function() {
-      this.ColorScale = chroma.bezier(['#00429d', '#96ffea', '#ffffe0', '#ff005e', '#93003a']).scale();
-      for(var i = 0; i < this.width; i++) this.Divs.push(this.ColorScale(i / this.width));
-      this.CalcRange();
     }
   }
 </script>
-
-<style scoped>
-  .color-bar {
-    display: inline-block;
-    vertical-align: text-bottom;
-    font-size: 12px;
-    line-height: 12px;
-  }
-  .color-bar .left-val {
-    float: left;
-  }
-  .color-bar .right-val {
-    float:right;
-  }
-  .color-bar .units {
-    text-align: center;
-    font-style: italic;
-  }
-  .color-bar .bar {
-     display: flex;
-     flex-direction: row;
-     border: 1px solid #EEE;
-  }
-  .color-bar .bar div {
-    width:1px;
-    height: 100%;
-    display: inline-block;
-  }
-</style>

@@ -18,6 +18,8 @@ import 'CSS/openZmeter.css';
 //Custom components ----------------------------------------------------------------------------------------------------
 import ToolbarSelect from 'Components/ToolbarSelect.vue';
 App.component('ToolbarSelect', ToolbarSelect);
+import ColorBar from 'Components/ColorBar.vue';
+App.component('ColorBar', ColorBar);
 //Define routes --------------------------------------------------------------------------------------------------------
 import About from 'Views/About/View.vue';
 const ViewRouter = createRouter({

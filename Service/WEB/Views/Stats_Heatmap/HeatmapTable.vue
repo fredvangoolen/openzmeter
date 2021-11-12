@@ -1,33 +1,37 @@
 <template>
-  <div>
-    <div ref="d3" />
-    <q-resize-observer @resize="onResize" />
-  </div>
+  <div />
 </template>
 
 <script>
   import * as d3 from 'd3';
   import moment from 'moment';
   export default {
-    props: { data: Object, year: Number },
+    props: { data: Object, year: Number, width: Number, max: Number },
+    emits: ['update:max'],
     data: function() {
-      return { Width: 300, MarginTop: 50, MarginLeft: 60 };
+      return { MarginTop: 12, MarginLeft: 60 };
     },
     mounted: function() {
-      this.SVG = d3.select(this.$refs.d3).append('svg');
+      this.SVG = d3.select(this.$el).append('svg');
       this.xScale = d3.scaleLinear().domain([0, 96]);
       this.xAxis = d3.axisTop(this.xScale).tickSize(2).ticks(96).tickFormat(d => ((d < 96) && (d % 4 == 0)) ? (d / 4).toString().padStart(2, '0') : '');
       this.yScale = d3.scaleBand();
       this.yAxis = d3.axisLeft(this.yScale).tickSize(2).tickFormat(d => moment(this.Year).dayOfYear(d + 1).format('dd - DD/MM'));
       this.SVG.append('g').attr('class', 'points').attr('transform', 'translate(0, 0)').on('mouseover', this.onMouseOver).on('mouseout', this.onMouseOut);
-      this.SVG.append('g').attr('class', 'legend').attr('transform', 'translate(0, 0)');
       this.SVG.append('g').attr('class', 'x-axis').attr('transform', 'translate(0, ' + this.MarginTop + ')');
       this.SVG.append('g').attr('class', 'y-axis').attr('transform', 'translate(' + this.MarginLeft + ', 0)');
     },
     watch: {
       'data.Rows': function() {
-        console.log("redraw");
-      this.Redraw();
+        this.Redraw();
+      },
+      year: function(val, prev) {
+        if(val == prev) this.Redraw();
+      },
+      width: function(val, prev) {
+        if(val == prev) return;
+        this.SVG.attr('width', this.width);
+        this.Redraw();
       }
     },
     methods: {
@@ -36,12 +40,6 @@
       },
       onMouseOut: function(d) {
         d3.select(d.fromElement).transition().duration(200).style("fill-opacity", 1);
-      },
-      onResize: function(val) {
-        if(this.Width == val.width) return;
-        this.Width = val.width;
-        this.SVG.attr('width', val.width);
-        this.Redraw();
       },
       Redraw: function() {
         let Max = 0;
@@ -64,9 +62,9 @@
             for(let n = 0; n < 96; n++) this.Cells.push({ Value: null, Day: i, Block: n });
           }
         }
-        this.SVG.attr('height', 12 * Days + 30);
-        this.xScale.range([this.MarginLeft, this.Width]);
-        this.yScale.range([this.MarginTop, 12 * Days + 30]);
+        this.SVG.attr('height', 10 * Days + this.MarginTop);
+        this.xScale.range([this.MarginLeft, this.width]);
+        this.yScale.range([this.MarginTop, 10 * Days + this.MarginTop]);
         this.yScale.domain(this.Days);
         d3.select('.x-axis').call(this.xAxis);
         d3.select('.y-axis').call(this.yAxis);
@@ -76,45 +74,25 @@
           this.Cells[Cell].Value = (this.Cells[Cell].Value == null) ? this.ArraySUM(row[EnergyCol]) : this.Cells[Cell].Value + this.ArraySUM(row[EnergyCol]);
           Max = Math.max(Max, Math.abs(this.Cells[Cell].Value));
         });
+        this.$emit('update:max', Max);
+        console.log(Max);
         this.SVG.select('.points').selectAll('.point').data(this.Cells).join(
           enter => enter.append("rect")
             .attr("class", "point")
             .attr("x", d => this.xScale((this.data.Aggreg == '1H') ? d.Block * 4 : d.Block))
             .attr("y", d => this.yScale(d.Day))
-            .attr("width", ((this.Width - this.MarginLeft) / ((this.data.Aggreg == '1H') ? 24 : 96)) - 0.1)
-            .attr("height", 12 - 0.1)
+            .attr("width", ((this.width - this.MarginLeft) / ((this.data.Aggreg == '1H') ? 24 : 96)) - 0.1)
+            .attr("height", 10 - 0.1)
             .attr("fill", d => (d.Value == null) ? '#eee' : d3.interpolateRdYlBu(1 - ((d.Value / (2.0 * Max)) + 0.5)))
           ,
           update => update
             .attr("x", d => this.xScale((this.data.Aggreg == '1H') ? d.Block * 4 : d.Block))
             .attr("y", d => this.yScale(d.Day))
-            .attr("width", ((this.Width - this.MarginLeft) / ((this.data.Aggreg == '1H') ? 24 : 96)) - 0.1)
+            .attr("width", ((this.width - this.MarginLeft) / ((this.data.Aggreg == '1H') ? 24 : 96)) - 0.1)
             .attr("fill", d => (d.Value == null) ? '#eee' : d3.interpolateRdYlBu(1 - ((d.Value / (2.0 * Max)) + 0.5)))
           ,
           exit => exit.remove()
         );
-        d3.select('.legend').html('');
-        var Colors = [];
-        for(let n = 0; n < 100; n++) {
-          this.SVG.select('.legend').append("rect")
-            .attr("x", (n / 100.0) * this.Width)
-            .attr("y", 12)
-            .attr("width", this.Width / 100.0)
-            .attr("height", 12)
-            .attr("fill", d3.interpolateRdYlBu(1 - (n / 100.0)));
-        }
-        this.SVG.select('.legend')
-          .append("text")
-          .attr("text-anchor", "start")
-          .attr("x", 1)
-          .attr("y", 10).attr('font-size', 10)
-          .text("a");
-        this.SVG.select('.legend')
-          .append("text")
-          .attr("text-anchor", "end")
-          .attr("x", this.Width - 1)
-          .attr("y", 10).attr('font-size', 10)
-          .text("b");
       },
 
 

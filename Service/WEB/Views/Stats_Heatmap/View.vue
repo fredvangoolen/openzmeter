@@ -18,16 +18,14 @@
         </q-btn>
       </q-toolbar>
       <q-linear-progress stripe v-if="Data.Progress != null" color="indigo-9" :value="Data.Progress" class="q-ma-none" />
-      <!--div style="height:300px"></div-->
-      <!--q-card-section class="bg-grey-3 q-pa-xs">
-        <color-bar :width="140" :height="10" :range="Range" units="Wh"></color-bar>
+      <q-card-section class="bg-grey-3 q-pa-xs text-right">
+        <color-bar :width="Math.max(140, Width * 0.2)" :height="10" :range="[-Max, Max]" units="Wh"></color-bar>
       </q-card-section>
-      <q-separator /-->
-
-      <heatmap-table ref="map" :data="Data" :year="Year" class="q-ma-xs" />
-      <!--q-inner-loading :showing="!Loaded" v-if="Queries>0">
-        <q-circular-progress show-value font-size="12px" :value="(Queries-Pending)/Queries*100" size="50px" :thickness="0.3" color="orange-10">{{ Math.trunc(((Queries-Pending)/Queries)*100, 0) }} %</q-circular-progress>
-      </q-inner-loading-->
+      <q-separator />
+      <div class="q-ma-sm">
+        <heatmap-table ref="map" :width="Width" :data="Data" v-model:max="Max" :year="Year" />
+        <q-resize-observer @resize="onResize" />
+      </div>
     </q-card>
   </q-page>
 </template>
@@ -39,7 +37,7 @@
   export default {
     data: function() {
       return { Data: this.Analyzer.Queries.Suscribe('Series', ['Active_Energy'], 60000), Aggregs: this.Aggregations(['15M', '1H']),
-               Aggreg: null, Year: null, ShowSpinner: true, Progress: 0, ExportData: null };
+               Aggreg: null, Year: null, ShowSpinner: true, Progress: 0, ExportData: null, Width: 300, Max: 0 };
     },
     unmounted: function() {
       this.Data.Stop();
@@ -86,6 +84,9 @@
       }
     },
     methods: {
+      onResize: function(evt) {
+        this.Width = evt.width;
+      },
       ExportSVG: function() {
         this.SaveSvg(this.$refs.map.$refs.d3.childNodes[0], "Heatmap.svg");
       },
