@@ -46,7 +46,7 @@ private:
     uint32_t pCurrentMaxAmplitude;
     size_t pVoltageBinCount;
     size_t pCurrentBinCount;
-    Database *DB;
+    string schemaName;
     bool skippedFirstPointSet;
     uint64_t startTime;
     uint64_t endTime;

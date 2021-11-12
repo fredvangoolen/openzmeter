@@ -6,8 +6,9 @@
 AnalyzerSoftCyclicHistogram::AnalyzerSoftCyclicHistogram(const string &analyzer_schema)
 {
     // Setup database structure
-    DB = new Database(analyzer_schema);
-    DB->ExecResource("SQL/Database_CyclicHistogram.sql");
+    schemaName = analyzer_schema;
+    Database DB(analyzer_schema);
+    DB.ExecResource("SQL/Database_CyclicHistogram.sql");
 
     nominalSamplesSaved = false;
     skippedFirstPointSet = false;
@@ -15,14 +16,8 @@ AnalyzerSoftCyclicHistogram::AnalyzerSoftCyclicHistogram(const string &analyzer_
     endTime = 0;
 }
 
-AnalyzerSoftCyclicHistogram::~AnalyzerSoftCyclicHistogram()
-{
-    // Cleanup memory
-    if (DB != NULL)
-    {
-        delete DB;
-    }
-    DB = NULL;
+AnalyzerSoftCyclicHistogram::~AnalyzerSoftCyclicHistogram(){
+
 }
 
 json AnalyzerSoftCyclicHistogram::GetConfig()
@@ -270,16 +265,16 @@ void AnalyzerSoftCyclicHistogram::WriteToDatabase(string eventStartTime)
         LogFile::Warning("[CH] No data has been added. Skipping saving to database.");
         return;
     }
+    Database DB(schemaName);
+    DB.ExecSentenceNoResult("BEGIN TRANSACTION;");
 
-    DB->ExecSentenceNoResult("BEGIN TRANSACTION;");
-
-    string sentence = "INSERT INTO cychist (starttime, endtime, event_id) VALUES (" + DB->Bind(startTime) + ", " + DB->Bind(endTime) + ", " + (eventStartTime != "0" ? eventStartTime : "NULL") + ") RETURNING id;";
+    string sentence = "INSERT INTO cychist (starttime, endtime, event_id) VALUES (" + DB.Bind(startTime) + ", " + DB.Bind(endTime) + ", " + (eventStartTime != "0" ? eventStartTime : "NULL") + ") RETURNING id;";
     LogFile::Warning(sentence.c_str());
-    DB->ExecSentenceAsyncResult(sentence);
+    DB.ExecSentenceAsyncResult(sentence);
 
-    if (DB->FecthRow())
+    if (DB.FecthRow())
     {
-        uint32_t cychist_id = DB->ResultUInt64("id");
+        uint32_t cychist_id = DB.ResultUInt64("id");
         string sql_points = "";
         bool shouldExec = false;
         sql_points += "INSERT INTO cychist_point (cychist_id, phase, x, y, count) VALUES ";
@@ -293,7 +288,7 @@ void AnalyzerSoftCyclicHistogram::WriteToDatabase(string eventStartTime)
                     uint64_t value = voltageHistogram[i][j][k];
                     if (value != 0)
                     {
-                        sql_points += "(" + DB->Bind(cychist_id) + "," + DB->Bind(i) + "," + DB->Bind(j) + "," + DB->Bind(k) + "," + DB->Bind(value) + "),";
+                        sql_points += "(" + DB.Bind(cychist_id) + "," + DB.Bind(i) + "," + DB.Bind(j) + "," + DB.Bind(k) + "," + DB.Bind(value) + "),";
                         shouldExec = true;
                     }
                 }
@@ -304,12 +299,12 @@ void AnalyzerSoftCyclicHistogram::WriteToDatabase(string eventStartTime)
         {
             sql_points = sql_points.substr(0, sql_points.size() - 1); // Remove last comma from the SQL statement
             sql_points += ";";
-            DB->ExecSentenceNoResult(sql_points);
-            DB->ExecSentenceNoResult("COMMIT TRANSACTION;");
+            DB.ExecSentenceNoResult(sql_points);
+            DB.ExecSentenceNoResult("COMMIT TRANSACTION;");
         }
         else
         {
-            DB->ExecSentenceNoResult("ROLLBACK TRANSACTION;");
+            DB.ExecSentenceNoResult("ROLLBACK TRANSACTION;");
         }
     }
 }
@@ -382,19 +377,20 @@ json AnalyzerSoftCyclicHistogram::GetCyclicHistogramForEvent(string eventStartTi
 {
     json result = json::object();
 
-    DB->ExecSentenceAsyncResult("SELECT id, event_id, starttime, endtime FROM cychist WHERE event_id = " + DB->Bind(eventStartTime));
-    if (DB->FecthRow())
+    Database DB(schemaName);
+    DB.ExecSentenceAsyncResult("SELECT id, event_id, starttime, endtime FROM cychist WHERE event_id = " + DB.Bind(eventStartTime));
+    if (DB.FecthRow())
     {
-        result["id"] = stoi(DB->ResultString("id"));
-        result["event_id"] = DB->ResultString("event_id");
-        result["starttime"] = stoll(DB->ResultString("starttime"));
-        result["endtime"] = stoll(DB->ResultString("endtime"));
+        result["id"] = stoi(DB.ResultString("id"));
+        result["event_id"] = DB.ResultString("event_id");
+        result["starttime"] = stoll(DB.ResultString("starttime"));
+        result["endtime"] = stoll(DB.ResultString("endtime"));
     }
 
-    DB->ExecSentenceAsyncResult("SELECT json_build_object('id', COALESCE(ARRAY_AGG(id ORDER BY phase, x, y ASC), '{}'), 'phase', COALESCE(ARRAY_AGG(phase ORDER BY phase, x, y ASC), '{}'), 'sample', COALESCE(ARRAY_AGG(x ORDER BY phase, x, y ASC), '{}'), 'voltage_bin', COALESCE(ARRAY_AGG(y ORDER BY phase, x, y ASC), '{}'), 'count', COALESCE(ARRAY_AGG(count ORDER BY phase, x, y ASC), '{}')) AS points FROM cychist_point WHERE cychist_id = " + DB->ResultString("id"));
-    if (DB->FecthRow())
+    DB.ExecSentenceAsyncResult("SELECT json_build_object('id', COALESCE(ARRAY_AGG(id ORDER BY phase, x, y ASC), '{}'), 'phase', COALESCE(ARRAY_AGG(phase ORDER BY phase, x, y ASC), '{}'), 'sample', COALESCE(ARRAY_AGG(x ORDER BY phase, x, y ASC), '{}'), 'voltage_bin', COALESCE(ARRAY_AGG(y ORDER BY phase, x, y ASC), '{}'), 'count', COALESCE(ARRAY_AGG(count ORDER BY phase, x, y ASC), '{}')) AS points FROM cychist_point WHERE cychist_id = " + DB.ResultString("id"));
+    if (DB.FecthRow())
     {
-        json points = json::parse(DB->ResultString("points"));
+        json points = json::parse(DB.ResultString("points"));
 
         json points_id = points["id"];
         json points_channel = points["phase"];

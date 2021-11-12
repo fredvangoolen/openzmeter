@@ -25,7 +25,7 @@ public:
     json GetJoltData(uint64_t startTime, uint64_t endTime);
 
 private:
-    Database *DB;
+    string schemaName;
     uint64_t startTime;
     uint64_t endTime;
     vector<JoltStats> stats;

@@ -3,20 +3,15 @@
 
 AnalyzerSoftJoltAlgorithm::AnalyzerSoftJoltAlgorithm(const string &analyzer_schema)
 {
-    DB = new Database(analyzer_schema);
-    DB->ExecResource("SQL/Database_Jolt.sql");
+    schemaName = analyzer_schema;
+    Database DB(analyzer_schema);
+    DB.ExecResource("SQL/Database_Jolt.sql");
 
     ClearStats();
 }
 
 AnalyzerSoftJoltAlgorithm::~AnalyzerSoftJoltAlgorithm()
 {
-    // Cleanup memory
-    if (DB != NULL)
-    {
-        delete DB;
-    }
-    DB = NULL;
 }
 
 vector<float> AnalyzerSoftJoltAlgorithm::ComputeDVDT(vector<float> input)
@@ -135,22 +130,22 @@ void AnalyzerSoftJoltAlgorithm::WriteToDatabase()
         // No data has been added to the JA. Don't store anything in database.
         return;
     }
-
-    DB->ExecSentenceNoResult("BEGIN TRANSACTION;");
+    Database DB(schemaName);
+    DB.ExecSentenceNoResult("BEGIN TRANSACTION;");
 
     for (size_t phaseNumber = 0; phaseNumber < stats.size(); phaseNumber++)
     {
         string sentence = "INSERT INTO jolt (time, phase, num_points, min, max, avg) VALUES (";
-        sentence += DB->Bind(endTime) + ","; // Use the ending time as the 'official' time when storing data
-        sentence += DB->Bind(phaseNumber) + ",";
-        sentence += DB->Bind(stats[phaseNumber].numPoints) + ",";
-        sentence += DB->Bind(stats[phaseNumber].min) + ",";
-        sentence += DB->Bind(stats[phaseNumber].max) + ",";
-        sentence += DB->Bind(stats[phaseNumber].avg) + ");";
-        DB->ExecSentenceNoResult(sentence);
+        sentence += DB.Bind(endTime) + ","; // Use the ending time as the 'official' time when storing data
+        sentence += DB.Bind(phaseNumber) + ",";
+        sentence += DB.Bind(stats[phaseNumber].numPoints) + ",";
+        sentence += DB.Bind(stats[phaseNumber].min) + ",";
+        sentence += DB.Bind(stats[phaseNumber].max) + ",";
+        sentence += DB.Bind(stats[phaseNumber].avg) + ");";
+        DB.ExecSentenceNoResult(sentence);
     }
 
-    DB->ExecSentenceNoResult("COMMIT TRANSACTION;");
+    DB.ExecSentenceNoResult("COMMIT TRANSACTION;");
 }
 
 void AnalyzerSoftJoltAlgorithm::ClearStats()
@@ -162,6 +157,8 @@ void AnalyzerSoftJoltAlgorithm::ClearStats()
 
 json AnalyzerSoftJoltAlgorithm::GetJoltData(uint64_t startTime, uint64_t endTime)
 {
+    Database DB(schemaName);
+
     json result = json::object();
     result["starttime"] = startTime;
     result["endtime"] = endTime;
@@ -175,13 +172,13 @@ json AnalyzerSoftJoltAlgorithm::GetJoltData(uint64_t startTime, uint64_t endTime
     sentence += "'max', COALESCE(ARRAY_AGG(max ORDER BY time, phase ASC), '{}'),";
     sentence += "'avg', COALESCE(ARRAY_AGG(avg ORDER BY time, phase ASC), '{}')";
     sentence += ") AS points FROM jolt WHERE ";
-    sentence += "time >= " + DB->Bind(startTime);
-    sentence += " AND time <= " + DB->Bind(endTime);
+    sentence += "time >= " + DB.Bind(startTime);
+    sentence += " AND time <= " + DB.Bind(endTime);
 
-    DB->ExecSentenceAsyncResult(sentence);
-    if (DB->FecthRow())
+    DB.ExecSentenceAsyncResult(sentence);
+    if (DB.FecthRow())
     {
-        json points = json::parse(DB->ResultString("points"));
+        json points = json::parse(DB.ResultString("points"));
 
         json points_id = points["id"];
         json points_time = points["time"];
