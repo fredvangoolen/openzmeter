@@ -17,9 +17,10 @@
       this.xAxis = d3.axisTop(this.xScale).tickSize(2).ticks(96).tickFormat(d => ((d < 96) && (d % 4 == 0)) ? (d / 4).toString().padStart(2, '0') : '');
       this.yScale = d3.scaleBand();
       this.yAxis = d3.axisLeft(this.yScale).tickSize(2).tickFormat(d => moment(this.Year).dayOfYear(d + 1).format('dd - DD/MM'));
-      this.SVG.append('g').attr('class', 'points').attr('transform', 'translate(0, 0)').on('mouseover', this.onMouseOver).on('mouseout', this.onMouseOut);
+      this.SVG.append('g').attr('class', 'points').attr('transform', 'translate(0, 0)');
       this.SVG.append('g').attr('class', 'x-axis').attr('transform', 'translate(0, ' + this.MarginTop + ')');
       this.SVG.append('g').attr('class', 'y-axis').attr('transform', 'translate(' + this.MarginLeft + ', 0)');
+      this.SVG.append('g').attr('class', 'border');
     },
     watch: {
       'data.Rows': function() {
@@ -35,16 +36,12 @@
       }
     },
     methods: {
-      onMouseOver: function(d) {
-        d3.select(d.toElement).transition().duration(10).style("fill-opacity", 0.3);
-      },
-      onMouseOut: function(d) {
-        d3.select(d.fromElement).transition().duration(200).style("fill-opacity", 1);
-      },
       Redraw: function() {
+        console.log('redraw');
         let Max = 0;
+        let Days = (this.year == null) ? 365 : moment([this.year, 11, 31]).dayOfYear();
+        this.SVG.attr('height', 8 * Days + this.MarginTop);
         if(this.data.Headers == null) {
-          this.SVG.attr('height', 500);
           d3.select('.x-axis').html('');
           d3.select('.y-axis').html('');
           return;
@@ -53,7 +50,6 @@
         this.Days = [];
         let TimeCol   = this.data.Headers.indexOf('Time');
         let EnergyCol = this.data.Headers.indexOf('Active_Energy');
-        let Days = moment([this.year, 11, 31]).dayOfYear();
         for(let i = 0; i < Days; i++) {
           this.Days.push(i);
           if(this.data.Aggreg == '1H') {
@@ -62,12 +58,14 @@
             for(let n = 0; n < 96; n++) this.Cells.push({ Value: null, Day: i, Block: n });
           }
         }
-        this.SVG.attr('height', 10 * Days + this.MarginTop);
         this.xScale.range([this.MarginLeft, this.width]);
-        this.yScale.range([this.MarginTop, 10 * Days + this.MarginTop]);
+        this.yScale.range([this.MarginTop, 8 * Days + this.MarginTop]);
         this.yScale.domain(this.Days);
         d3.select('.x-axis').call(this.xAxis);
         d3.select('.y-axis').call(this.yAxis);
+        d3.select('.border').html('');
+        d3.select('.border').append('line').attr('x1', this.width).attr('x2', this.width).attr('y1', this.MarginTop).attr('y2', 8 * Days + this.MarginTop).attr('stroke', 'black').attr('stroke-width', 1)
+        d3.select('.border').append('line').attr('x1', this.MarginLeft).attr('x2', this.width).attr('y1', 8 * Days + this.MarginTop).attr('y2', 8 * Days + this.MarginTop).attr('stroke', 'black').attr('stroke-width', 1);
         this.data.Rows.forEach(row => {
           let RowDate = moment(row[TimeCol]).tz(this.Analyzer.TimeZone);
           let Cell = (this.data.Aggreg == '1H') ? (RowDate.dayOfYear() - 1) * 24 + RowDate.hour() : (RowDate.dayOfYear() - 1) * 96 + RowDate.hour() * 4 + Math.trunc(RowDate.minute() / 15);
@@ -75,20 +73,19 @@
           Max = Math.max(Max, Math.abs(this.Cells[Cell].Value));
         });
         this.$emit('update:max', Max);
-        console.log(Max);
         this.SVG.select('.points').selectAll('.point').data(this.Cells).join(
           enter => enter.append("rect")
             .attr("class", "point")
             .attr("x", d => this.xScale((this.data.Aggreg == '1H') ? d.Block * 4 : d.Block))
             .attr("y", d => this.yScale(d.Day))
-            .attr("width", ((this.width - this.MarginLeft) / ((this.data.Aggreg == '1H') ? 24 : 96)) - 0.1)
+            .attr("width", (this.width - this.MarginLeft) / ((this.data.Aggreg == '1H') ? 24 : 96))
             .attr("height", 10 - 0.1)
             .attr("fill", d => (d.Value == null) ? '#eee' : d3.interpolateRdYlBu(1 - ((d.Value / (2.0 * Max)) + 0.5)))
           ,
           update => update
             .attr("x", d => this.xScale((this.data.Aggreg == '1H') ? d.Block * 4 : d.Block))
             .attr("y", d => this.yScale(d.Day))
-            .attr("width", ((this.width - this.MarginLeft) / ((this.data.Aggreg == '1H') ? 24 : 96)) - 0.1)
+            .attr("width", (this.width - this.MarginLeft) / ((this.data.Aggreg == '1H') ? 24 : 96))
             .attr("fill", d => (d.Value == null) ? '#eee' : d3.interpolateRdYlBu(1 - ((d.Value / (2.0 * Max)) + 0.5)))
           ,
           exit => exit.remove()
