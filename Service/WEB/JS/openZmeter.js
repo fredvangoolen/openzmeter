@@ -1,8 +1,9 @@
 import CBOR from 'cbor-js';
 import { Notify } from 'quasar';
-import { reactive, ref } from 'vue';
+import { computed, reactive, ref } from 'vue';
 import Axios from 'axios';
 import moment from 'moment';
+import 'moment-timezone';
 const openZmeter = {
   install: function(App) {
     let This = App.config.globalProperties;
@@ -57,7 +58,7 @@ const openZmeter = {
           );
         });
       },
-      GetDevice: (settings) => {
+      SetDevice: (settings) => {
         return This.API.Post('setDevice', settings);
       },
       GetUsers: () => {
@@ -206,13 +207,20 @@ const openZmeter = {
           This.Analyzer.Ranges.Aggreg1H = null;
           This.Analyzer.Ranges.Alarms = null;
           This.Analyzer.Ranges.Events = null;
-          This.Analyzer.Ranges.Years = [];
           This.Analyzer.Ranges.Loading = true;
         },
         Refresh: () => {
           This.API.GetSeriesRange(This.Analyzer.Analyzer, '3S').then(
             (result) => This.Analyzer.Ranges.Aggreg3S = result
           );
+          This.API.GetSeriesRange(This.Analyzer.Analyzer, '15M').then(
+            (result) => This.Analyzer.Ranges.Aggreg15M = result
+          );
+          This.API.GetSeriesRange(This.Analyzer.Analyzer, '1H').then(
+            (result) => This.Analyzer.Ranges.Aggreg1H = result
+          );
+
+
           //TODO: todos los rangos, autoreload cada 30 segundos, cancelar
         }
       },
@@ -466,6 +474,15 @@ const openZmeter = {
       All.forEach(val => { if(series.includes(val.value)) Options.push(val); } );
       console.log("Aggregations");
       return Options;
+    };
+    This.Years = (range) => {
+      console.log(range);
+      let Items = [];
+      if((range == null) || (This.Analyzer.Analyzer == null)) return Items;
+      let StartYear = moment.tz(range.From, This.Analyzer.Timezone).year();
+      let EndYear = moment.tz(range.To, This.Analyzer.Timezone).year();
+      for(let year = StartYear; year <= EndYear; year++) Items.push({ value: year, name: String(year) });
+      return Items;
     };
     This.SerieViewColor = (serie) => {
       if(serie == 'Frequency') return '#5CB85C';

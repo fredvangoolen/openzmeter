@@ -6,8 +6,7 @@
 </template>
 
 <script>
-  import { defineAsyncComponent } from 'vue';
-  let AnalyzersTable = defineAsyncComponent(() => import('./Table.vue'));
+  import AnalyzersTable from './Table.vue';
 
 //  import AnalyzerInfo from './Analyzer/Info.vue';
 //    import AnalyzerConfigure from './Configure.vue';

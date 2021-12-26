@@ -1,16 +1,24 @@
 <template>
   <q-page class="q-gutter-sm">
     <q-card>
-      <q-toolbar class="bg-indigo-9 text-white">
+      <q-toolbar class="bg-indigo-9 text-white q-pr-none">
         <q-toolbar-title>Energy consumption</q-toolbar-title>
-            <portal to="fs-toolbar" :disabled="!Expanded" class="header-buttons">
-              <toolbar-aggregation storage="AggregationEnergy" v-model="Aggreg" :options="['15M', '1H']"></toolbar-aggregation>
-              <toolbar-period storage="Period" v-model="Range"></toolbar-period>
-              <div class="btn-group">
-                <button-export file="Energy" :rows="Export"></button-export>
-                <button-expand v-model="Expanded"></button-expand>
-              </div>
-            </portal>
+        <!--portal to="fs-toolbar" :disabled="!Expanded" class="header-buttons"-->
+        <toolbar-select name="Aggregation" storage="Dashboard.Aggreg" :options="Aggregations(['15M', '1H'])" v-model="Aggreg" />
+        <q-separator dark vertical />
+        <toolbar-period storage="Period" v-model="Range"></toolbar-period>
+        <q-separator dark vertical />
+        <q-btn stretch dense flat icon="menu">
+          <q-menu>
+            <q-list dense>
+              <!--button-export file="Energy" :rows="Export"></button-export>
+              <button-expand v-model="Expanded"></button-expand-->
+              <q-item clickable v-close-popup>Export</q-item>
+              <q-item clickable v-close-popup>Expand</q-item>
+            </q-list>
+          </q-menu>
+        </q-btn>
+        <!--/portal-->
       </q-toolbar>
 
             <div class="row">

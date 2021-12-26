@@ -9,7 +9,7 @@
       </template>
       <template v-slot:body-cell-enabled="props">
         <q-td :props="props">
-          <q-checkbox size="sm" disable v-model="props.row.Enabled" />
+          <q-checkbox dense size="sm" disable v-model="props.row.Enabled" />
         </q-td>
       </template>
       <template v-slot:body-cell-actions="props">
@@ -26,13 +26,12 @@
 </template>
 
 <script>
-  import { defineAsyncComponent } from 'vue';
-  let Virtual = defineAsyncComponent(() => import('./Devices/Virtual.vue'));
-  let DeviceV1 = defineAsyncComponent(() => import('./Devices/V1.vue'));
-  let DeviceV2 = defineAsyncComponent(() => import('./Devices/V2.vue'));
-  let DeviceV3 = defineAsyncComponent(() => import('./Devices/V3.vue'));
-  let DeviceV4 = defineAsyncComponent(() => import('./Devices/V4.vue'));
-  let DeviceRemote = defineAsyncComponent(() => import('./Devices/Remote.vue'));
+  import Virtual from './Devices/Virtual.vue';
+  import DeviceV1 from './Devices/V1.vue';
+  import DeviceV2 from './Devices/V2.vue';
+  import DeviceV3 from './Devices/V3.vue';
+  import DeviceV4 from './Devices/V4.vue';
+  import Remote from './Devices/Remote.vue';
   export default {
     data: function() {
       return { ShowSpinner: false, Device: null, Devices: this.APIList(this.API.GetDevices),
@@ -60,7 +59,7 @@
     methods: {
       Configure: function(id) {
         this.ShowSpinner = true;
-        this.API.getDevice(id.Serial).then(
+        this.API.GetDevice(id.Serial).then(
           (result) => {
             this.Device = result;
             this.Device.Driver = id.Driver;
@@ -72,6 +71,6 @@
         );
       }
     },
-    components: { Virtual, DeviceV1, DeviceV2, DeviceV3, DeviceV4, DeviceRemote }
+    components: { Virtual, DeviceV1, DeviceV2, DeviceV3, DeviceV4, Remote }
   }
 </script>

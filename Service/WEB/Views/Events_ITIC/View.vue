@@ -1,12 +1,17 @@
 <template>
   <q-page>
-    <div class="row">
+    <q-card>
+      <q-toolbar class="bg-grey-9 text-white q-pr-none">
+        <q-toolbar-title>ITIC Curve (CBEMA)</q-toolbar-title>
+        <toolbar-select name="Year" storage="Events_ITIC.Year" :options="YearsList" v-model="Year" />
+      </q-toolbar>
+
       <div class="col-lg-12">
         <div class="panel panel-other">
           <div class="panel-heading">
-            <span class="header-text">ITIC Curve (CBEMA)</span>
+
             <div class="header-buttons">
-              <toolbar-years v-model="Year" storage="StatYear" aggreg="1H"></toolbar-years>
+
               <div class="btn-group">
                 <button-export file="Events" :rows="Export"></button-export>
               </div>
@@ -18,7 +23,7 @@
           </div>
         </div>
       </div>
-    </div>
+    </q-card>
     <div class="row">
       <div class="col-xs-12 col-md-6">
         <by-date :data="TransferEvents.Data"></by-date>
@@ -50,6 +55,11 @@
     watch: {
       analyzer: function() { if(this.Year == null) return; this.TransferEvents.Update(this.analyzer, [moment().tz(this.analyzer.TimeZone).year(this.Year).startOf('year').valueOf(), moment().tz(this.analyzer.TimeZone).year(this.Year).endOf('year').valueOf()]); },
       Year: function(val) { if(this.analyzer == null) return ; this.TransferEvents.Update(this.analyzer, [moment().tz(this.analyzer.TimeZone).year(val).startOf('year').valueOf(), moment().tz(this.analyzer.TimeZone).year(val).endOf('year').valueOf()]); }
+    },
+    computed: {
+      YearsList: function() {
+        return this.Years(this.Analyzer.Ranges.Aggreg1H).reverse();
+      }
     },
     beforeDestroy: function() {
       this.TransferEvents.Destroy();

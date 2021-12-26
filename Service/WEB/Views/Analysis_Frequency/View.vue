@@ -1,33 +1,43 @@
 <template>
   <q-page>
-    <div class="row">
+    <q-card>
+      <q-toolbar class="bg-green-6 text-white q-pr-none">
+        <q-toolbar-title>Frequency</q-toolbar-title>
+        <toolbar-select name="Aggregation" storage="Frequency.Aggregation" :options="Aggregations(['3S', '1M', '10M', '1H'])" v-model="Aggreg" />
+        <q-btn stretch dense flat icon="menu">
+          <q-menu>
+            <q-list dense>
+              <q-item clickable v-close-popup>Export CSV</q-item>
+            </q-list>
+          </q-menu>
+        </q-btn>
+      </q-toolbar>
+      <q-card-section class="q-pa-none">
       <div class="col-lg-12">
-        <div class="panel panel-frequency">
-          <div class="panel-heading">
-            <div class="huge header-text">Frequency</div>
             <portal to="fs-toolbar" :disabled="!Expanded" class="header-buttons">
-              <toolbar-aggregation storage="Aggregation" :options="['3S', '1M', '10M', '1H']" v-model="Aggreg"></toolbar-aggregation>
+
               <toolbar-period storage="Period" v-model="Range"></toolbar-period>
               <div class="btn-group">
                 <button-export :rows="Export" file="Frequency"></button-export>
                 <button-expand v-model="Expanded"></button-expand>
               </div>
             </portal>
-          </div>
+
           <div class="panel-body">
             <div class="row">
               <counters class="col-md-6 col-lg-4 col-xl-3" :dataNow="TransferNow.LastData" :dataGraph="TransferGraph.Data" :height.sync="Height"></counters>
               <div class="col-md-6 col-lg-8 col-xl-9">
                 <portal to="fs-body" :disabled="!Expanded" class="panel-body">
                   <spinner v-if="TransferGraph.Data==null"></spinner>
-                  <frequency :data="TransferGraph.Data" :height="Expanded?DialogHeight:Height" @range="Range=$event"></frequency>
+                  <!--frequency :data="TransferGraph.Data" :height="Expanded?DialogHeight:Height" @range="Range=$event"></frequency-->
                 </portal>
               </div>
             </div>
           </div>
-        </div>
+
       </div>
-    </div>
+      </q-card-section>
+    </q-card>
     <dlg-fs v-if="Expanded" title="Frequency" :height.sync="DialogHeight"></dlg-fs>
   </q-page>
 </template>

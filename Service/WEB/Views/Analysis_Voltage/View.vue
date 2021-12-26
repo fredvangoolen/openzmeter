@@ -3,9 +3,10 @@
     <q-card>
       <q-toolbar class="bg-red-9 text-white q-pr-none">
         <q-toolbar-title>Voltage</q-toolbar-title>
-
+        <toolbar-select name="Aggregation" storage="Voltage.Aggreg" :options="Aggregations(['3S', '1M', '10M', '1H'])" v-model="Aggreg" />
+        <q-separator dark vertical />
             <portal to="fs-toolbar" :disabled="!Expanded" class="header-buttons">
-              <toolbar-aggregation storage="Aggregation" :options="['3S', '1M', '10M', '1H']" v-model="Aggreg"></toolbar-aggregation>
+
               <toolbar-period storage="Period" v-model="Range" ></toolbar-period>
               <toolbar-phases storage="ViewPhases" current="false" :multi="true" v-model="Phases"></toolbar-phases>
               <div class="btn-group">
@@ -21,7 +22,7 @@
               <div class="col-md-6 col-lg-8 col-xl-9">
                 <portal to="fs-body" :disabled="!Expanded" class="panel-body">
                   <spinner v-if="TransferGraph.Data==null"></spinner>
-                  <voltage :phases="Phases" :data="TransferGraph.Data" :height="Expanded?DialogHeight:Height" @range="Range=$event"></voltage>
+                  <!--voltage :phases="Phases" :data="TransferGraph.Data" :height="Expanded?DialogHeight:Height" @range="Range=$event"></voltage-->
                 </portal>
               </div>
             </div>
@@ -39,8 +40,8 @@
           </q-tabs>
         </q-toolbar>
         <q-tab-panels v-model="ActiveTab">
-          <detail-tabs v-if="analyzer.NominalFrequency>0" :tabs="['Waveform', 'Harmonics', 'Evolution', 'Advanced', 'Phasors', 'Parameters', 'Events']" storage="Voltage.Details.Tabs.AC" v-model="ActiveTab"></detail-tabs>
-          <detail-tabs v-if="analyzer.NominalFrequency==0" :tabs="['Waveform', 'Advanced']" storage="Voltage.Details.Tabs.DC" v-model="ActiveTab"></detail-tabs>
+          <detail-tabs v-if="Analyzer.NominalFrequency>0" :tabs="['Waveform', 'Harmonics', 'Evolution', 'Advanced', 'Phasors', 'Parameters', 'Events']" storage="Voltage.Details.Tabs.AC" v-model="ActiveTab"></detail-tabs>
+          <detail-tabs v-if="Analyzer.NominalFrequency==0" :tabs="['Waveform', 'Advanced']" storage="Voltage.Details.Tabs.DC" v-model="ActiveTab"></detail-tabs>
           <q-tab-panel name="waveform" class="q-pa-none"><waveform :data="TransferNow.Data" :paused.sync="Paused" /></q-tab-panel>
           <harmonics v-if="ActiveTab=='Harmonics'" :data="TransferNow.Data" :paused.sync="Paused"></harmonics>
           <evolution v-if="ActiveTab=='Evolution'" :data="TransferCubism.Data"></evolution>

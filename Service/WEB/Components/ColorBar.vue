@@ -12,7 +12,6 @@ import { now } from 'moment';
     },
     mounted: function() {
       this.SVG = d3.select(this.$el).append('svg');
-//      this.SVG = d3.select(document.createElement('custom'));
       this.Update();
     },
     watch: {

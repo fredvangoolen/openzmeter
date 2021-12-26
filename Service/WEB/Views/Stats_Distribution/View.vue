@@ -3,9 +3,9 @@
     <q-card>
       <q-toolbar class="bg-indigo-9 text-white q-pr-none">
         <q-toolbar-title>Energy distribution</q-toolbar-title>
-        <q-btn stretch flat size="sm"><div>Year<br><strong>sdf</strong></div></q-btn>
+        <toolbar-select name="Year" storage="Stats_Heatmap.Year" :options="YearsList" v-model="Year" />
         <q-separator dark vertical />
-        <q-btn stretch flat icon="menu">
+        <q-btn stretch dense flat icon="menu">
           <q-menu>
             <q-list dense>
               <q-item clickable v-close-popup>Reload</q-item>
@@ -14,13 +14,12 @@
           </q-menu>
         </q-btn>
       </q-toolbar>
-      <q-card-section class="bg-grey-3 q-pa-xs">
+      <q-card-section class="bg-grey-3 q-pa-xs text-right">
         <color-bar :width="140" :height="10" :range="Range" units="Wh"></color-bar>
       </q-card-section>
       <q-separator />
                     <div class="header-buttons clearfix">
-              <color-bar :width="140" :height="10" :range="Range" units="Wh"></color-bar>
-              <toolbar-years storage="StatsYear" v-model="Year" aggreg="1H"></toolbar-years>
+
               <div class="btn-group">
                 <button-export file="Distribution" :rows="Export"></button-export>
               </div>
@@ -28,7 +27,7 @@
 
 
         <q-card-section>
-            <calendar :data="Data" :year="Year" :range.sync="Range" @update:export="CalendarData=$event"></calendar>
+            <!--calendar :data="Data" :year="Year" :range.sync="Range" @update:export="CalendarData=$event"></calendar-->
         </q-card-section>
         <q-inner-loading :showing="ShowSpinner"><q-spinner-dots size="50px" color="orange-10" /></q-inner-loading>
       </q-card>
@@ -54,6 +53,11 @@
     watch: {
       Year: function() { this.Update(); },
       analyzer: function() { this.Update(); }
+    },
+    computed: {
+      YearsList: function() {
+        return this.Years(this.Analyzer.Ranges.Aggreg1H).reverse();
+      }
     },
     methods: {
       Update: function() {

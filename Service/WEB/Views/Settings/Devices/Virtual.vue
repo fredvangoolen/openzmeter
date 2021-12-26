@@ -1,7 +1,7 @@
 <template>
   <q-card>
     <q-card-actions class="bg-grey-9 text-white">
-      <div class="text-h6">Device &raquo; {{ Settings.Serial }}</div>
+      <q-toolbar-title>Device &raquo; {{ Settings.Device }}</q-toolbar-title>
     </q-card-actions>
     <q-card-section class="row q-px-sm q-col-gutter-x-sm">
       <q-item class="col-12">
@@ -51,7 +51,7 @@
     methods: {
       Save: function () {
         this.ShowSpinner = true;
-        this.API.setDevice(this.Settings).then(
+        this.API.SetDevice(this.Settings).then(
           () => {
             this.$emit('update:modelValue', null);
             this.$q.notify({ message: 'Device settings saved', timeout: 3000, color: 'green', position: 'bottom-right' });

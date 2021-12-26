@@ -1,12 +1,12 @@
 <template>
   <q-page>
-    <div class="row">
+    <q-card>
       <div class="col-lg-12">
         <div class="panel panel-active-energy">
           <div class="panel-heading">
             <div class="huge header-text">Active Energy</div>
             <portal to="fs-toolbar" :disabled="!ExpandedActive" class="header-buttons">
-              <toolbar-aggregation storage="AggregationEnergy" :options="['15M', '1H']" v-model="Aggreg"></toolbar-aggregation>
+              <toolbar-select storage="Energy.Aggregation" :options="Aggregations(['15M', '1H'])" v-model="Aggreg" />
               <toolbar-period storage="Period" v-model="Range"></toolbar-period>
               <div class="btn-group">
                 <button-export file="Energy" :rows="Export"></button-export>
@@ -16,18 +16,18 @@
           </div>
           <div class="panel-body">
             <div class="row">
-              <counters class="col-md-6 col-lg-4 col-xl-3" serie="Active_Energy" :data15M="Transfer15M.LastData" :data1H="Transfer1H.LastData" :dataGraph="TransferGraph.Data" :height.sync="ActiveHeight"></counters>
+              <!--counters class="col-md-6 col-lg-4 col-xl-3" serie="Active_Energy" :data15M="Transfer15M.LastData" :data1H="Transfer1H.LastData" :dataGraph="TransferGraph.Data" :height.sync="ActiveHeight"></counters-->
               <div class="col-md-6 col-lg-8 col-xl-9">
                 <portal to="fs-body" :disabled="!ExpandedActive" class="panel-body">
                   <spinner v-if="TransferGraph.Data==null"></spinner>
-                  <energy serie="Active_Energy" :data="TransferGraph.Data" :height="ExpandedActive?DialogHeight:ActiveHeight" @range="Range=$event"></energy>
+                  <!--energy serie="Active_Energy" :data="TransferGraph.Data" :height="ExpandedActive?DialogHeight:ActiveHeight" @range="Range=$event"></energy-->
                 </portal>
               </div>
             </div>
           </div>
         </div>
       </div>
-      <div class="col-lg-12" v-if="analyzer.NominalFrequency!=0">
+      <div class="col-lg-12" v-if="Analyzer.NominalFrequency!=0">
         <div class="panel panel-reactive-energy">
           <div class="panel-heading">
             <div class="header-text">Fund. Reactive Energy</div>
@@ -40,18 +40,18 @@
           </div>
           <div class="panel-body">
             <div class="row">
-              <counters class="col-md-6 col-lg-4 col-xl-3" serie="Reactive_Energy" :data15M="Transfer15M.LastData" :data1H="Transfer1H.LastData" :dataGraph="TransferGraph.Data" :height.sync="ReactiveHeight"></counters>
+              <!--counters class="col-md-6 col-lg-4 col-xl-3" serie="Reactive_Energy" :data15M="Transfer15M.LastData" :data1H="Transfer1H.LastData" :dataGraph="TransferGraph.Data" :height.sync="ReactiveHeight"></counters-->
               <div class="col-md-6 col-lg-8 col-xl-9">
                 <portal to="fs-body" :disabled="!ExpandedReactive" class="panel-body">
                   <spinner v-if="TransferGraph.Data==null"></spinner>
-                  <energy serie="Reactive_Energy" :data="TransferGraph.Data" :height="ExpandedReactive?DialogHeight:ReactiveHeight" @range="Range=$event"></energy>
+                  <!--energy serie="Reactive_Energy" :data="TransferGraph.Data" :height="ExpandedReactive?DialogHeight:ReactiveHeight" @range="Range=$event"></energy-->
                 </portal>
               </div>
             </div>
           </div>
         </div>
       </div>
-    </div>
+    </q-card>
     <dlg-fs v-if="ExpandedActive" title="Active Energy" :height.sync="DialogHeight"></dlg-fs>
     <dlg-fs v-if="ExpandedReactive" title="Reactive Energy" :height.sync="DialogHeight"></dlg-fs>
   </q-page>

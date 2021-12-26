@@ -1,22 +1,25 @@
 <template>
   <q-page>
-    <div class="row">
+    <q-card>
+      <q-toolbar class="bg-grey-9 text-white q-pr-none">
+        <q-toolbar-title>EN50160</q-toolbar-title>
+        <toolbar-select name="Year" storage="Events_EN50160.Year" :options="YearsList" v-model="Year" />
+      </q-toolbar>
+
       <div class="col-lg-12">
-        <div class="panel panel-other">
-          <div class="panel-heading">
-            <span class="header-text">EN50160</span>
+
+
             <div class="header-buttons clearfix">
               <toolbar-weeks :weeks="Weeks" v-model="Index"></toolbar-weeks>
-              <toolbar-years v-model="Year" aggreg="1H" storage="StatsYear"></toolbar-years>
             </div>
           </div>
           <div class="panel-body main">
             <spinner v-if="!Ready"></spinner>
             <counters v-if="Ready" :data="Weeks[Index]"></counters>
-          </div>
-        </div>
+
       </div>
-    </div>
+
+    </q-card>
     <div class="row" v-if="Ready">
       <div :class="[(analyzer.VoltageChannels==1) ? 'col-lg-4' : 'col-lg-6', 'col-md-12']">
         <frequency :data="Weeks[Index]" :ranges="Frequencies"></frequency>
@@ -63,6 +66,9 @@
       }
     },
     computed: {
+      YearsList: function() {
+        return this.Years(this.Analyzer.Ranges.Aggreg1H).reverse();
+      },
       Weeks: function() {
         this.Index = 'All year';
         var Weeks = {};

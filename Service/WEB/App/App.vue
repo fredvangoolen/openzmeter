@@ -1,5 +1,5 @@
 <template>
-  <q-layout id="app" view="hHh Lpr lff" class="bg-grey-2">
+  <q-layout id="app" view="hHh lpR fFf" class="bg-grey-2">
     <q-header v-if="(User.User != null) && (UserLoaded == true)">
       <q-toolbar class="bg-grey-9 q-px-xs">
         <q-btn dense flat icon="menu" class="lt-md q-mr-xs" @click="$refs.Sidebar.toggle()" />
@@ -13,7 +13,7 @@
         <q-separator />
       </div>
     </q-header>
-    <q-drawer v-if="(User.User != null) && (UserLoaded == true)" ref="Sidebar" v-model="Expanded" mini-to-overlay :mini="MiniState" @mouseover="MiniState=false" @mouseout="MiniState=true" :width="300" :mini-width="38" dark class="bg-grey-9">
+    <q-drawer v-if="(User.User != null) && (UserLoaded == true)" ref="Sidebar" v-model="Expanded" mini-to-overlay :mini="MiniState" @mouseover="MiniState=false" @mouseleave="HideBar" :width="300"  dark class="bg-grey-9">
       <q-list>
         <q-separator />
         <sidebar-analyzer :status="TransferStatus" />
@@ -77,6 +77,10 @@
 //      }
     },
     methods: {
+      HideBar: function() {
+        setTimeout(() => { this.MiniState = true }, 500);
+        console.log("close");
+      },
       onResize: function(val) {
         this.MiniState = true;
         this.TwoRows = (val.width < 768);
@@ -87,7 +91,6 @@
           this.Expanded = false;
           this.DesktopMode = false;
         }
-//        setTimeout(() => { this.MiniState = true; }, 500)
       }
     },
     components: { Login, TopbarIndicators, SidebarUser, SidebarAnalyzer, SidebarMenu }

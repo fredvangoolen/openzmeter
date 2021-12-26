@@ -1,6 +1,6 @@
 <template>
-  <q-item clickable class="q-pa-xs" dark @click="ShowDialog = true">
-    <q-item-section side class="q-pr-xs">
+  <q-item clickable dark @click="ShowDialog = true">
+    <q-item-section side>
       <img class="icon" :src="require('Imgs/user32.png')">
     </q-item-section>
     <q-item-section>

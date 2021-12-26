@@ -1,7 +1,7 @@
 <template>
   <q-page>
     <q-card>
-      <q-toolbar class="bg-blue-9 text-white q-pr-none">
+      <q-toolbar class="bg-blue-6 text-white q-pr-none">
         <q-toolbar-title>Current</q-toolbar-title>
       </q-toolbar>
 
@@ -10,7 +10,7 @@
           <div class="panel-heading">
             <div class="header-text"></div>
             <portal to="fs-toolbar" :disabled="!Expanded" class="header-buttons">
-              <toolbar-aggregation storage="Aggregation" :options="['3S', '1M', '10M', '1H']" v-model="Aggreg"></toolbar-aggregation>
+              <toolbar-select storage="Current.Aggregation" :options="Aggregations(['3S', '1M', '10M', '1H'])" v-model="Aggreg" />
               <toolbar-period storage="Period" v-model="Range" ></toolbar-period>
               <toolbar-phases storage="ViewPhases" :current="true" :multi="true" v-model="Phases"></toolbar-phases>
               <div class="btn-group">
@@ -25,7 +25,7 @@
               <div class="col-md-6 col-lg-8 col-xl-9">
                 <portal to="fs-body" :disabled="!Expanded" class="panel-body">
                   <spinner v-if="TransferGraph.Data==null"></spinner>
-                  <current :phases="Phases" :data="TransferGraph.Data" :height="Expanded?DialogHeight:Height" @range="Range=$event"></current>
+                  <!--current :phases="Phases" :data="TransferGraph.Data" :height="Expanded?DialogHeight:Height" @range="Range=$event"></current-->
                 </portal>
               </div>
             </div>
@@ -33,8 +33,8 @@
         </div>
       </div>
       <div class="col-lg-12">
-        <detail-tabs v-if="analyzer.NominalFrequency>0" :tabs="['Waveform', 'Harmonics', 'Evolution', 'Advanced', 'Parameters']" storage="Current.Details.Tabs.AC" v-model="ActiveTab"></detail-tabs>
-        <detail-tabs v-if="analyzer.NominalFrequency==0" :tabs="['Waveform', 'Advanced']" storage="Current.Details.Tabs.DC" v-model="ActiveTab"></detail-tabs>
+        <detail-tabs v-if="Analyzer.NominalFrequency>0" :tabs="['Waveform', 'Harmonics', 'Evolution', 'Advanced', 'Parameters']" storage="Current.Details.Tabs.AC" v-model="ActiveTab"></detail-tabs>
+        <detail-tabs v-if="Analyzer.NominalFrequency==0" :tabs="['Waveform', 'Advanced']" storage="Current.Details.Tabs.DC" v-model="ActiveTab"></detail-tabs>
         <waveform v-if="ActiveTab=='Waveform'" :data="TransferNow.Data" :paused.sync="Paused"></waveform>
         <harmonics v-if="ActiveTab=='Harmonics'" :data="TransferNow.Data" :paused.sync="Paused"></harmonics>
         <evolution v-if="ActiveTab=='Evolution'" :data="TransferCubism.Data"></evolution>

@@ -3,9 +3,9 @@
     <q-card>
       <q-toolbar class="bg-indigo-9 text-white q-pr-none">
         <q-toolbar-title>Energy Heatmap</q-toolbar-title>
-        <toolbar-select name="Aggregation" storage="Stats_Heatmap.Aggreg" :options="Aggregs" v-model="Aggreg" />
+        <toolbar-select name="Aggregation" storage="Stats_Heatmap.Aggreg" :options="Aggregations(['15M', '1H'])" v-model="Aggreg" />
         <q-separator dark vertical />
-        <toolbar-select name="Year" storage="Stats_Heatmap.Year" :options="Years" v-model="Year" />
+        <toolbar-select name="Year" storage="Stats_Heatmap.Year" :options="YearsList" v-model="Year" />
         <q-separator dark vertical />
         <q-btn stretch dense flat icon="menu">
           <q-menu>
@@ -17,7 +17,7 @@
           </q-menu>
         </q-btn>
       </q-toolbar>
-      <q-linear-progress stripe v-if="Data.Progress != null" color="indigo-9" :value="Data.Progress" class="q-ma-none" />
+      <q-linear-progress v-if="Data.Progress != null" color="indigo-9" :value="Data.Progress" class="q-ma-none" />
       <q-card-section class="bg-grey-3 q-pa-xs text-right">
         <color-bar :width="Math.max(140, Width * 0.2)" :height="10" :range="[-Max, Max]" units="Wh"></color-bar>
       </q-card-section>
@@ -36,40 +36,16 @@
   import HeatmapTable from './HeatmapTable.vue';
   export default {
     data: function() {
-      return { Data: this.Analyzer.Queries.Suscribe('Series', ['Active_Energy'], 60000), Aggregs: this.Aggregations(['15M', '1H']),
+      return { Data: this.Analyzer.Queries.Suscribe('Series', ['Active_Energy'], 60000),
                Aggreg: null, Year: null, ShowSpinner: true, Progress: 0, ExportData: null, Width: 300, Max: 0 };
     },
     unmounted: function() {
       this.Data.Stop();
     },
     computed: {
-      Years: function() {
-        let Items = [];
-        if(this.Analyzer.Analyzer == null) return;
-        if(this.Analyzer.Ranges.Aggreg3S != null) {
-          let StartYear = moment(this.Analyzer.Ranges.Aggreg3S.From).year();
-          let EndYear = moment(this.Analyzer.Ranges.Aggreg3S.To).year();
-          for(let year = StartYear; year <= EndYear; year++) Items.push({ value: year, name: String(year) });
-          Items = Items.reverse();
-        }
-        return Items;
-           /* if(this.Years.length == 0) this.Years.push(moment().year());
-              var Stored = null;
-              if(this.storage != null) {
-                Stored = parseInt(localStorage.getItem(this.storage));
-                if(isNaN(Stored) == true) Stored = null;
-              }
-              if(Years.length > 0) {
-                if((Stored >= StartYear) && (Stored <= EndYear)) {
-                  this.$emit('input', Stored);
-                } else {
-                  this.$emit('input', parseInt(Years[0]));
-                }
-              } else {
-                this.$emit('input', null);
-              }
-            }*/
-
+      YearsList: function() {
+        if(this.Aggreg == '15M') return this.Years(this.Analyzer.Ranges.Aggreg15M).reverse();
+        if(this.Aggreg == '1H') return this.Years(this.Analyzer.Ranges.Aggreg1H).reverse();
       }
     },
     watch: {

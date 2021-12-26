@@ -3,6 +3,7 @@
     <q-card>
       <q-toolbar class="bg-indigo-9 text-white q-pr-none">
         <q-toolbar-title>Energy costs</q-toolbar-title>
+        <toolbar-select name="Year" storage="Stats_Heatmap.Year" :options="YearsList" v-model="Year" />
       </q-toolbar>
 
     </q-card>
@@ -15,7 +16,7 @@
               <div class="btn-group">
                 <option-picker v-model="Group" :options="[{name: 'Contracted', value: 0}, {name: 'Compare group 1', value: 1}, {name: 'Compare group 2', value: 2}, {name: 'Compare group 3', value: 3}, {name: 'Compare group 4', value: 4}, {name: 'Compare group 5', value: 5}, {name: 'Compare group 6', value: 6}, {name: 'Compare group 7', value: 7}, {name: 'Compare group 8', value: 8}, {name: 'Compare group 9', value: 9}, {name: 'Compare group 10', value: 10}]"></option-picker>
               </div>
-              <toolbar-years v-model="Year" aggreg="1H" storage="StatsYear"></toolbar-years>
+
               <div class="btn-group">
                 <button-export file="Cost" :rows="Export"></button-export>
               </div>
@@ -49,6 +50,9 @@
       return { Year: null, Bills: null, Active: null, Group: 0 };
     },
     computed: {
+      YearsList: function() {
+        return this.Years(this.Analyzer.Ranges.Aggreg1H).reverse();
+      },
       BillNames: function() {
         var Names = [];
         for(var n in this.Bills) Names.push(moment(this.Bills[n].To).tz(this.Analyzer.TimeZone).format('DD-MMM'));
