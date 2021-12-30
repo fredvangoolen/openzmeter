@@ -3,9 +3,9 @@
     <q-card>
       <q-toolbar class="bg-indigo-9 text-white q-pr-none">
         <q-toolbar-title>Energy distribution</q-toolbar-title>
-        <toolbar-select name="Year" storage="Stats_Heatmap.Year" :options="YearsList" v-model="Year" />
+        <toolbar-year name="Year" storage="Stats_Heatmap.Year" :options="YearsList" v-model="Year" />
         <q-separator dark vertical />
-        <q-btn stretch dense flat icon="menu">
+        <q-btn stretch dense flat icon="mdiMenu">
           <q-menu>
             <q-list dense>
               <q-item clickable v-close-popup>Reload</q-item>

@@ -3,7 +3,7 @@
     <q-card>
       <q-toolbar class="bg-indigo-9 text-white q-pr-none">
         <q-toolbar-title>Energy costs</q-toolbar-title>
-        <toolbar-select name="Year" storage="Stats_Heatmap.Year" :options="YearsList" v-model="Year" />
+        <toolbar-year storage="Stats_Heatmap.Year" v-model="Year" />
       </q-toolbar>
 
     </q-card>
@@ -50,9 +50,6 @@
       return { Year: null, Bills: null, Active: null, Group: 0 };
     },
     computed: {
-      YearsList: function() {
-        return this.Years(this.Analyzer.Ranges.Aggreg1H).reverse();
-      },
       BillNames: function() {
         var Names = [];
         for(var n in this.Bills) Names.push(moment(this.Bills[n].To).tz(this.Analyzer.TimeZone).format('DD-MMM'));

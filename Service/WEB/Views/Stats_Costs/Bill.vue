@@ -6,7 +6,7 @@
         <div v-if="bill.Complete==false" class="title-warning"><img :src="require('Imgs/exclamation.png')">Bill is not yet complete, partial data is shown</div>
       </div>
       <portal to="fs-toolbar" :disabled="!Expanded" class="float-right">
-        <toolbar-select storage="Bill.Aggregation" v-model="Aggreg" :options="Aggregations(['15M', '1H', '1D'])" />
+        <toolbar-aggreg storage="Bill.Aggregation" v-model="Aggreg" :options="['15M', '1H', '1D']" />
           <div class="btn-group">
             <button type="button" class="btn btn-default btn-xs" :class="{ active: GraphSeries=='Energy' }" @click="GraphSeries='Energy'">Energy</button>
             <button type="button" class="btn btn-default btn-xs" :class="{ active: GraphSeries=='Power' }" @click="GraphSeries='Power'">Power</button>

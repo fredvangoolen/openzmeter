@@ -1,4 +1,5 @@
 <template>
+
   <div class="btn-group" v-if="analyzer.Mode != '1PHASE'">
     <button type="button" v-for="(item, index) in analyzer.PhaseNames" @click="Toggle(index)" :key="index" :class="{ active: (Active[index]==true) }" class="btn btn-default btn-xs" :title="'Show phase ' + item"><img :src="PhaseImgs[index]"></button>
     <button type="button" v-if="(analyzer.NeutralName!=null)&&(current==true)" @click="Toggle(analyzer.PhaseNames.length)" :class="{ active: (Active[analyzer.PhaseNames.length]==true) }" class="btn btn-default btn-xs" :title="'Show phase ' + analyzer.NeutralName"><img :src="NeutralImg"></button>
@@ -7,7 +8,7 @@
 
 <script>
   export default {
-    props: { analyzer: Object, storage: String, multi: Boolean, current: Boolean, value: [Number, Array] },
+    props: { storage: String, multi: Boolean, current: Boolean, value: [Number, Array] },
     data() {
       return { Active: [], BaseImg: null };
     },

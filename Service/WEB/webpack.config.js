@@ -1,6 +1,7 @@
 var path = require('path');
 const webpack = require('webpack');
 const { VueLoaderPlugin } = require('vue-loader');
+const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
 module.exports = {
   entry: './Index.js',
   output: {
@@ -10,7 +11,8 @@ module.exports = {
   },
   plugins: [
     new webpack.DefinePlugin({ }),
-    new VueLoaderPlugin()
+    new VueLoaderPlugin(),
+    new BundleAnalyzerPlugin()
   ],
   module: {
     rules: [
@@ -24,10 +26,6 @@ module.exports = {
         test: /\.vue$/,
         loader: 'vue-loader'
       }, {
-        resourceQuery: /blockType=i18n/,
-        type: 'javascript/auto',
-        loader: '@intlify/vue-i18n-loader'
-      }, {
         test: /\.js$/,
         exclude: /node_modules/,
         loader: 'babel-loader',
@@ -40,7 +38,7 @@ module.exports = {
         use: [{
           loader: 'url-loader',
           options: {
-            limit: 800000,
+            limit: 8000000,
             esModule: false
           }
         }]
@@ -55,7 +53,6 @@ module.exports = {
       'JS': path.resolve(__dirname, 'JS'),
       'CSS': path.resolve(__dirname, 'CSS'),
       'Imgs': path.resolve(__dirname, 'Imgs'),
-
     },
     extensions: ['*', '.js', '.vue', '.json']
   },
@@ -75,14 +72,14 @@ module.exports = {
 
 if(process.env.NODE_ENV === 'production') {
   module.exports.devtool = false;
-//  module.exports.plugins = (module.exports.plugins || []).concat([
-//    new webpack.DefinePlugin({
-//      'process.env': {
-//        NODE_ENV: '"production"'
-//      }
-//    }),
-//    new webpack.LoaderOptionsPlugin({
-//      minimize: true
-//    })
-//  ]);
+  module.exports.plugins = (module.exports.plugins || []).concat([
+    new webpack.DefinePlugin({
+      'process.env': {
+        NODE_ENV: '"production"'
+      }
+    }),
+    new webpack.LoaderOptionsPlugin({
+      minimize: true
+    })
+  ]);
 }

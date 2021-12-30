@@ -3,7 +3,7 @@
     <q-card>
       <q-toolbar class="bg-grey-9 text-white q-pr-none">
         <q-toolbar-title>ITIC Curve (CBEMA)</q-toolbar-title>
-        <toolbar-select name="Year" storage="Events_ITIC.Year" :options="YearsList" v-model="Year" />
+        <toolbar-year storage="Events_ITIC.Year" v-model="Year" />
       </q-toolbar>
 
       <div class="col-lg-12">
@@ -55,11 +55,6 @@
     watch: {
       analyzer: function() { if(this.Year == null) return; this.TransferEvents.Update(this.analyzer, [moment().tz(this.analyzer.TimeZone).year(this.Year).startOf('year').valueOf(), moment().tz(this.analyzer.TimeZone).year(this.Year).endOf('year').valueOf()]); },
       Year: function(val) { if(this.analyzer == null) return ; this.TransferEvents.Update(this.analyzer, [moment().tz(this.analyzer.TimeZone).year(val).startOf('year').valueOf(), moment().tz(this.analyzer.TimeZone).year(val).endOf('year').valueOf()]); }
-    },
-    computed: {
-      YearsList: function() {
-        return this.Years(this.Analyzer.Ranges.Aggreg1H).reverse();
-      }
     },
     beforeDestroy: function() {
       this.TransferEvents.Destroy();

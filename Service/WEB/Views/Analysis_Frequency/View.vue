@@ -3,7 +3,7 @@
     <q-card>
       <q-toolbar class="bg-green-6 text-white q-pr-none">
         <q-toolbar-title>Frequency</q-toolbar-title>
-        <toolbar-select name="Aggregation" storage="Frequency.Aggregation" :options="Aggregations(['3S', '1M', '10M', '1H'])" v-model="Aggreg" />
+        <toolbar-aggreg storage="Frequency.Aggregation" :options="['3S', '1M', '10M', '1H']" v-model="Aggreg" />
         <q-btn stretch dense flat icon="menu">
           <q-menu>
             <q-list dense>

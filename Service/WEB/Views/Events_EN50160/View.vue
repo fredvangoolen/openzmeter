@@ -3,7 +3,7 @@
     <q-card>
       <q-toolbar class="bg-grey-9 text-white q-pr-none">
         <q-toolbar-title>EN50160</q-toolbar-title>
-        <toolbar-select name="Year" storage="Events_EN50160.Year" :options="YearsList" v-model="Year" />
+        <toolbar-year storage="Events_EN50160.Year" v-model="Year" />
       </q-toolbar>
 
       <div class="col-lg-12">
@@ -66,9 +66,6 @@
       }
     },
     computed: {
-      YearsList: function() {
-        return this.Years(this.Analyzer.Ranges.Aggreg1H).reverse();
-      },
       Weeks: function() {
         this.Index = 'All year';
         var Weeks = {};

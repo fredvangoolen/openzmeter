@@ -11,7 +11,7 @@
       <q-toolbar class="bg-grey-3 q-pa-none">
         <q-space />
         <q-input dense debounce="300" label="Search" v-model="Filter" class="q-mr-sm">
-          <template v-slot:prepend><q-icon name="search" /></template>
+          <template v-slot:prepend><q-icon :name="mdiMagnify" /></template>
         </q-input>
         <q-btn stretch unelevated color="primary" @click="Add">Add</q-btn>
       </q-toolbar>
@@ -51,6 +51,7 @@
 </template>
 
 <script>
+  import { mdiMagnify } from '@quasar/extras/mdi-v6';
   import Tariff from './Tariffs/Tariff.vue';
   import EspEsios from './Tariffs/EspEsios.vue';
   export default {
@@ -70,6 +71,9 @@
           { name: 'actions', label: '' }
         ]
       };
+    },
+    created: function() {
+      this.mdiMagnify = mdiMagnify;
     },
     watch: {
       'Tariffs.Loading': function(val) {
@@ -134,21 +138,3 @@
     components: { Tariff, EspEsios }
   }
 </script>
-
-<style scoped>
-  @media screen and (min-width: 600px) {
-    .table >>> th:nth-child(1) {
-      width: 100px;
-      text-align: center;
-    }
-    .table >>> td:nth-child(1) {
-      text-align: center;
-    }
-    .table >>> th:nth-child(3) {
-      width: 120px;
-    }
-    .table >>> td:nth-child(3) {
-      text-align: right;
-    }
-  }
-</style>

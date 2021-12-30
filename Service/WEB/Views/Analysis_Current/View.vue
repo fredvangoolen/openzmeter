@@ -1,22 +1,29 @@
 <template>
   <q-page>
     <q-card>
-      <q-toolbar class="bg-blue-6 text-white q-pr-none">
-        <q-toolbar-title>Current</q-toolbar-title>
-      </q-toolbar>
+      <teleport to="fs-toolbar" :disabled="!Expanded">
+        <q-toolbar class="bg-blue-6 text-white q-pr-none">
+          <q-toolbar-title>Current</q-toolbar-title>
+          <toolbar-aggreg storage="Current.Aggregation" :options="['3S', '1M', '10M', '1H']" v-model="Aggreg" />
+          <q-separator dark vertical />
+          <!--toolbar-period storage="Period" v-model="Range" ></toolbar-period>
+          <q-separator dark vertical /-->
+          <toolbar-phases-multi storage="Voltage.Main.Phases" :current="true" v-model="Phases" v-if="Analyzer.VoltageChannels() > 1" />
+          <q-separator dark vertical v-if="Analyzer.VoltageChannels() > 1" />
+          <toolbar-export file="Current" :rows="Export" />
+          <q-separator dark vertical />
+          <button-expand v-model="Expanded"></button-expand>
+        </q-toolbar>
+      </teleport>
 
       <div class="col-lg-12">
         <div class="panel panel-current">
           <div class="panel-heading">
             <div class="header-text"></div>
             <portal to="fs-toolbar" :disabled="!Expanded" class="header-buttons">
-              <toolbar-select storage="Current.Aggregation" :options="Aggregations(['3S', '1M', '10M', '1H'])" v-model="Aggreg" />
-              <toolbar-period storage="Period" v-model="Range" ></toolbar-period>
-              <toolbar-phases storage="ViewPhases" :current="true" :multi="true" v-model="Phases"></toolbar-phases>
-              <div class="btn-group">
-                <button-export file="Current" :rows="Export"></button-export>
-                <button-expand v-model="Expanded"></button-expand>
-              </div>
+
+
+
             </portal>
           </div>
           <div class="panel-body">
@@ -56,7 +63,7 @@
   import Waveform from './Waveform.vue';
   export default {
     data: function() {
-      return { ActiveTab: null, Aggreg: null, Range: null, Phases: null, Height: 300, Paused: false, Expanded: false, DialogHeight: 300,
+      return { ActiveTab: null, Aggreg: null, Range: null, Phases: [], Height: 300, Paused: false, Expanded: false, DialogHeight: 300,
                TransferGraph: this.SeriesTransfer(['Current']),
                TransferNow: this.NowTransfer(['Current', 'Voltage_Samples', 'Current_Samples', 'Voltage_Harmonics_Complex', 'Current_Harmonics_Complex', 'Voltage_FFT', 'Current_FFT', 'Power_Factor', 'Current_THD', 'Phi']),
                TransferCubism: this.SeriesTransfer(['Current_Harmonics', 'Power_Factor', 'Current_THD', 'Phi']),

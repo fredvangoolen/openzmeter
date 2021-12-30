@@ -9,7 +9,7 @@
           <div class="panel-heading">
             <div class="huge header-text">Active Power</div>
             <portal to="fs-toolbar" :disabled="!ExpandedActive" class="header-buttons">
-              <toolbar-select storage="Energy.Aggregation" :options="Aggregations(['15M', '1H'])" v-model="Aggreg" />
+              <toolbar-aggreg storage="Energy.Aggregation" :options="['15M', '1H']" v-model="Aggreg" />
               <toolbar-period storage="Period" v-model="Range"></toolbar-period>
               <div class="btn-group">
                 <button type="button" class="btn btn-default btn-xs" :class="{ active: ShowContracted }" @click="ShowContracted=!ShowContracted" title="Scale includes contracted power limit"><img :src="require('Imgs/tag_blue.png')"></button>

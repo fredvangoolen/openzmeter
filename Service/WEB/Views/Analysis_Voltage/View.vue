@@ -1,22 +1,22 @@
 <template>
   <q-page>
     <q-card>
-      <q-toolbar class="bg-red-9 text-white q-pr-none">
-        <q-toolbar-title>Voltage</q-toolbar-title>
-        <toolbar-select name="Aggregation" storage="Voltage.Aggreg" :options="Aggregations(['3S', '1M', '10M', '1H'])" v-model="Aggreg" />
-        <q-separator dark vertical />
-            <portal to="fs-toolbar" :disabled="!Expanded" class="header-buttons">
+      <teleport to="fs-toolbar" :disabled="!Expanded">
+        <q-toolbar class="bg-red-9 text-white q-pr-none">
+          <q-toolbar-title>Voltage</q-toolbar-title>
+          <toolbar-aggreg storage="Voltage.Aggreg" :options="['3S', '1M', '10M', '1H']" v-model="Aggreg" />
+          <q-separator dark vertical />
+          <!--toolbar-period storage="Period" v-model="Range" ></toolbar-period>
+          <q-separator dark vertical /-->
+          <toolbar-phases-multi storage="Voltage.Main.Phases" :current="false" v-model="Phases" v-if="Analyzer.VoltageChannels() > 1" />
+          <q-separator dark vertical v-if="Analyzer.VoltageChannels() > 1"/>
+          <toolbar-export file="Voltage" :rows="Export" />
+          <q-separator dark vertical />
+          <button-expand />
+        </q-toolbar>
+      </teleport>
 
-              <toolbar-period storage="Period" v-model="Range" ></toolbar-period>
-              <toolbar-phases storage="ViewPhases" current="false" :multi="true" v-model="Phases"></toolbar-phases>
-              <div class="btn-group">
-                <button-export file="Voltage" :rows="Export"></button-export>
-                <button-expand v-model="Expanded"></button-expand>
-              </div>
-            </portal>
-
-      </q-toolbar>
-          <div class="panel-body">
+      <div class="panel-body">
             <div class="row">
               <counters class="col-md-6 col-lg-4 col-xl-3" :data10M="Transfer10M.LastData" :dataGraph="TransferGraph.Data" :height.sync="Height"></counters>
               <div class="col-md-6 col-lg-8 col-xl-9">
@@ -67,7 +67,7 @@
   import Phasors from './Phasors.vue';
   export default {
     data: function() {
-      return { ActiveTab: null, Aggreg: null, Range: null, Phases: null, Height: 300, Paused: false, Expanded: false, DialogHeight: 300,
+      return { ActiveTab: null, Aggreg: null, Range: null, Phases: [], Height: 300, Paused: false, Expanded: false, DialogHeight: 300,
                TransferGraph: this.SeriesTransfer(['Voltage']),
                TransferNow: this.NowTransfer(['Voltage', 'Current', 'Voltage_Samples', 'Voltage_Phase', 'Current_Samples', 'Voltage_Harmonics_Complex', 'Current_Harmonics_Complex', 'Voltage_FFT', 'Current_FFT', 'Power_Factor', 'Voltage_THD', 'Phi', 'Unbalance']),
                TransferCubism: this.SeriesTransfer(['Voltage_Harmonics', 'Power_Factor', 'Voltage_THD', 'Phi', 'Unbalance']),

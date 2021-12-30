@@ -4,7 +4,7 @@
       <q-toolbar class="bg-indigo-9 text-white q-pr-none">
         <q-toolbar-title>Energy consumption</q-toolbar-title>
         <!--portal to="fs-toolbar" :disabled="!Expanded" class="header-buttons"-->
-        <toolbar-select name="Aggregation" storage="Dashboard.Aggreg" :options="Aggregations(['15M', '1H'])" v-model="Aggreg" />
+        <toolbar-aggreg storage="Dashboard.Aggreg" :options="['15M', '1H']" v-model="Aggreg" />
         <q-separator dark vertical />
         <toolbar-period storage="Period" v-model="Range"></toolbar-period>
         <q-separator dark vertical />

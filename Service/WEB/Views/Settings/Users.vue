@@ -7,7 +7,7 @@
       <q-space />
       <q-input dense debounce="300" label="Search" v-model="Filter" class="q-mr-sm">
         <template v-slot:prepend>
-          <q-icon name="search" />
+          <q-icon :name="mdiMagnify" />
         </template>
       </q-input>
       <q-btn stretch unelevated color="primary" @click="Add">Add</q-btn>
@@ -33,7 +33,8 @@
 </template>
 
 <script>
-  let UserEdit = () => import('App/User/Dialog.vue');
+  import { mdiMagnify } from '@quasar/extras/mdi-v6';
+  import UserEdit from 'App/User/Dialog.vue';
   export default {
     data: function() {
       return { ShowSpinner: false, Filter: '', ShowDialog: false, Enabled: false, User: null, Users: this.APIList(this.API.GetUsers),
@@ -45,6 +46,9 @@
           { name: 'actions', label: '' }
         ]
       };
+    },
+    created: function() {
+      this.mdiMagnify = mdiMagnify;
     },
     watch: {
       'Users.Loading': function(val) {

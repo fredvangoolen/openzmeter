@@ -2,7 +2,7 @@
   <q-layout id="app" view="hHh lpR fFf" class="bg-grey-2">
     <q-header v-if="(User.User != null) && (UserLoaded == true)">
       <q-toolbar class="bg-grey-9 q-px-xs">
-        <q-btn dense flat icon="menu" class="lt-md q-mr-xs" @click="$refs.Sidebar.toggle()" />
+        <q-btn dense flat :icon="mdiMenu" class="lt-md q-mr-xs" @click="$refs.Sidebar.toggle()" />
         <q-toolbar-title class="q-pa-none">
           <img src="MainLogo.png" style="margin-top: 12px; max-width: 428px" />
         </q-toolbar-title>
@@ -32,15 +32,18 @@
 </template>
 
 <script>
+  import { mdiMenu } from '@quasar/extras/mdi-v6';
   import Login from './Login.vue';
   import TopbarIndicators from './TopbarIndicators.vue';
   import SidebarMenu from './SidebarMenu.vue';
   import SidebarUser from './SidebarUser.vue';
   import SidebarAnalyzer from './SidebarAnalyzer.vue';
-  import IconSet from 'quasar/icon-set/svg-material-icons';
   export default {
     data: function() {
       return { TwoRows: true, UserLoaded: false ,MiniState: false, Expanded: false, DesktopMode: false, NoNetwork: false, TransferStatus: this.StatusTransfer(['Events', 'Alarms']) };
+    },
+    created: function() {
+      this.mdiMenu = mdiMenu;
     },
     watch: {
       'User.User': function(val) {
@@ -52,7 +55,7 @@
       }
     },
     mounted: function() {
-      this.$q.iconSet.set(IconSet);
+      //this.$q.iconSet.set(IconSet);
       this.User.GetCurrent().then(
         () => this.UserLoaded = true,
         () => this.UserLoaded = true

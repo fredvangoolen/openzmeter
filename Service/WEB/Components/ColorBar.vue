@@ -4,7 +4,6 @@
 
 <script>
   import * as d3 from 'd3';
-import { now } from 'moment';
   export default {
     props: { width: Number, height: Number, range: Array, units: String },
     data() {

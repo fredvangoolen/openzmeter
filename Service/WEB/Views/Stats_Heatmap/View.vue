@@ -3,11 +3,11 @@
     <q-card>
       <q-toolbar class="bg-indigo-9 text-white q-pr-none">
         <q-toolbar-title>Energy Heatmap</q-toolbar-title>
-        <toolbar-select name="Aggregation" storage="Stats_Heatmap.Aggreg" :options="Aggregations(['15M', '1H'])" v-model="Aggreg" />
+        <toolbar-aggreg storage="Stats_Heatmap.Aggreg" :options="['15M', '1H']" v-model="Aggreg" />
         <q-separator dark vertical />
-        <toolbar-select name="Year" storage="Stats_Heatmap.Year" :options="YearsList" v-model="Year" />
+        <toolbar-year storage="Stats_Heatmap.Year" aggreg="15M" v-model="Year" />
         <q-separator dark vertical />
-        <q-btn stretch dense flat icon="menu">
+        <q-btn stretch dense flat icon="mdiMenu">
           <q-menu>
             <q-list dense>
               <q-item clickable v-close-popup>Reload</q-item>
@@ -42,19 +42,12 @@
     unmounted: function() {
       this.Data.Stop();
     },
-    computed: {
-      YearsList: function() {
-        if(this.Aggreg == '15M') return this.Years(this.Analyzer.Ranges.Aggreg15M).reverse();
-        if(this.Aggreg == '1H') return this.Years(this.Analyzer.Ranges.Aggreg1H).reverse();
-      }
-    },
     watch: {
       Aggreg: function(val, prev) {
-        if(val == null) return;
+        console.log("view", val, prev);
         this.Data.SetAggreg(val);
       },
       Year: function(val, prev) {
-        if(val == null) return;
         let YearDate = moment.tz(this.Analyzer.TimeZone).year(val);
         this.Data.SetRange([YearDate.startOf('year').valueOf(), YearDate.endOf('year').valueOf()]);
       }

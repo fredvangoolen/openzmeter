@@ -8,7 +8,7 @@
       <q-item-label caption class="ellipsis">{{ User.Name ? User.Name : '-' }}</q-item-label>
     </q-item-section>
     <q-item-section side>
-      <q-icon name="menu" />
+      <q-icon :name="mdiMenu" />
     </q-item-section>
     <!--div class="btn-group">
       <button type="button" class="btn btn-default btn-xs" title="User logout" @click="Logout"><img :src="require('Imgs/user_go.png')"></button>
@@ -18,10 +18,14 @@
 </template>
 
 <script>
+  import { mdiMenu } from '@quasar/extras/mdi-v6';
   import UserDialog from './User/Dialog.vue';
   export default {
     data() {
       return { ShowDialog: false };
+    },
+    created: function() {
+      this.mdiMenu = mdiMenu;
     },
 //    methods: {
 //      GetUser: function() {

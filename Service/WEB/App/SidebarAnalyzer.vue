@@ -22,13 +22,14 @@
       <q-item-label caption class="ellipsis">{{ Analyzer.Analyzer ? Analyzer.Analyzer : 'Select one before continue' }}</q-item-label>
     </q-item-section>
     <q-item-section side>
-      <q-icon name="menu" />
+      <q-icon :name="mdiMenu" />
     </q-item-section>
     <analyzer-dialog v-if="ShowDialog" @close="ShowDialog = false" />
   </q-item>
 </template>
 
 <script>
+  import { mdiMenu } from '@quasar/extras/mdi-v6';
   import AnalyzerDialog from './Analyzer/Dialog.vue';
 //  import moment from 'moment';
 //  import 'moment-timezone';
@@ -38,6 +39,7 @@
       return { ShowDialog: false };
     },
     created: function() {
+      this.mdiMenu = mdiMenu;
 //      if(localStorage.getItem("Analyzer") == null) {
 //        this.SetAnalyzer(null);
 //        this.Dialog = 'Table';

@@ -6,7 +6,7 @@
           <div class="panel-heading">
             <div class="huge header-text">Active Energy</div>
             <portal to="fs-toolbar" :disabled="!ExpandedActive" class="header-buttons">
-              <toolbar-select storage="Energy.Aggregation" :options="Aggregations(['15M', '1H'])" v-model="Aggreg" />
+              <toolbar-aggreg storage="Energy.Aggregation" :options="['15M', '1H']" v-model="Aggreg" />
               <toolbar-period storage="Period" v-model="Range"></toolbar-period>
               <div class="btn-group">
                 <button-export file="Energy" :rows="Export"></button-export>
