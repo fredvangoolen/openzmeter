@@ -1,6 +1,32 @@
 <template>
-  <div class="btn-group">
-    <div class="input-group input-group-xs">
+  <q-btn stretch flat dense size="sm">
+    <div>
+      <div class="block">Date range</div>
+      <div class="block select-value">{{ Selected }}</div>
+    </div>
+    <q-menu anchor="bottom right" self="top right">
+      <div class="row no-wrap q-pa-none">
+        <q-date flat minimal range v-model="CustomRange"/>
+        <q-separator vertical inset class="q-ma-none" />
+        <div class="col">
+          <q-list dense>
+            <q-item clickable :active="modelValue == 'LastHours'" @click="Select('LastHours')">Last 2 hours</q-item>
+            <q-item clickable :active="modelValue == 'LastDay'" @click="Select('LastDay')">Last 24 hours</q-item>
+            <q-item clickable :active="modelValue == 'LastWeek'" @click="Select('LastWeek')">Last 7 days</q-item>
+            <q-item clickable :active="modelValue == 'LastMonth'" @click="Select('LastMonth')">Last 30 days</q-item>
+            <q-item clickable :active="modelValue == 'LastYear'" @click="Select('LastYear')">Last 365 days</q-item>
+            <q-separator />
+            <q-item clickable :active="modelValue == 'Day'" @click="Select('Day')">Today</q-item>
+            <q-item clickable :active="modelValue == 'Week'" @click="Select('Week')">This week</q-item>
+            <q-item clickable :active="modelValue == 'Month'" @click="Select('Month')">This month</q-item>
+            <q-item clickable :active="modelValue == 'Year'" @click="Select('Year')">This year</q-item>
+            <q-separator />
+            <q-item clickable :active="Array.isArray(modelValue)" @click="ShowDialog=true">Custom</q-item>
+          </q-list>
+        </div>
+      </div>
+    </q-menu>
+    <!--div class="input-group input-group-xs">
       <div class="input-group-btn">
         <button class="btn btn-default narrow" type="button" @click="Previous"><img :src="require('Imgs/resultset_previous.png')"></button>
       </div>
@@ -24,8 +50,8 @@
       <div class="input-group-btn">
         <button class="btn btn-default narrow" type="button" @click="Next"><img :src="require('Imgs/resultset_next.png')"></button>
       </div>
-    </div>
-    <dlg ref="Dialog" v-if="ShowDialog">
+    </div-->
+    <!--dlg ref="Dialog" v-if="ShowDialog">
       <template v-slot:header>
         <div class="pull-left"><h4 class="modal-title">Data range</h4></div>
         <div class="pull-right btn-group">
@@ -43,8 +69,8 @@
           <date-picker :options="{ format: 'DD/MM/YYYY - HH:mm:ss', viewMode: 'days', timeZone: analyzer.TimeZone }" v-model="Range[1]"></date-picker>
         </div>
       </div>
-    </dlg>
-  </div>
+    </dlg-->
+  </q-btn>
 </template>
 
 <script>
@@ -52,7 +78,7 @@
   export default {
     props: { storage: String, value: [String, Array], analyzer: Object },
     data: function () {
-      return { ShowDialog: false, Value: null, Range: null };
+      return { ShowDialog: false, Value: null, Range: null, CustomRange: null };
     },
     watch: {
       value: function(val) {
@@ -106,12 +132,3 @@
     }
   }
 </script>
-
-<style scoped>
-  .input-group-btn .narrow {
-    padding: 1px 0px;
-  }
-  .dropdown-toggle {
-    border-radius: 0px;
-  }
-</style>

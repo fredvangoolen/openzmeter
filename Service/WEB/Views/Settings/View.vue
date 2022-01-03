@@ -12,11 +12,13 @@
   import Devices from './Devices.vue';
   import Tariffs from './Tariffs.vue';
   import Connectivity from './Connectivity.vue';
+  import { mdiCheckAll } from '@quasar/extras/mdi-v6';
   export default {
     data: function() {
       return { Queries: 0, Pending: 0, Loaded: null };
     },
-    mounted: function() {
+    created: function() {
+      this.mdiCheckAll = mdiCheckAll;
       this.Loaded = this.$q.notify({ group: false, timeout: 0, position: 'bottom-right', spinner: true, message: 'Loading modules...', caption: '0%' });
     },
     methods: {
@@ -32,7 +34,7 @@
         if(this.Pending > 0) this.Pending--;
         this.UpdateNotification();
         if((this.Pending == 0) && (this.Loaded != null)){
-          this.Loaded({ type: 'positive', icon: 'done', spinner: false, caption: 'Done!', timeout: 1000 });
+          this.Loaded({ type: 'positive', icon: mdiCheckAll, spinner: false, caption: 'Done!', timeout: 1000 });
           this.Loaded = null;
         }
       }

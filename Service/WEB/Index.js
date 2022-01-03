@@ -32,6 +32,8 @@ import ToolbarExport from 'Components/ToolbarExport.vue';
 App.component('ToolbarExport', ToolbarExport);
 import ToolbarPause from 'Components/ToolbarPause.vue';
 App.component('ToolbarPause', ToolbarPause);
+import ToolbarPeriod from 'Components/ToolbarPeriod.vue';
+App.component('ToolbarPeriod', ToolbarPeriod);
 import ToolbarPhasesMulti from 'Components/ToolbarPhasesMulti.vue';
 App.component('ToolbarPhasesMulti', ToolbarPhasesMulti);
 import ToolbarPhasesSingle from 'Components/ToolbarPhasesSingle.vue';
@@ -58,13 +60,11 @@ import Events_Alarms from 'Views/Events_Alarms/View.vue';
 import Stats_Costs from 'Views/Stats_Costs/View.vue';
 import Stats_Heatmap from'Views/Stats_Heatmap/View.vue';
 import Stats_Distribution from 'Views/Stats_Distribution/View.vue';
-
 import Settings from 'Views/Settings/View.vue';
 import About from 'Views/About/View.vue';
 const ViewRouter = createRouter({
   history: createWebHistory(),
   routes: [
-    { path: '/',                    redirect: '/Dashboard' },
     { path: '/Config',              component: Config },
     { path: '/Dashboard',           component: Dashboard },
     { path: '/Analysis/Voltage',    component: Analysis_Voltage },

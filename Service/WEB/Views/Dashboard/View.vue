@@ -8,23 +8,16 @@
         <q-separator dark vertical />
         <toolbar-period storage="Period" v-model="Range"></toolbar-period>
         <q-separator dark vertical />
-        <q-btn stretch dense flat icon="menu">
-          <q-menu>
-            <q-list dense>
-              <!--button-export file="Energy" :rows="Export"></button-export>
-              <button-expand v-model="Expanded"></button-expand-->
-              <q-item clickable v-close-popup>Export</q-item>
-              <q-item clickable v-close-popup>Expand</q-item>
-            </q-list>
-          </q-menu>
-        </q-btn>
+        <toolbar-export file="Energy" :rows="Export" />
+        <q-separator dark vertical />
+        <toolbar-expand v-model="Expanded" />
         <!--/portal-->
       </q-toolbar>
 
             <div class="row">
               <counters class="col-md-5 col-lg-4 col-xl-3" :height.sync="Height" :data="TransferGraph.Data"></counters>
               <div class="col-md-7 col-lg-8 col-xl-9">
-                <portal to="fs-body" :disabled="!Expanded" class="panel-body">
+                <portal to="fs-body" :disabled="!Expanded">
                   <spinner v-if="TransferGraph.Data==null"></spinner>
                   <!--energy :height="Expanded?DialogHeight:Height-10" :data="TransferGraph.Data" @range="Range=$event"></energy-->
                 </portal>
@@ -64,6 +57,7 @@
   import Variables from './Variables.vue';
   import 'JS/dygraph-synchronizer.js';
   import Dygraph from 'JS/dygraph.js';
+import ToolbarExpand from '../../Components/ToolbarExpand.vue';
   export default {
     data: function() {
       return { Aggreg: null, Range: null, Height: 200, Paused3S: false, Expanded: false, DialogHeight: 200,
@@ -127,7 +121,7 @@
         return Object.seal(Data);
       }
     },
-    components: { Energy, Counters, Graphs, Variables }
+    components: { Energy, Counters, Graphs, Variables, ToolbarExpand }
   }
 </script>
 

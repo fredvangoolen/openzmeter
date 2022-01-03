@@ -120,6 +120,12 @@ const openZmeter = {
       GetSeriesRange: (analyzer, aggreg) => {
         return This.API.Post("getSeriesRange", { Aggreg: aggreg, Analyzer: analyzer });
       },
+      GetAlarmsRange: (analyzer) => {
+        return This.API.Post("getAlarmsRange", { Analyzer: analyzer });
+      },
+      GetEventsRange: (analyzer) => {
+        return This.API.Post("getEventsRange", { Analyzer: analyzer });
+      },
       GetSeries: (analyzer, aggreg, series, from, to) => {
         return This.API.Post("getSeries", { Aggreg: aggreg, Analyzer: analyzer, Series: series, From: from, To: to });
       }
@@ -223,7 +229,8 @@ const openZmeter = {
           Promises.push(This.API.GetSeriesRange(This.Analyzer.Analyzer, '10M'));
           Promises.push(This.API.GetSeriesRange(This.Analyzer.Analyzer, '15M'));
           Promises.push(This.API.GetSeriesRange(This.Analyzer.Analyzer, '1H'));
-          //TODO: AÑÑADIR EVENTOS Y ALARMAS AQUI
+          Promises.push(This.API.GetAlarmsRange(This.Analyzer.Analyzer));
+          Promises.push(This.API.GetEventsRange(This.Analyzer.Analyzer));
           Promise.all(Promises).then(
             (result) => {
               if(Cancelled == true) return;
@@ -232,6 +239,8 @@ const openZmeter = {
               This.Analyzer.Ranges.Aggreg10M = result[2];
               This.Analyzer.Ranges.Aggreg15M = result[3];
               This.Analyzer.Ranges.Aggreg1H = result[4];
+              This.Analyzer.Ranges.Alarms = result[5];
+              This.Analyzer.Ranges.Events = result[6];
               This.Analyzer.Ranges.Timer = setTimeout(This.Analyzer.Ranges.Refresh, 300000);
             },
             () => {
