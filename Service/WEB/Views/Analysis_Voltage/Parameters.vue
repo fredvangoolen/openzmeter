@@ -1,4 +1,5 @@
 <template>
+  <q-tab-panel class="q-pa-none">
   <div class="panel panel-other">
     <div class="panel-heading clearfix">
       <div class="header-text">From {{ (data!=null) ? analyzer.FormatAggregation(data.Aggreg) : '-' }} aggregation {{ MouseOver ? '(Graph paused)' : '' }}</div>
@@ -17,6 +18,7 @@
       <cubism v-show="analyzer.VoltageChannels>1" :index="3" ref="g3" title="Unbalance" :data="Data" :now="DataNow" :format="Formatter_Percent" :paused="MouseOver"></cubism>
     </div>
   </div>
+  </q-tab-panel>
 </template>
 
 <script>

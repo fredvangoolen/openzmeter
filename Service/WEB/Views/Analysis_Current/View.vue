@@ -1,8 +1,8 @@
 <template>
   <q-page>
     <q-card>
-      <teleport to="fs-toolbar" :disabled="!Expanded">
-        <q-toolbar class="bg-blue-6 text-white q-pr-none">
+      <q-toolbar class="bg-blue-6 text-white q-pr-none">
+        <portal to="dlg-toolbar" :disabled="!Expanded">
           <q-toolbar-title>Current</q-toolbar-title>
           <toolbar-aggreg storage="Current.Aggregation" :options="['3S', '1M', '10M', '1H']" v-model="Aggreg" />
           <q-separator dark vertical />
@@ -12,21 +12,15 @@
           <q-separator dark vertical v-if="Analyzer.VoltageChannels() > 1" />
           <toolbar-export file="Current" :rows="Export" />
           <q-separator dark vertical />
-          <button-expand v-model="Expanded"></button-expand>
-        </q-toolbar>
-      </teleport>
+          <toolbar-expand v-model="Expanded" />
+        </portal>
+      </q-toolbar>
 
       <div class="col-lg-12">
         <div class="panel panel-current">
-          <div class="panel-heading">
-            <div class="header-text"></div>
-            <portal to="fs-toolbar" :disabled="!Expanded" class="header-buttons">
 
 
 
-            </portal>
-          </div>
-          <div class="panel-body">
             <div class="row">
               <counters class="col-md-6 col-lg-4 col-xl-3" :data1M="Transfer1M.LastData" :data3S="Transfer3S.LastData" :dataGraph="TransferGraph.Data" :height.sync="Height"></counters>
               <div class="col-md-6 col-lg-8 col-xl-9">
@@ -36,9 +30,10 @@
                 </portal>
               </div>
             </div>
-          </div>
+
         </div>
       </div>
+      <dialog-fullscreen :modelValue="Expanded" color="bg-blue-6" />
       <div class="col-lg-12">
         <detail-tabs v-if="Analyzer.NominalFrequency>0" :tabs="['Waveform', 'Harmonics', 'Evolution', 'Advanced', 'Parameters']" storage="Current.Details.Tabs.AC" v-model="ActiveTab"></detail-tabs>
         <detail-tabs v-if="Analyzer.NominalFrequency==0" :tabs="['Waveform', 'Advanced']" storage="Current.Details.Tabs.DC" v-model="ActiveTab"></detail-tabs>
@@ -49,7 +44,7 @@
         <parameters v-if="ActiveTab=='Parameters'" :data="TransferCubism.Data" :dataNow="TransferNow.Data" :paused.sync="Paused"></parameters>
       </div>
     </q-card>
-    <dlg-fs v-if="Expanded" title="Voltage" :height.sync="DialogHeight"></dlg-fs>
+
   </q-page>
 </template>
 

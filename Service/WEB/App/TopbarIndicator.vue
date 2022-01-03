@@ -23,7 +23,8 @@
     data: function() {
       return { };
     },
-    mounted: function() {
+    created: function() {
+      console.log(this.serie);
       if(['Voltage', 'Current', 'Frequency', 'Active_Power'].includes(this.serie)) this.Analyzer.NowSeries.Suscribe([this.serie]);
     },
     unmounted: function() {
@@ -33,9 +34,10 @@
       Value: function() {
         var Val = { Value: ['Offline'], Aggreg: '', Units: '' };
         if(this.serie == 'Active_Energy') return Val;
-
+        console.log(this.Analyzer.NowSeries);
         if(this.Analyzer.NowSeries.Loading == true) Val.Value = ['Wait'];
         if(this.Analyzer.NowSeries.Loading == false) {
+          return [];
           Val.Value = ['Offline'];
           if(this.Analyzer.NowSeries[this.serie].Value != null) {
             if(Array.isArray(this.Analyzer.NowSeries[this.serie].Value) == false) {

@@ -1,26 +1,28 @@
 <template>
-  <div class="panel panel-other">
-    <div class="panel-heading clearfix">
-      <div class="header-text">{{ (data==null) ? 'Loading data...' : 'Last update at ' + analyzer.FormatTimeMS(data.Sampletime) }} {{ paused ? '(Paused)' : MouseOver ? '(Graph paused)' : '' }}</div>
-      <div v-if="RmsCurrent<analyzer.MinCurrent" class="title-warning"><img :src="require('Imgs/exclamation.png')">No current or current too low</div>
-      <portal to="fs-toolbar" :disabled="!Expanded" class="header-buttons">
-        <toolbar-phases storage="DetailsPhases" :multi="true" :current="true" v-model="Phases"></toolbar-phases>
-        <toolbar-options storage="DetailsOptions" :options="['1st Harmonic', 'Current', 'Log']" v-model="Options"></toolbar-options>
-        <div class="btn-group">
-          <button-export file="Harmonics" :rows="Export"></button-export>
-          <button-expand v-model="Expanded"></button-expand>
-          <button-pause :value="paused" @input="$emit('update:paused', $event)"></button-pause>
-        </div>
-      </portal>
-    </div>
-    <portal to="fs-body" :disabled="!Expanded" class="panel-body">
-      <spinner v-if="data==null"></spinner>
-      <div @mouseenter="MouseOver=true" @mouseleave="MouseOver=false">
-        <graph :options="GraphOptions" :paused="MouseOver" :height="Expanded?DialogHeight:300"></graph>
-      </div>
+  <q-toolbar class="bg-grey-3 q-pr-none">
+    <portal to="dlg-toolbar" :disabled="!Expanded">
+      <q-toolbar-title>{{ (data==null) ? 'Loading data...' : 'Last update at ' + analyzer.FormatTimeMS(data.Sampletime) }} {{ paused ? '(Paused)' : MouseOver ? '(Graph paused)' : '' }}</q-toolbar-title>
+      <div v-if="RmsCurrent<Analyzer.MinCurrent" class="title-warning"><img :src="require('Imgs/exclamation.png')">No current or current too low</div>
+      <q-separator vertical />
+      <toolbar-phases-multi storage="Analysis_Voltage.Harmonics.Phases" :current="true" v-model="Phases" v-show="Analyzer.VoltageChannels() > 1" />
+      <q-separator vertical v-if="Analyzer.VoltageChannels() > 1" />
+      <toolbar-options storage="DetailsOptions" :options="['1st Harmonic', 'Current', 'Log']" v-model="Options"></toolbar-options>
+      <q-separator vertical />
+      <toolbar-export file="Harmonics" :rows="Export" />
+      <q-separator vertical />
+      <toolbar-pause :value="paused" @input="$emit('update:paused', $event)" />
+      <q-separator vertical />
+      <toolbar-expand v-model="Expanded" />
     </portal>
-    <dlg-fs v-if="Expanded" title="Harmonics" :height.sync="DialogHeight"></dlg-fs>
-  </div>
+  </q-toolbar>
+  <q-separator />
+  <portal to="dlg-body" :disabled="!Expanded">
+    <!--spinner v-if="data==null"></spinner-->
+    <div @mouseenter="MouseOver=true" @mouseleave="MouseOver=false"  style="min-height:300px">
+      <!--graph :options="GraphOptions" :paused="MouseOver" :height="Expanded?DialogHeight:300"></graph-->
+    </div>
+  </portal>
+  <dlg-fs v-if="Expanded" title="Harmonics" :height.sync="DialogHeight"></dlg-fs>
 </template>
 
 <script>
@@ -31,7 +33,7 @@
   export default {
     props: { data: Object, paused: Boolean },
     data: function() {
-      return { MouseOver: false, Options: null, Phases: null, VOffset: 0, COffset: 0, Expanded: false, DialogHeight: 300 };
+      return { MouseOver: false, Options: null, Phases: [], VOffset: 0, COffset: 0, Expanded: false, DialogHeight: 300 };
     },
     computed: {
       RmsCurrent: function() { return (this.data == null) ? 0.0 : this.ArrayAbsMax(this.data.Current); },

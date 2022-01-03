@@ -13,7 +13,6 @@
     </div>
   </div>
 </template>
-
 <script>
   export default {
     props: { options: Array, value: [Boolean, String, Number], prefix: String, postfix: String },

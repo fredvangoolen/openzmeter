@@ -1,6 +1,6 @@
 <template>
   <q-card v-show="Tariffs.Loading == false">
-    <q-toolbar class="bg-grey-9 text-white q-pr-none">
+    <q-toolbar class="bg-grey-9 text-white">
       <q-toolbar-title>Tariffs</q-toolbar-title>
       <q-tabs stretch v-model="Tab" active-bg-color="primary">
         <q-tab name="templates" label="Templates" />

@@ -11,7 +11,7 @@
     data: function() {
       return { ShowSpinner: true };
     },
-    mounted: function() {
+    created: function() {
       this.API.Post('getAPI', {}).then(
         (result) => {
           this.$refs.api.loadSpec(result);

@@ -28,7 +28,7 @@
       return { };
     },
     mounted: function() {
-      this.Calendar = $(this.$refs.calendar).calendar({ language: "custom" });
+      //this.Calendar = $(this.$refs.calendar).calendar({ language: "custom" });
       if(this.year != null) this.Calendar.setYear(this.year);
       if(this.data != null) this.SetData();
     },

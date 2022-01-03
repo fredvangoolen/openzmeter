@@ -7,9 +7,9 @@
   import 'JS/dygraph-crosshair.js';
   import chroma from 'chroma-js';
   import * as oZm from 'JS/openZmeter.js';
-  import Vue from 'vue';
+ import { getCurrentInstance } from 'vue';
   import moment from 'moment';
-//  const This = Vue;
+  const This = getCurrentInstance();
   var PatternImg = new Image();
   PatternImg.onload = () => {};
   PatternImg.src = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAQAAAAECAIAAAAmkwkpAAAAJElEQVQImT2JsQ0AMAyDyP832q+QIWqZEJDEx6gA0JZr9/mmLvBPKENuQmcdAAAAAElFTkSuQmCC";
@@ -139,7 +139,7 @@
       },
       WaveTimeTicks: function(max, analyzer) {
         var ticks = [];
-        for(var i = 0; i <= Math.floor(max / analyzer.SampleRate * analyzer.NominalFrequency); i++) ticks.push({ v: i * analyzer.SampleRate / analyzer.NominalFrequency, label: This.Round(i / analyzer.NominalFrequency * 1000, 2, false) });
+        for(var i = 0; i <= Math.floor(max / analyzer.SampleRate * analyzer.NominalFrequency); i++) ticks.push({ v: i * analyzer.SampleRate / analyzer.NominalFrequency, label: Math.round(i / analyzer.NominalFrequency * 1000) });
         return ticks;
       }
     },
@@ -495,7 +495,7 @@
       if(this.options.file.length == 0) this.options.file.push(new Array(this.options.labels.length).fill(0));
       this.Graph = new Dygraph(this.$el, this.options.file, this.options);
       this.$nextTick(() => {
-        $(this.Graph.graphDiv).parent().removeAttr('style');
+        //$(this.Graph.graphDiv).parent().removeAttr('style');
         this.Graph.resize((this.width == null) ? '100%' : this.width, this.height);
         this.Graph.resize();
       });

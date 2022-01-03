@@ -41,7 +41,7 @@
       <div class="name">Events</div>
     </div>
     <div class="submenu" :class="{ show: (Submenu == 'Events') }" v-if="analyzer!=null">
-      <router-link to="/Events/EN50160" v-if="analyzer.NominalFrequency!=0">EN50160</router-link>
+      <router-link to="/Events/EN50160" v-if="Analyzer.NominalFrequency!=0">EN50160</router-link>
       <router-link :to="{ path: '/Events/Alarms', query: (this.UnreadAlarms != 0) ? { From: this.status.Alarms.LastRead, To: this.status.Time } : null }">Alarms<span class="badge badge-submenu" v-if="UnreadAlarms>0">{{ UnreadAlarms }}</span></router-link>
     </div-->
     <q-expansion-item dense header-class="q-pa-sm" group="menu" v-model="Expanded[2]" v-if="Analyzer.Analyzer != null">

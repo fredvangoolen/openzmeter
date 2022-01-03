@@ -2,7 +2,7 @@
   <div class="panel panel-other">
     <div class="panel-heading clearfix">
       <div class="header-text">{{ (data==null) ? 'Loading data...' : 'Last update at ' + analyzer.FormatTimeMS(data.Sampletime) }} {{ paused ? '(Paused)' : MouseOver ? '(Graph paused)' : '' }}</div>
-      <div v-if="RmsCurrent<analyzer.MinCurrent" class="title-warning"><img :src="require('Imgs/exclamation.png')">No current or current too low</div>
+      <div v-if="RmsCurrent<Analyzer.MinCurrent" class="title-warning"><img :src="require('Imgs/exclamation.png')">No current or current too low</div>
       <portal to="fs-toolbar" :disabled="!Expanded" class="header-buttons">
         <toolbar-phases storage="DetailsPhases" :multi="true" :current="true" v-model="Phases"></toolbar-phases>
         <toolbar-options storage="DetailsOptions" :options="['Voltage', 'Log']" v-model="Options"></toolbar-options>
@@ -46,8 +46,8 @@
         Opt.legendFormatter = Graph.Formatters.Legend_Follow;
         if((this.Phases == null) || (this.Options == null)) return Opt;
         Opt.visibility = [];
-        var VoltageNames = this.analyzer.SerieNames('Voltage');
-        var CurrentNames = this.analyzer.SerieNames('Current');
+        var VoltageNames = this.Analyzer.SerieNames('Voltage');
+        var CurrentNames = this.Analyzer.SerieNames('Current');
         for(var n in CurrentNames) Opt.visibility.push(this.Phases[n]);
         for(var n in VoltageNames) Opt.visibility.push(this.Phases[n] && this.Options['Voltage']);
         for(var n in VoltageNames) Opt.series[VoltageNames[n]] = { axis: 'y2' };
@@ -68,7 +68,7 @@
         Opt.axes.x.axisLabelFormatter = (y) => { return Graph.Formatters.FFTAxis(this.analyzer, y); };
         Opt.axes.x.valueFormatter = (y) => { return Graph.Formatters.FFTVal(this.analyzer, y); };
         Opt.labels = ['Bin'].concat(VoltageNames).concat(CurrentNames);
-        Opt.colors = this.analyzer.SerieColors('Current').concat(this.analyzer.SerieColors('Voltage'));
+        Opt.colors = this.Analyzer.SerieColors('Current').concat(this.analyzer.SerieColors('Voltage'));
         if(this.data != null) {
           for(var i = 0; i < this.data.Voltage_FFT[0].length; i++) {
           var Row = [i];
@@ -102,12 +102,12 @@
         var Data = [];
         if(this.data == null) return Data;
         var Header = ['Index'];
-        var CurrentNames = this.analyzer.SerieNames('Current');
+        var CurrentNames = this.Analyzer.SerieNames('Current');
         for(var i = 0; i < CurrentNames.length; i++) {
           Header.push(CurrentNames[i]);
           Header.push(CurrentNames[i] + ' (dB)');
         }
-        var VoltageNames = this.analyzer.SerieNames('Voltage');
+        var VoltageNames = this.Analyzer.SerieNames('Voltage');
         for(var i = 0; i < VoltageNames.length; i++) {
           Header.push(VoltageNames[i]);
           Header.push(VoltageNames[i] + ' (dB)');

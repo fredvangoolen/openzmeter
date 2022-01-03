@@ -31,14 +31,14 @@
 </template>
 
 <script>
-  let Bluetooth = () => import('./Connectivity/Bluetooth.vue');
-  let Wifi = () => import('./Connectivity/WIFI.vue');
-  let Ethernet = () => import('./Connectivity/Ethernet.vue');
-  let Ntp = () => import('./Connectivity/NTP.vue');
-  let ModbusTcp = () => import('./Connectivity/ModbusTCP.vue');
-  let Telegram = () => import('./Connectivity/Telegram.vue');
-  let Vpn = () => import('./Connectivity/OpenVPN.vue');
-  let Updates = () => import('./Connectivity/Updates.vue');
+  import Bluetooth from './Connectivity/Bluetooth.vue';
+  import Wifi from './Connectivity/WIFI.vue';
+  import Ethernet from './Connectivity/Ethernet.vue';
+  import Ntp from './Connectivity/NTP.vue';
+  import ModbusTcp from './Connectivity/ModbusTCP.vue';
+  import Telegram from './Connectivity/Telegram.vue';
+  import Vpn from './Connectivity/OpenVPN.vue';
+  import Updates from './Connectivity/Updates.vue';
   export default {
     data: function() {
       return { ShowSpinner: false, View: null, Settings: null,

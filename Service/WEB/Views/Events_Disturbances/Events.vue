@@ -3,7 +3,7 @@
     <div class="panel-heading clearfix">
       <div class="header-text">Last events</div>
       <div class="header-buttons clearfix">
-        <toolbar-pager :pageSize="pagesize" :input="Events" :output.sync="FilterEvents" :filtercols="['Date', 'Type', 'Notes']"></toolbar-pager>
+        <!--toolbar-pager :pageSize="pagesize" :input="Events" :output.sync="FilterEvents" :filtercols="['Date', 'Type', 'Notes']"></toolbar-pager-->
         <div class="btn-group">
           <button class="btn btn-default btn-xs btn-danger" type="button" @click="DeleteSelected">Delete selection</button>
           <button-export file="Events" :rows="Export"></button-export>

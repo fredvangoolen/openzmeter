@@ -3,40 +3,28 @@
     <q-card>
       <q-toolbar class="bg-indigo-9 text-white q-pr-none">
         <q-toolbar-title>Energy distribution</q-toolbar-title>
-        <toolbar-year name="Year" storage="Stats_Heatmap.Year" :options="YearsList" v-model="Year" />
+        <toolbar-year storage="Stats_Distribution.Year" aggreg="1H" v-model="Year" />
         <q-separator dark vertical />
-        <q-btn stretch dense flat icon="mdiMenu">
-          <q-menu>
-            <q-list dense>
-              <q-item clickable v-close-popup>Reload</q-item>
-              <q-item clickable v-close-popup>Export</q-item>
-            </q-list>
-          </q-menu>
-        </q-btn>
+        <toolbar-export file="Distribution" :rows="Export" />
       </q-toolbar>
+      <q-linear-progress v-if="Data.Progress != null" color="indigo-9" :value="Data.Progress" class="q-ma-none" />
+
       <q-card-section class="bg-grey-3 q-pa-xs text-right">
         <color-bar :width="140" :height="10" :range="Range" units="Wh"></color-bar>
       </q-card-section>
       <q-separator />
-                    <div class="header-buttons clearfix">
-
-              <div class="btn-group">
-                <button-export file="Distribution" :rows="Export"></button-export>
-              </div>
-            </div>
-
-
-        <q-card-section>
-            <!--calendar :data="Data" :year="Year" :range.sync="Range" @update:export="CalendarData=$event"></calendar-->
-        </q-card-section>
-        <q-inner-loading :showing="ShowSpinner"><q-spinner-dots size="50px" color="orange-10" /></q-inner-loading>
-      </q-card>
-      <q-card class="col-12 col-lg-6" v-if="!ShowSpinner">
-        <months :data="Data"></months>
-      </q-card>
-      <q-card class="col-12 col-lg-6" v-if="!ShowSpinner">
-        <week-day :data="Data"></week-day>
+      <q-card-section>
+        <calendar :data="Data" :year="Year" :range.sync="Range" @update:export="CalendarData=$event"></calendar>
+      </q-card-section>
     </q-card>
+    <div class="row" v-if="Data.Progress==null">
+      <q-card class="col-12 col-lg-6">
+      <!--months :data="Data"></months-->
+      </q-card>
+      <q-card class="col-12 col-lg-6">
+        <!--week-day :data="Data"></week-day-->
+      </q-card>
+    </div>
   </q-page>
 </template>
 
@@ -48,11 +36,17 @@
   import 'moment-timezone';
   export default {
     data: function() {
-      return { Range: [0, 1], Year: null, Data: null, ShowSpinner: true, Progress: 0, CalendarData: [] };
+      return { Data: this.Analyzer.Queries.Suscribe('Costs', ['Active_Energy', 'Period'], 600000),
+               Year: null, Range: [0, 1], CalendarData: [], Max: 0 };
+    },
+    unmounted: function() {
+      this.Data.Stop();
     },
     watch: {
-      Year: function() { this.Update(); },
-      analyzer: function() { this.Update(); }
+      Year: function(val) {
+        let YearDate = moment.tz(this.Analyzer.TimeZone).year(val);
+        this.Data.SetRange([YearDate.startOf('year').valueOf(), YearDate.endOf('year').valueOf()]);
+      },
     },
     computed: {
       YearsList: function() {

@@ -1,42 +1,49 @@
 <template>
-  <q-card-section class="q-pa-none">
-    <q-toolbar class="bg-grey-3">
-    <div class="panel-heading clearfix">
-      <div class="header-text">{{ (data==null) ? 'Loading data...' : 'Last update at ' + analyzer.FormatTimeMS(data.Sampletime) }} {{ paused ? '(Paused)' : MouseOver ? '(Graph paused)' : '' }}</div>
-      <div v-if="RmsCurrent<analyzer.MinCurrent" class="title-warning"><img :src="require('Imgs/exclamation.png')">No current or current too low</div>
-      <portal to="fs-toolbar" :disabled="!Expanded" class="header-buttons">
-        <toolbar-phases storage="DetailsPhases" :multi="true" :current="true" v-model="Phases"></toolbar-phases>
-        <toolbar-options storage="DetailsOptions" :options="['Current']" v-model="Options"></toolbar-options>
-        <div class="btn-group">
-          <button type="button" class="btn btn-default btn-xs" @click="ShowStream=true" title="Stream waves in realtime"><img :src="require('Imgs/diskette.png')"></button>
-          <button-export file="Waveform" :rows="Export"></button-export>
-          <button-expand v-model="Expanded"></button-expand>
-          <button-pause :value="paused" @input="$emit('update:paused', $event)"></button-pause>
-        </div>
-      </portal>
-    </div>
-    </q-toolbar>
-    <q-separator />
-    <portal to="fs-body" :disabled="!Expanded" class="panel-body">
-      <spinner v-if="data==null"></spinner>
-      <div @mouseenter="MouseOver=true" @mouseleave="MouseOver=false">
-        <graph :options="GraphOptions" :height="Expanded?DialogHeight:300" :paused="MouseOver"></graph>
-      </div>
+  <q-tab-panel class="q-pa-none">
+  <q-toolbar class="bg-grey-3 q-pr-none">
+    <portal to="dlg-toolbar" :disabled="!Expanded">
+      <q-toolbar-title>{{ (data==null) ? 'Loading data...' : 'Last update at ' + analyzer.FormatTimeMS(data.Sampletime) }} {{ paused ? '(Paused)' : MouseOver ? '(Graph paused)' : '' }}</q-toolbar-title>
+      <div v-if="RmsCurrent<Analyzer.MinCurrent" class="title-warning"><img :src="require('Imgs/exclamation.png')">No current or current too low</div>
+      <q-separator vertical />
+      <toolbar-phases-multi storage="Analysis_Voltage.Waveform.Phases" :current="true" v-model="Phases" v-show="Analyzer.VoltageChannels() > 1" />
+      <q-separator vertical v-if="Analyzer.VoltageChannels() > 1" />
+        <!--toolbar-options storage="DetailsOptions" :options="['Current']" v-model="Options"></toolbar-options-->
+        <button type="button" class="btn btn-default btn-xs" @click="ShowStream=true" title="Stream waves in realtime"><img :src="require('Imgs/diskette.png')"></button>
+      <q-separator vertical />
+      <toolbar-export file="Waveform" :rows="Export" />
+      <q-separator vertical />
+      <toolbar-pause :value="paused" @input="$emit('update:paused', $event)" />
+      <q-separator vertical />
+      <toolbar-expand v-model="Expanded" />
     </portal>
-    <wave-stream v-if="ShowStream" @close="ShowStream=false"></wave-stream>
-    <dlg-fs v-if="Expanded" title="Waveform" :height.sync="DialogHeight"></dlg-fs>
-  </q-card-section>
+  </q-toolbar>
+  <q-separator />
+  <portal to="dlg-body" :disabled="!Expanded">
+    <!--spinner v-if="data==null"></spinner-->
+    <div @mouseenter="MouseOver=true" @mouseleave="MouseOver=false">
+      <!--graph :analyzer="Analyzer" :options="GraphOptions" :height="Expanded?DialogHeight:300" :paused="MouseOver"></graph-->
+    </div>
+  </portal>
+  <wave-stream v-if="ShowStream" @close="ShowStream=false"></wave-stream>
+    <!--dlg-fs v-if="Expanded" title="Waveform" :height.sync="DialogHeight"></dlg-fs-->
+  <dialog-fullscreen :modelValue="Expanded" color="bg-red-9" />
+  </q-tab-panel>
 </template>
 
 <script>
   import * as oZm from 'JS/openZmeter.js';
   import WaveStream from './WaveStream.vue';
   import Dygraph from 'JS/dygraph.js';
-  import Graph from 'Components/Graph.vue';
+//  import Graph from 'Components/Graph.vue';
   export default {
     props: { data: Object, paused: Boolean },
     data: function() {
-      return { MouseOver: false, Options: null, Phases: null, Expanded: false, DialogHeight: 300, ShowStream: false };
+      return { MouseOver: false, Options: null, Phases: [], Expanded: false, DialogHeight: 300, ShowStream: false,
+               Transfer: this.Analyzer.NowSeries.Suscribe(['Current', 'Voltage_Samples', 'Current_Samples'])
+      };
+    },
+    beforeUnmount: function() {
+      this.Analyzer.NowSeries.Unsuscribe(['Current', 'Voltage_Samples', 'Current_Samples']);
     },
     computed: {
       RmsCurrent: function() { return (this.data == null) ? 0.0 : this.ArrayAbsMax(this.data.Current); },
@@ -51,7 +58,7 @@
         Opt.gridLinePattern = [4, 4];
         Opt.legend = 'follow';
         Opt.showRangeSelector = false;
-        Opt.axes.x.ticker = (min, max) => { return Graph.Tickers.WaveTimeTicks(max, this.analyzer); };
+        Opt.axes.x.ticker = (min, max) => { return Graph.Tickers.WaveTimeTicks(max, this.Analyzer); };
         if((this.Phases == null) || (this.Options == null)) return Opt;
         Opt.visibility = [];
         var VoltageNames = this.analyzer.SerieNames('Voltage');
@@ -109,9 +116,3 @@
     components: { WaveStream }
   }
 </script>
-
-<style scoped>
-  .header-text {
-    font-size: 14px;
-  }
-</style>

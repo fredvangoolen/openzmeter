@@ -1,76 +1,25 @@
 <template>
-  <portal to="dialogs">
-    <div class="modal" tabindex="1" role="dialog" data-backdrop="false" data-keyboard="false" ref="dialog">
-      <div class="modal-backdrop in"></div>
-      <div class="modal-dialog">
-        <div class="modal-content" ref="body">
-          <div class="modal-header">
-            <div class="pull-left"><h4 class="modal-title">{{ title }}</h4></div>
-            <portal-target name="fs-toolbar" class="pull-right clearfix"></portal-target>
-          </div>
-          <div class="modal-body">
-            <portal-target name="fs-body"></portal-target>
-          </div>
-        </div>
-      </div>
-    </div>
-  </portal>
+  <q-dialog :modelValue="modelValue" no-backdrop-dismiss maximized>
+    <q-card>
+      <q-toolbar class="text-white q-pr-none" :class="color">
+        <portal-target name="dlg-toolbar" />
+      </q-toolbar>
+      <q-card-section>
+        <portal-target name="dlg-body" />
+      </q-card-section>
+    </q-card>
+  </q-dialog>
 </template>
 
 <script>
+  import { mdiDockWindow } from '@quasar/extras/mdi-v6';
   export default {
-    props: { title: String, height: Number },
+    props: { modelValue: Boolean, color: String },
     data: function() {
       return { };
     },
-    methods: {
-      ResizeHandler: function() {
-        this.$emit('update:height', $(this.$refs.body).height() - 60);
-      }
-    },
-    beforeDestroy: function() {
-      $(window).off('resize', this.ResizeHandler);
-    },
-    mounted: function() {
-      $(window).on('resize', this.ResizeHandler);
-      this.$nextTick(() => {
-        $(this.$refs.dialog).modal('show');
-
-        window.dispatchEvent(new Event('resize'));
-      });
+    created: function() {
+      this.mdiDockWindow = mdiDockWindow;
     }
   }
 </script>
-
-<style scoped>
-  .modal-header {
-    padding: 4px 5px 2px 5px;
-  }
-  .pull-right {
-    margin-top: 1px;
-  }
-  .modal-dialog {
-    z-index: 1100;
-    color: #333;
-    font-size: 14px;
-    width: 100%;
-    height: 100%;
-    padding: 10px;
-    margin: 0px !important;
-  }
-  .modal-content {
-    height: 100%;
-  }
-  @media (max-width: 640px) {
-    .modal-dialog {
-      padding: 0px;
-    }
-    .modal-content {
-      border: none;
-      border-radius: 0px;
-    }
-    .modal-header {
-      border-radius: 0px;
-    }
-  }
-</style>

@@ -1,6 +1,6 @@
 <template>
-  <div class="panel panel-other">
-    <div class="panel-heading clearfix">
+  <q-tab-panel class="q-pa-none">
+    <q-toolbar class="bg-grey-3 q-pr-none">
       <div class="header-text">From {{ (data!=null) ? analyzer.FormatAggregation(data.Aggreg) : '-' }} aggregation {{ MouseOver ? '(Graph paused)' : '' }}</div>
       <div class="header-buttons">
         <toolbar-phases storage="DetailsPhases" :multi="false" :current="false" v-model="Phase"></toolbar-phases>
@@ -10,12 +10,12 @@
           <button-export file="Evolution" :rows="Export"></button-export>
         </div>
       </div>
-    </div>
+    </q-toolbar>
     <div class="panel-body" @mouseenter="MouseOver=true" @mouseleave="MouseOver=false">
-      <spinner v-if="data==null"></spinner>
-      <cubism ref="g" v-for="(serie, index) in Names" :key="index" :index="index" :data="Data" :title="serie" :format="Formatter"></cubism>
+      <!--spinner v-if="data==null"></spinner-->
+      <!--cubism ref="g" v-for="(serie, index) in Names" :key="index" :index="index" :data="Data" :title="serie" :format="Formatter"></cubism-->
     </div>
-  </div>
+  </q-tab-panel>
 </template>
 
 <script>

@@ -44,6 +44,11 @@
     },
     created: function() {
       this.mdiMenu = mdiMenu;
+      this.$q.addressbarColor.set('#a2e3fa');
+            this.User.GetCurrent().then(
+        () => this.UserLoaded = true,
+        () => this.UserLoaded = true
+      );
     },
     watch: {
       'User.User': function(val) {
@@ -54,12 +59,9 @@
         );
       }
     },
-    mounted: function() {
+//    mounted: function() {
       //this.$q.iconSet.set(IconSet);
-      this.User.GetCurrent().then(
-        () => this.UserLoaded = true,
-        () => this.UserLoaded = true
-      );
+
 //      window.EventBus.$on('UserUnathorized', () => {
 //        localStorage.setItem("UserName", undefined);
 //        this.$router.replace('Login');
@@ -78,7 +80,7 @@
 //          }
 //        );
 //      }
-    },
+//    },
     methods: {
       HideBar: function() {
         setTimeout(() => { this.MiniState = true }, 500);

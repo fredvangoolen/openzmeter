@@ -399,6 +399,7 @@ const openZmeter = {
             }
             This.Analyzer.NowSeries[serie].Suscribers++;
           });
+          console.log(This.Analyzer.NowSeries.GetSusbribed());
           This.Analyzer.NowSeries.Refresh();
         },
         Unsuscribe: (series) => {
@@ -415,6 +416,7 @@ const openZmeter = {
           while(This.Analyzer.NowSeries.Aborts.length > 0) This.Analyzer.NowSeries.Aborts.pop()();
         },
         Refresh: () => {
+          if(This.Analyzer.Analyzer == null) return;
           let Series = This.Analyzer.NowSeries.GetSusbribed();
           let Cancelled = false;
           This.Analyzer.NowSeries.CancelPrev();
