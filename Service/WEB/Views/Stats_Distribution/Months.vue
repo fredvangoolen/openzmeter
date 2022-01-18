@@ -13,8 +13,8 @@
 </template>
 
 <script>
-  import moment from 'moment';
-  import 'moment-timezone';
+//  import moment from 'moment';
+//  import 'moment-timezone';
   var Names = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
   export default {
     props: { data: Array },

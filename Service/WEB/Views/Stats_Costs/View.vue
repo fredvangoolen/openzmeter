@@ -44,7 +44,7 @@
 <script>
   import SummaryGraph from './SummaryGraph.vue';
   import Bill from './Bill.vue';
-  import moment from 'moment';
+//  import moment from 'moment';
   export default {
     data: function() {
       return { Year: null, Bills: null, Active: null, Group: 0 };

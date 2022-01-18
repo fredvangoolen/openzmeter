@@ -1,10 +1,10 @@
 <template>
-  <div class="indicator" :style="{ 'background-color': SerieViewColor(serie) }">
+  <q-card class="indicator" :style="{ 'background-color': SerieViewColor(serie) }">
     <div>
       <div v-for="(val, idx) in Value.Value" v-html="val" :key="idx"></div>
     </div>
     <div>{{ Value.Units }}{{ SerieUnits(serie) }}<br><span style="font-size: 10px; font-weight: normal; font-stretch: condensed">{{ Value.Aggreg }}</span></div>
-  </div>
+  </q-card>
 
   <!--div  :style="{ 'border-color': BackColor }">
     <div>
@@ -24,7 +24,6 @@
       return { };
     },
     created: function() {
-      console.log(this.serie);
       if(['Voltage', 'Current', 'Frequency', 'Active_Power'].includes(this.serie)) this.Analyzer.NowSeries.Suscribe([this.serie]);
     },
     unmounted: function() {
@@ -34,10 +33,8 @@
       Value: function() {
         var Val = { Value: ['Offline'], Aggreg: '', Units: '' };
         if(this.serie == 'Active_Energy') return Val;
-        console.log(this.Analyzer.NowSeries);
         if(this.Analyzer.NowSeries.Loading == true) Val.Value = ['Wait'];
         if(this.Analyzer.NowSeries.Loading == false) {
-          return [];
           Val.Value = ['Offline'];
           if(this.Analyzer.NowSeries[this.serie].Value != null) {
             if(Array.isArray(this.Analyzer.NowSeries[this.serie].Value) == false) {
@@ -88,6 +85,7 @@
     min-width: 44px;
     font-size: 11px;
     line-height: 10px;
+    border-radius: 3px;
   }
   .indicator > div:nth-child(2) {
     display: table-cell;

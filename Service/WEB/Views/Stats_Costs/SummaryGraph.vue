@@ -4,7 +4,7 @@
 
 <script>
   import Graph from 'Components/Graph.vue';
-  import moment from 'moment';
+//  import moment from 'moment';
   export default {
     props: { data: Array },
     data: function() {

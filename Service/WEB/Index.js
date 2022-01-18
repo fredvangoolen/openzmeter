@@ -20,6 +20,8 @@ import 'quasar/dist/quasar.css';
 //import '@mdi/font/css/materialdesignicons.css';
 import 'CSS/openZmeter.css';
 //Custom components ----------------------------------------------------------------------------------------------------
+import Cubism from 'Components/Cubism.vue';
+App.component('Cubism', Cubism);
 import DialogFullscreen from 'Components/DialogFullscreen.vue';
 App.component('DialogFullscreen', DialogFullscreen);
 //import Graph from 'Components/Graph.vue';

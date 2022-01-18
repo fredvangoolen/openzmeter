@@ -84,7 +84,6 @@
     methods: {
       HideBar: function() {
         setTimeout(() => { this.MiniState = true }, 500);
-        console.log("close");
       },
       onResize: function(val) {
         this.MiniState = true;

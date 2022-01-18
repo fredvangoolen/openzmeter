@@ -37,7 +37,7 @@
 
 <script>
   import Graph from 'Components/Graph.vue';
-  import moment from 'moment';
+//  import moment from 'moment';
   import * as oZm from 'JS/openZmeter.js';
   import Dygraph from 'JS/dygraph.js';
   import Counters from './Counters.vue';

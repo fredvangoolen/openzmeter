@@ -11,11 +11,11 @@
       </q-toolbar>
       <q-linear-progress v-if="Data.Progress != null" color="indigo-9" :value="Data.Progress" class="q-ma-none" />
       <q-card-section class="bg-grey-3 q-pa-xs text-right">
-        <color-bar :width="Math.max(140, Width * 0.2)" :height="10" :range="[-Max, Max]" units="Wh"></color-bar>
+        <color-bar :width="Math.max(140, Width * 0.2)" :height="10" :range="[-Max, Max]" units="Wh" />
       </q-card-section>
       <q-separator />
       <div class="q-ma-sm">
-        <heatmap-table ref="map" :width="Width" :data="Data" v-model:max="Max" :year="Year" />
+        <heatmap-table :width="Width" :data="Data" v-model:max="Max" :year="Year" />
         <q-resize-observer @resize="onResize" />
       </div>
     </q-card>
@@ -23,8 +23,6 @@
 </template>
 
 <script>
-  import moment from 'moment';
-  import  'moment-timezone';
   import HeatmapTable from './HeatmapTable.vue';
   export default {
     data: function() {
@@ -39,7 +37,7 @@
         this.Data.SetAggreg(val);
       },
       Year: function(val) {
-        let YearDate = moment.tz(this.Analyzer.TimeZone).year(val);
+        let YearDate = this.$dayjs().tz(this.Analyzer.TimeZone).year(val);
         this.Data.SetRange([YearDate.startOf('year').valueOf(), YearDate.endOf('year').valueOf()]);
       }
     },

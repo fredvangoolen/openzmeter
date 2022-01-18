@@ -38,7 +38,7 @@
 </template>
 
 <script>
-  import moment from 'moment';
+//  import moment from 'moment';
   import Frequency from './Frequency.vue';
   import Voltage from './Voltage.vue';
   import Counters from './Counters.vue';

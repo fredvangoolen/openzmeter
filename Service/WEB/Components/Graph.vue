@@ -8,7 +8,7 @@
   import chroma from 'chroma-js';
   import * as oZm from 'JS/openZmeter.js';
  import { getCurrentInstance } from 'vue';
-  import moment from 'moment';
+//  import moment from 'moment';
   const This = getCurrentInstance();
   var PatternImg = new Image();
   PatternImg.onload = () => {};

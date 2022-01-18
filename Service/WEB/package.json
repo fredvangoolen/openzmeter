@@ -19,8 +19,6 @@
     "dayjs": "^1.10.7",
     "highlight-within-textarea": "^2.0.5",
     "marked": "^1.1.1",
-    "moment": "^2.29.1",
-    "moment-timezone": "^0.5.34",
     "portal-vue": "^3.0.0-beta.0",
     "quasar": "^2.4.1",
     "quasar-extras-svg-icons": "^1.11.4",

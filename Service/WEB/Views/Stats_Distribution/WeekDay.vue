@@ -13,8 +13,8 @@
 </template>
 
 <script>
-  import moment from 'moment';
-  import 'moment-timezone';
+  //import moment from 'moment';
+  //import 'moment-timezone';
   let Names = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
   export default {
     props: { data: Array },

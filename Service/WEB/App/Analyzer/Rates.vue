@@ -25,7 +25,7 @@
 
 <script>
   import AnalyzerRate from './Rate.vue';
-  import moment from 'moment';
+//  import moment from 'moment';
   import * as oZm from 'JS/openZmeter.js';
   export default {
     props: { analyzer: Object },

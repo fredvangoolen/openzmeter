@@ -56,7 +56,7 @@
 
 <script>
   import * as oZm from 'JS/openZmeter.js';
-  import moment from 'moment';
+//  import moment from 'moment';
   export default {
     props: { analyzer: Object },
     data() {

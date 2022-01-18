@@ -32,8 +32,8 @@
   import Calendar from './Calendar.vue';
   import Months from './Months.vue';
   import WeekDay from './WeekDay.vue';
-  import moment from 'moment';
-  import 'moment-timezone';
+//  import moment from 'moment';
+//  import 'moment-timezone';
   export default {
     data: function() {
       return { Data: this.Analyzer.Queries.Suscribe('Costs', ['Active_Energy', 'Period'], 600000),

@@ -29,8 +29,8 @@
 </template>
 
 <script>
-  import moment from 'moment';
-  import 'moment-timezone';
+//  import moment from 'moment';
+//  import 'moment-timezone';
   export default {
     props: { settings: Object },
     data: function() {

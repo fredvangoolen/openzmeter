@@ -36,7 +36,7 @@
   import * as oZm from 'JS/openZmeter.js';
   import Dygraph from 'JS/dygraph.js';
   import Graph from 'Components/Graph.vue';
-  import moment from 'moment';
+//  import moment from 'moment';
   import 'JS/dygraph-crosshair.js';
   export default {
     props: { serie: String, data: Object, last: Object, paused: Boolean },

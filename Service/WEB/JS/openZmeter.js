@@ -2,11 +2,20 @@ import CBOR from 'cbor-js';
 import { Notify } from 'quasar';
 import { computed, reactive, ref } from 'vue';
 import Axios from 'axios';
-import moment from 'moment';
-import 'moment-timezone';
+import dayjs from 'dayjs';
+import dayjs_utc from 'dayjs/plugin/utc';
+import dayjs_timezone from 'dayjs/plugin/timezone';
+import dayjs_dayOfYear from 'dayjs/plugin/dayOfYear';
+import dayjs_customParseFormat from 'dayjs/plugin/customParseFormat';
+
 const openZmeter = {
   install: function(App) {
     let This = App.config.globalProperties;
+    dayjs.extend(dayjs_utc);
+    dayjs.extend(dayjs_timezone);
+    dayjs.extend(dayjs_dayOfYear);
+    dayjs.extend(dayjs_customParseFormat);
+    This.$dayjs = dayjs;
     This.API = reactive({
       Mode: 'application/json',
       Online: true,
@@ -276,7 +285,7 @@ const openZmeter = {
               let Cancelled = false;
               let Promises = [];
               let ReqRange = null;
-              let Now = moment().tz(This.Analyzer.TimeZone);
+              let Now = This.$dayjs().tz(This.Analyzer.TimeZone);
               let UpdateProgress = () => {
                 if(Suscriber.Progress == null) return;
                 Done++;
@@ -352,7 +361,6 @@ const openZmeter = {
                   if(Before.length > 0) Suscriber.Rows = Before.concat(Suscriber.Rows);
                   Suscriber.Timer = setTimeout(Suscriber.Refresh, Suscriber.Interval);
                   Suscriber.Progress = null;
-                  console.log(Suscriber.Rows.length);
                 },
                 () => {
                   if(Cancelled == true) return;
@@ -408,7 +416,6 @@ const openZmeter = {
             }
             This.Analyzer.NowSeries[serie].Suscribers++;
           });
-          console.log(This.Analyzer.NowSeries.GetSusbribed());
           This.Analyzer.NowSeries.Refresh();
         },
         Unsuscribe: (series) => {
@@ -581,6 +588,7 @@ const openZmeter = {
         localStorage.setItem(key, def);
         return def;
       } else {
+        if(Number.isInteger(def)) Stored = Number.parseInt(Stored);
         if(options == null) return Stored;
         if(options.includes(Stored)) {
           return Stored;

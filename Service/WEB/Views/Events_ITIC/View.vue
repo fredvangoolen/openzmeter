@@ -47,7 +47,7 @@
   import ByType from './ByType.vue';
   import ByRms from './ByRMS.vue';
   import ByDuration from './ByDuration.vue';
-  import moment from 'moment';
+//  import moment from 'moment';
   export default {
     data: function() {
       return { Year: null, TransferEvents: this.EventsTransfer() };

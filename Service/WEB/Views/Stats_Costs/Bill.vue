@@ -64,7 +64,7 @@
 
 <script>
   import Dygraph from 'JS/dygraph.js';
-  import moment from 'moment';
+//  import moment from 'moment';
   import Graph from 'Components/Graph.vue';
   export default {
     props: { bill: Object },

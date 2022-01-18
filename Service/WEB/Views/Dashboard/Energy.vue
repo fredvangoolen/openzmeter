@@ -1,15 +1,42 @@
 <template>
-  <div @mouseenter="MouseOver=true" @mouseleave="MouseOver=false">
-    <graph :options="GraphOptions" :height="height" :paused="MouseOver"></graph>
-  </div>
+  <q-card>
+    <q-toolbar class="bg-indigo-9 text-white q-pr-none">
+      <portal to="dlg-toolbar" :disabled="!Expanded">
+        <q-toolbar-title>Energy consumption</q-toolbar-title>
+        <toolbar-aggreg storage="Dashboard.Aggreg" :options="['15M', '1H']" v-model="Aggreg" />
+        <q-separator dark vertical />
+        <toolbar-period storage="Period" v-model="Range"></toolbar-period>
+        <q-separator dark vertical />
+        <toolbar-export file="Energy" :rows="Export" />
+        <q-separator dark vertical />
+        <toolbar-expand v-model="Expanded" />
+      </portal>
+    </q-toolbar>
+    <div class="row">
+      <counters class="col-auto" :height.sync="Height" :data="TransferGraph.Data" />
+      <div class="col-grow">
+        <portal to="dlg-body" :disabled="!Expanded">
+          <!--spinner v-if="TransferGraph.Data==null"></spinner-->
+          <div @mouseenter="MouseOver=true" @mouseleave="MouseOver=false">
+            <!--graph :options="GraphOptions" :height="height" :paused="MouseOver"></graph-->
+          </div>
+                <!--energy :height="Expanded?DialogHeight:Height-10" :data="TransferGraph.Data" @range="Range=$event"></energy-->
+                  </portal>
+      </div>
+    </div>
+    <dialog-fullscreen :modelValue="Expanded" color="bg-indigo-9" :height.sync="DialogHeight"></dialog-fullscreen>
+  </q-card>
 </template>
 
 <script>
   import Graph from 'Components/Graph.vue';
+  import Counters from './Counters.vue';
   export default {
     props: { height: Number, data: Object },
     data: function() {
-      return { MouseOver: false };
+      return { Aggreg: null, Range: null, Height: 200, Expanded: false, DialogHeight: 200, MouseOver: false,
+      TransferGraph: this.PriceTransfer(['Active_Energy', 'Cost', 'Color', 'Period', 'Bill'])
+      };
     },
     computed: {
       GraphOptions: function() {
@@ -45,6 +72,22 @@
         }
         return Opt;
       }
-    }
+    },
+    methods: {
+      Export: function() {
+        if(this.TransferGraph.Data == null) return [];
+        var Data = [['Time', 'Active Energy', 'Period expense']];
+        var TimeCol = this.TransferGraph.Data.Headers.indexOf('Time');
+        var ActiveCol = this.TransferGraph.Data.Headers.indexOf('Active_Energy');
+        var ExpenseCol = this.TransferGraph.Data.Headers.indexOf('Cost');
+        for(var i = 0; i < this.TransferGraph.Data.Rows.length; i++) {
+          if(this.TransferGraph.Data.Rows[i][ActiveCol] == null) continue;
+          Data.push([this.analyzer.FormatDateTime(this.TransferGraph.Data.Rows[i][TimeCol]), this.Round(this.TransferGraph.Data.Rows[i][ActiveCol], 3), this.Round(this.TransferGraph.Data.Rows[i][ExpenseCol], 3)]);
+        }
+        return Object.seal(Data);
+      }
+
+    },
+    components: { Counters }
   }
 </script>

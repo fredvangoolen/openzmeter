@@ -7,8 +7,8 @@
 
 <script>
 //  import calendar from 'JS/bootstrap-year-calendar.js';
-  import moment from 'moment';
-  import 'moment-timezone';
+//  import moment from 'moment';
+//  import 'moment-timezone';
   import chroma from 'chroma-js';
 //  ;(function($) {
 //    $.fn.calendar.dates['custom'] = {

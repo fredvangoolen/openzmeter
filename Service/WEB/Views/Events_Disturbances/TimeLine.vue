@@ -3,10 +3,10 @@
 </template>
 
 <script>
-  import moment from 'moment';
-  import { DataSet } from "vis-data/peer";
-  import { Timeline } from "vis-timeline/peer";
-  import "vis-timeline/styles/vis-timeline-graph2d.css";
+//  import moment from 'moment';
+//  import { DataSet } from "vis-data/peer";
+//  import { Timeline } from "vis-timeline/peer";
+//  import "vis-timeline/styles/vis-timeline-graph2d.css";
   export default {
     props: { events: Object },
     data: function() {
