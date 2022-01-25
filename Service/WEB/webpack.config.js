@@ -12,7 +12,7 @@ module.exports = {
   plugins: [
     new webpack.DefinePlugin({ }),
     new VueLoaderPlugin(),
-    new BundleAnalyzerPlugin()
+    //new BundleAnalyzerPlugin()
   ],
   module: {
     rules: [
