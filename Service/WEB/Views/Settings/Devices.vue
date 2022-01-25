@@ -59,7 +59,7 @@
             this.Devices = [];
             this.ShowSpinner = false;
             for(var n = 1; n < result.length; n++) {
-              this.Tariffs.push({ Driver: result[n][DriverCol], Name: result[n][NameCol], Serial: result[n][SerialCol], Enabled: result[n][EnabledCol], Analyzers: result[n][AnalyzersCol] });
+              this.Devices.push({ Driver: result[n][DriverCol], Name: result[n][NameCol], Serial: result[n][SerialCol], Enabled: result[n][EnabledCol], Analyzers: result[n][AnalyzersCol] });
             }
           },
           (fail) => {}

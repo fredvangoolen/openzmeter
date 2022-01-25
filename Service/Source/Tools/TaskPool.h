@@ -16,6 +16,7 @@
 #pragma once
 #include <queue>
 #include <pthread.h>
+#include <stdint.h>
 #include <functional>
 // ---------------------------------------------------------------------------------------------------------------------
 using namespace std;

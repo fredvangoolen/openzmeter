@@ -337,7 +337,7 @@ void DeviceV3::ReadCallback(struct libusb_transfer *transfer) {
           Values[6] = (pCapture[6] + pCurrentOffset[5]) * pCurrentGain[5];
           Values[7] = (pCapture[6] + pCurrentOffset[6]) * pCurrentGain[6];
           Values[8] = (pCapture[6] + pCurrentOffset[7]) * pCurrentGain[7];
-          for(auto &Tmp : pAnalyzers) Tmp->BufferAppend(Values);
+          for(uint8_t n = 0; n < pAnalyzersCount; n++) pAnalyzers[n]->BufferAppend(Values);
         }
       } else if((Type == 0x8000) && (pCaptureSize > 0x10)) {
         pCaptureSize--;
