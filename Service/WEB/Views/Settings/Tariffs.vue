@@ -87,6 +87,23 @@
       this.Tariffs.Stop();
     },
     methods: {
+      LoadTariffs: function() {
+        this.ShowDialog = false;
+        this.ShowSpinner = true;
+        this.Post('getTariffs', { }).then(
+          (result) => {
+            var NameCol = result[0].indexOf("Name");
+            var UserCol = result[0].indexOf("User");
+            this.Enabled = true;
+            this.Tariffs = [];
+            this.ShowSpinner = false;
+            for(var n = 1; n < result.length; n++) {
+              this.Tariffs.push({ Name: result[n][NameCol], User: result[n][UserCol]});
+            }
+          },
+          (fail) => { }
+        );
+      },
       Add: function() {
         this.SourceTariff = null;
         this.Tariff = null;

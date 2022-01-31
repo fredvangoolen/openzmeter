@@ -24,7 +24,6 @@
 #define DEVICEV3_MANSTRING       "zRed"                          //Manufacturer string
 #define DEVICEV3_PRODSTRING      "openZmeter - Capture device"   //Product string
 #define DEVICEV3_ENDPOINT_IN       0x81                          //Endpoint de lectura de datos
-#define DEVICEV3_SAMPLEFREQ       20000                          //Frequencia de muestreo
 #define DEVICEV3_TRANSFERS          128                          //Numero de transferencias a encolar
 //----------------------------------------------------------------------------------------------------------------------
 class DeviceV3 final : public Device {
@@ -44,7 +43,6 @@ class DeviceV3 final : public Device {
     int16_t                      pCapture[9];              //Captured samples
     uint8_t                      pCaptureSize;             //Captured samples count
     libusb_device_handle        *pDeviceHandle;            //Dispositivo de captura
-    libusb_device               *pNewDevice;               //Dispositivo que se conecta
     libusb_context              *pContext;                 //USB context
     int32_t                      pRunAverageValues[9];     //Average wave value of last second
     uint32_t                     pRunAverageCounter;       //Somple count for average

@@ -2,20 +2,14 @@
   "components": {
     "schemas": {
       "UserListTemplate": {
-        "type": "object",
-        "properties": {
-          "User": { "type": "string" },
-          "Name": { "type": "string" },
-          "Email": { "type": "string" },
-          "TimeZone": { "type": "string" }
-        },
-        "example": {
-          "User": "admin",
-          "Name": "System administrator",
-          "Email": "example@example.com",
-          "TimeZone": "UTC"
-        },
-        "required": [ "User", "Name", "Email", "TimeZone" ]
+        "type": "array",
+        "items": {
+          "type": "array",
+          "example": [
+            [ "User", "Name", "Email", "TimeZone"],
+            [ "admin", "System administrator", "example@example.com", "UTC" ]
+          ]
+        }
       }
     }
   },

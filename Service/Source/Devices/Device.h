@@ -32,11 +32,13 @@ class Device {
     const string           pName;               //Driver description
   protected :
     Device(const string &serial, const string &driver, const string &name);
-  protected :
+  public :
     virtual uint32_t AnalyzersCount() = 0;
   public :
-    json   GetJSONDescriptor();
     string Serial() const;
+    string Driver() const;
+    string Name() const;
+    bool   Enabled() const;
   public :
     virtual ~Device();
     virtual void GetDevice(HTTPRequest &req) = 0;
