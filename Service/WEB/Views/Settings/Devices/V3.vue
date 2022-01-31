@@ -29,13 +29,13 @@
           <tr class="separator-bottom">
             <td><strong>Voltage</strong></td>
             <td>
-              <input-spin :min="-200" :max="200" v-model="Settings.VoltageOffset" :increment="0.01" :decimals="2"></input-spin>
+              <input-spin :min="-32000" :max="32000" v-model="Settings.VoltageOffset" :increment="0.01" :decimals="2"></input-spin>
             </td>
             <td>
               <button type="button" class="btn btn-default btn-xs" @click="SetVoltageOffset()" :disabled="Settings.Wave_Average.Voltage == 0.0" :title="'Last second offset: ' + Round(-Settings.Wave_Average.Voltage, 2, false)"><img :src="require('Imgs/wand.png')"></button>
             </td>
             <td>
-              <input-spin :min="90" :max="110" v-model="Settings.VoltageGain" :increment="0.001" :decimals="3" prepend="%"></input-spin>
+              <input-spin :min="0" :max="100" v-model="Settings.VoltageGain" :increment="0.001" :decimals="5"></input-spin>
             </td>
             <td></td>
           </tr>
@@ -48,7 +48,7 @@
               <button type="button" class="btn btn-default btn-xs" @click="SetCurrentOffset(idx)" :disabled="Settings.Wave_Average.Current[idx] == 0.0" :title="'Last second offset: ' + Round(-Settings.Wave_Average.Current[idx], 2, false)"><img :src="require('Imgs/wand.png')"></button>
             </td>
             <td>
-              <input-spin :min="90" :max="110" v-model="Settings.Outputs[idx].CurrentGain" :increment="0.001" :decimals="3" prepend="%"></input-spin>
+              <input-spin :min="0" :max="100" v-model="Settings.Outputs[idx].CurrentGain" :increment="0.001" :decimals="5"></input-spin>
             </td>
             <td>
               <toggle class="float-right" onText="Yes" offText="No" v-model="Settings.Outputs[idx].Enabled"></toggle>
