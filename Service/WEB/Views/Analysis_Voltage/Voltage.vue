@@ -7,7 +7,7 @@
       <q-separator dark vertical />
       <!--toolbar-period storage="Period" v-model="Range" ></toolbar-period>
       <q-separator dark vertical /-->
-      <toolbar-phases-multi storage="Voltage.Main.Phases" :current="false" v-model="Phases" v-show="Analyzer.VoltageChannels() > 1" />
+      <toolbar-phases-multi storage="Analysis_Voltage.Phases" :current="false" v-model="Phases" v-show="Analyzer.VoltageChannels() > 1" />
       <q-separator dark vertical v-if="Analyzer.VoltageChannels() > 1" />
 
       <toolbar-export file="Voltage" :rows="Export" />
@@ -15,7 +15,7 @@
       <toolbar-expand v-model="Expanded" />
     </portal>
   </q-toolbar>
-      <q-card-section class="row q-pa-xs">
+  <q-card-section class="row q-pa-xs">
         <!--counters class="col-auto" :data10M="Transfer10M.LastData" :dataGraph="TransferGraph.Data" :height.sync="Height"></counters-->
         <div class="col">
           <portal to="dlg-body" :disabled="!Expanded">
@@ -25,14 +25,10 @@
                     <div @mouseenter="MouseOver=true" @mouseleave="MouseOver=false">
     <!--graph :options="GraphOptions" :height="height" :paused="MouseOver"></graph-->
   </div>
-          </portal>
-        </div>
-      </q-card-section>
-
-      <dialog-fullscreen :modelValue="Expanded" color="bg-red-9" />
-
-
-
+      </portal>
+    </div>
+  </q-card-section>
+  <dialog-fullscreen :modelValue="Expanded" color="bg-red-9" />
 </template>
 
 <script>

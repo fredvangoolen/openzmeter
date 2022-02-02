@@ -1,7 +1,7 @@
 <template>
-  <q-item clickable dark @click="ShowDialog = true">
+  <q-item clickable dark dense @click="ShowDialog=true">
     <q-item-section side>
-      <img class="icon" :src="require('Imgs/disconnect32.png')">
+      <img class="q-py-sm" :src="require('Imgs/disconnect24.png')" />
       <!--div class="collapse-icon">
       <img class="icon" :src="require('Imgs/disconnect32.png')">
       <span v-if="(status!=null)&&(status.State!=null)&&(status.PendingActions!=null)&&(status.PendingActions>0)">
@@ -140,9 +140,5 @@
 </script>
 
 <style scoped>
-  .icon {
-    height: 24px;
-    width: 24px;
-    margin-left: 3px;
-  }
+
 </style>

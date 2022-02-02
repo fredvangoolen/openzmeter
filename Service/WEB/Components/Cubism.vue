@@ -7,7 +7,6 @@
 
 <script>
   import * as d3 from 'd3';
-//  import moment from 'moment';
   export default {
     props: { data: Array, titles: Array, format: Array, now: Array, paused: Boolean },
     data() {
@@ -19,8 +18,8 @@
         this.SVG.append('g')
           .attr('class', 'points-' + n)
           .attr('transform', 'translate(0, ' + (this.MarginTop + this.RowHeight * n) + ')');
-        this.SVG.append('g').
-          attr('class', 'legend-' + n)
+        this.SVG.append('g')
+          .attr('class', 'legend-' + n)
           .attr('transform', 'translate(0, ' + (this.MarginTop + this.RowHeight * n) + ')');
       }
       this.SVG.append('g')
@@ -58,7 +57,6 @@
         this.Width = evt.width;
         this.SVG.attr('height', this.Height);
         this.SVG.attr('width', this.Width);
-        //if(this.Width != evt.width)
          this.Redraw();
       },
       Redraw: function() {
@@ -86,7 +84,7 @@
           for(let n = 0; n < this.data.length; n++) Max = Math.max(Max, Math.abs(this.data[n][i + 1]));
           Max = Max / 3.0;
           let yScale = d3.scaleLinear()
-            .range([this.RowHeight, 0])
+            .range([this.RowHeight - 1, 0])
             .domain([0, Max]);
           for(let n = 0; n < this.data.length; n++) {
             let Val = this.data[n][i + 1];
@@ -122,6 +120,7 @@
               .attr('width', this.Width / 1440.0)
               .attr('height', d => d[2])
               .attr('fill', d => d[3])
+              .attr('shape-rendering', 'crispEdges')
             ,
             update => update
               .attr('x', d => xScale(d[0]))
@@ -138,25 +137,28 @@
           Border.append('line')
             .attr('x1', 0)
             .attr('x2', this.Width)
-            .attr('y1', this.MarginTop + this.RowHeight * (1 +i))
-            .attr('y2', this.MarginTop + this.RowHeight * (1 + i))
+            .attr('y1', this.MarginTop + this.RowHeight * (1 + i) - 1)
+            .attr('y2', this.MarginTop + this.RowHeight * (1 + i) - 1)
             .attr('stroke', 'black')
             .attr('stroke-width', 1)
+            .attr('shape-rendering', 'crispEdges')
         }
         Border.append('line')
-          .attr('x1', this.Width)
-          .attr('x2', this.Width)
+          .attr('x1', this.Width - 1)
+          .attr('x2', this.Width - 1)
           .attr('y1', this.MarginTop)
           .attr('y2', this.Height)
           .attr('stroke', 'black')
-          .attr('stroke-width', 1);
+          .attr('stroke-width', 1)
+          .attr('shape-rendering', 'crispEdges');
         Border.append('line')
           .attr('x1', 0)
           .attr('x2', 0)
           .attr('y1', this.MarginTop)
           .attr('y2', this.Height)
           .attr('stroke', 'black')
-          .attr('stroke-width', 1);
+          .attr('stroke-width', 1)
+          .attr('shape-rendering', 'crispEdges');
       },
 
 

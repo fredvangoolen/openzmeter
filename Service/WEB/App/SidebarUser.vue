@@ -1,7 +1,7 @@
 <template>
-  <q-item clickable dark @click="ShowDialog = true">
+  <q-item clickable dark dense @click="ShowDialog = true">
     <q-item-section side>
-      <img class="icon" :src="require('Imgs/user32.png')">
+      <img class="q-py-sm" :src="require('Imgs/user24.png')">
     </q-item-section>
     <q-item-section>
       <q-item-label class="ellipsis">{{ User.User ? User.User : '-' }}</q-item-label>

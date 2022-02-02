@@ -44,7 +44,7 @@
           .domain([0, 96]);
         let xAxis = d3.axisTop(xScale)
           .tickSize(0)
-          tickSizeInner(2)
+          .tickSizeInner(2)
           .ticks(96)
           .tickFormat(d => ((d < 96) && (d % 4 == 0)) ? (d / 4).toString().padStart(2, '0') : '');
         let yScale = d3.scaleBand();
@@ -76,17 +76,19 @@
         d3.select('.y-axis').call(yAxis);
         d3.select('.border').html('');
         d3.select('.border').append('line')
-          .attr('x1', this.Width)
-          .attr('x2', this.Width)
+          .attr('x1', this.Width - 1)
+          .attr('x2', this.Width - 1)
           .attr('y1', this.MarginTop)
           .attr('y2', 8 * Days + this.MarginTop)
           .attr('stroke', 'black').attr('stroke-width', 1)
+          .attr('shape-rendering', 'crispEdges');
         d3.select('.border').append('line')
           .attr('x1', this.MarginLeft)
           .attr('x2', this.Width)
-          .attr('y1', 8 * Days + this.MarginTop)
-          .attr('y2', 8 * Days + this.MarginTop)
-          .attr('stroke', 'black').attr('stroke-width', 1);
+          .attr('y1', 8 * Days + this.MarginTop - 1)
+          .attr('y2', 8 * Days + this.MarginTop - 1)
+          .attr('stroke', 'black').attr('stroke-width', 1)
+          .attr('shape-rendering', 'crispEdges');
         this.data.Rows.forEach(row => {
           let RowDate = this.$dayjs(row[TimeCol]).tz(this.Analyzer.TimeZone);
           let Cell = (this.data.Aggreg == '1H') ? (RowDate.dayOfYear() - 1) * 24 + RowDate.hour() : (RowDate.dayOfYear() - 1) * 96 + RowDate.hour() * 4 + Math.trunc(RowDate.minute() / 15);
@@ -99,8 +101,9 @@
             .attr('x', d => xScale((this.data.Aggreg == '1H') ? d.Block * 4 : d.Block))
             .attr('y', d => yScale(d.Day))
             .attr('width', (this.Width - this.MarginLeft) / ((this.data.Aggreg == '1H') ? 24 : 96))
-            .attr('height', 10 - 0.1)
+            .attr('height', 8)
             .attr('fill', d => (d.Value == null) ? '#eee' : d3.interpolateRdYlBu(1 - ((d.Value / (2.0 * Max)) + 0.5)))
+            .attr('shape-rendering', 'crispEdges')
           ,
           update => update
             .attr('x', d => xScale((this.data.Aggreg == '1H') ? d.Block * 4 : d.Block))

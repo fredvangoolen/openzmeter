@@ -1,48 +1,23 @@
 <template>
   <q-page>
     <q-card>
-      <q-toolbar class="bg-blue-6 text-white q-pr-none">
-        <portal to="dlg-toolbar" :disabled="!Expanded">
-          <q-toolbar-title>Current</q-toolbar-title>
-          <toolbar-aggreg storage="Current.Aggregation" :options="['3S', '1M', '10M', '1H']" v-model="Aggreg" />
-          <q-separator dark vertical />
-          <!--toolbar-period storage="Period" v-model="Range" ></toolbar-period>
-          <q-separator dark vertical /-->
-          <toolbar-phases-multi storage="Voltage.Main.Phases" :current="true" v-model="Phases" v-if="Analyzer.VoltageChannels() > 1" />
-          <q-separator dark vertical v-if="Analyzer.VoltageChannels() > 1" />
-          <toolbar-export file="Current" :rows="Export" />
-          <q-separator dark vertical />
-          <toolbar-expand v-model="Expanded" />
-        </portal>
+      <current />
+      <q-toolbar class="bg-grey-9 text-white">
+        <q-tabs v-model="ActiveTab" shrink stretch active-bg-color="primary" align="left">
+          <q-tab name="waveform" label="Waveform" />
+          <q-tab name="harmonics" label="Harmonics" v-if="Analyzer.NominalFrequency>0" />
+          <q-tab name="evolution" label="Evolution" v-if="Analyzer.NominalFrequency>0" />
+          <q-tab name="advanced" label="Advanced" />
+          <q-tab name="parameters" label="Parameters" v-if="Analyzer.NominalFrequency>0" />
+        </q-tabs>
       </q-toolbar>
-
-      <div class="col-lg-12">
-        <div class="panel panel-current">
-
-
-
-            <div class="row">
-              <counters class="col-md-6 col-lg-4 col-xl-3" :data1M="Transfer1M.LastData" :data3S="Transfer3S.LastData" :dataGraph="TransferGraph.Data" :height.sync="Height"></counters>
-              <div class="col-md-6 col-lg-8 col-xl-9">
-                <portal to="fs-body" :disabled="!Expanded" class="panel-body">
-                  <spinner v-if="TransferGraph.Data==null"></spinner>
-                  <!--current :phases="Phases" :data="TransferGraph.Data" :height="Expanded?DialogHeight:Height" @range="Range=$event"></current-->
-                </portal>
-              </div>
-            </div>
-
-        </div>
-      </div>
-      <dialog-fullscreen :modelValue="Expanded" color="bg-blue-6" />
-      <div class="col-lg-12">
-        <detail-tabs v-if="Analyzer.NominalFrequency>0" :tabs="['Waveform', 'Harmonics', 'Evolution', 'Advanced', 'Parameters']" storage="Current.Details.Tabs.AC" v-model="ActiveTab"></detail-tabs>
-        <detail-tabs v-if="Analyzer.NominalFrequency==0" :tabs="['Waveform', 'Advanced']" storage="Current.Details.Tabs.DC" v-model="ActiveTab"></detail-tabs>
-        <waveform v-if="ActiveTab=='Waveform'" :data="TransferNow.Data" :paused.sync="Paused"></waveform>
-        <harmonics v-if="ActiveTab=='Harmonics'" :data="TransferNow.Data" :paused.sync="Paused"></harmonics>
-        <evolution v-if="ActiveTab=='Evolution'" :data="TransferCubism.Data"></evolution>
-        <advanced v-if="ActiveTab=='Advanced'" :data="TransferNow.Data" :paused.sync="Paused"></advanced>
-        <parameters v-if="ActiveTab=='Parameters'" :data="TransferCubism.Data" :dataNow="TransferNow.Data" :paused.sync="Paused"></parameters>
-      </div>
+      <q-tab-panels v-model="ActiveTab">
+        <waveform name="waveform" :data="TransferNow.Data" :paused.sync="Paused"></waveform>
+        <harmonics name="harmonics" :data="TransferNow.Data" :paused.sync="Paused"></harmonics>
+        <evolution name="evolution" :data="TransferCubism.Data"></evolution>
+        <advanced name="advanced" :data="TransferNow.Data" :paused.sync="Paused"></advanced>
+        <parameters name="parameters" :data="TransferCubism.Data" :dataNow="TransferNow.Data" :paused.sync="Paused"></parameters>
+      </q-tab-panels>
     </q-card>
 
   </q-page>
@@ -58,7 +33,7 @@
   import Waveform from './Waveform.vue';
   export default {
     data: function() {
-      return { ActiveTab: null, Aggreg: null, Range: null, Phases: [], Height: 300, Paused: false, Expanded: false, DialogHeight: 300,
+      return { ActiveTab: null,
                TransferGraph: this.SeriesTransfer(['Current']),
                TransferNow: this.NowTransfer(['Current', 'Voltage_Samples', 'Current_Samples', 'Voltage_Harmonics_Complex', 'Current_Harmonics_Complex', 'Voltage_FFT', 'Current_FFT', 'Power_Factor', 'Current_THD', 'Phi']),
                TransferCubism: this.SeriesTransfer(['Current_Harmonics', 'Power_Factor', 'Current_THD', 'Phi']),

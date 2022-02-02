@@ -3,26 +3,15 @@
     <q-card>
       <q-toolbar class="bg-green-6 text-white q-pr-none">
         <q-toolbar-title>Frequency</q-toolbar-title>
-        <toolbar-aggreg storage="Frequency.Aggregation" :options="['3S', '1M', '10M', '1H']" v-model="Aggreg" />
-        <q-btn stretch dense flat icon="menu">
-          <q-menu>
-            <q-list dense>
-              <q-item clickable v-close-popup>Export CSV</q-item>
-            </q-list>
-          </q-menu>
-        </q-btn>
+        <portal to="fs-toolbar" :disabled="!Expanded" class="header-buttons">
+          <toolbar-aggreg storage="Frequency.Aggregation" :options="['3S', '1M', '10M', '1H']" v-model="Aggreg" />
+          <toolbar-period storage="Frequency.Period" v-model="Range" />
+          <toolbar-export :rows="Export" file="Frequency" />
+          <toolbar-expand v-model="Expanded" />
+        </portal>
       </q-toolbar>
       <q-card-section class="q-pa-none">
       <div class="col-lg-12">
-            <portal to="fs-toolbar" :disabled="!Expanded" class="header-buttons">
-
-              <toolbar-period storage="Period" v-model="Range"></toolbar-period>
-              <div class="btn-group">
-                <button-export :rows="Export" file="Frequency"></button-export>
-                <button-expand v-model="Expanded"></button-expand>
-              </div>
-            </portal>
-
           <div class="panel-body">
             <div class="row">
               <counters class="col-md-6 col-lg-4 col-xl-3" :dataNow="TransferNow.LastData" :dataGraph="TransferGraph.Data" :height.sync="Height"></counters>

@@ -442,7 +442,7 @@
         };
       },
     },
-    props: { options: Object, height: Number, width: Number, paused: Boolean, window: Array, analyzer: null },
+    props: { options: Object, height: Number, width: Number, paused: Boolean, window: Array },
     data: function() {
       return { };
     },

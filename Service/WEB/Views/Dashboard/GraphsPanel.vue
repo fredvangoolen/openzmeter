@@ -1,35 +1,37 @@
 <template>
-  <div class="panel" :class="PanelClass">
-    <div class="panel-heading">
-      <div class="header-text">
-        <div>{{ analyzer.SerieName(serie) }}</div>
+  <q-card>
+    <q-toolbar :class="ToolbarClass">
+      <div>
+        <q-toolbar-title>{{ Title }}</q-toolbar-title>
         <div class="aggreg-row" v-if="data!=null">From {{ analyzer.FormatAggregation(data.Aggreg) }} aggregation {{ paused ? '(Paused)' : '' }}</div>
       </div>
-      <div class="header-buttons">
+      <!--div class="header-buttons">
         <div class="main-value"><span v-html="LastValue.Value"></span> <span class="huge-small-unit">{{ LastValue.Units }}</span></div>
         <div v-if="LastValue.Phases.length > 1" class="phases">
           <div v-for="(val, idx) in LastValue.Phases" :key="idx" v-html="val"></div>
         </div>
-      </div>
-    </div>
-    <portal to="fs-body" :disabled="!Expanded" class="panel-body">
+      </div-->
+    </q-toolbar>
+    <q-card-section>
+    <!--portal to="fs-body" :disabled="!Expanded" class="panel-body">
       <spinner v-if="data==null"></spinner>
       <div @mouseenter="$emit('update:paused', true)" @mouseleave="$emit('update:paused', false)">
         <graph ref="graph" :options="GraphOptions" :height="Expanded?DialogHeight:150" :paused="paused"></graph>
       </div>
-    </portal>
-    <div class="panel-footer clearfix">
-      <router-link :to="Link"><span class="pull-left">View Details</span></router-link>
-      <portal to="fs-toolbar" :disabled="!Expanded" class="header-buttons">
-        <toolbar-phases v-model="Phases" v-if="serie != 'Frequency'" :storage="'Dashboard_' + serie" :current="serie=='Current'" :multi="true"></toolbar-phases>
-        <div class="btn-group">
-          <button-export :rows="Export" :file="analyzer.SerieName(serie)"></button-export>
-          <button-expand v-model="Expanded"></button-expand>
-        </div>
+    </portal-->
+    </q-card-section>
+
+      <!--router-link :to="Link"><span class="pull-left">View Details</span></router-link-->
+      <portal to="dlg-toolbar" :disabled="!Expanded">
+        <q-toolbar class="bg-grey-3">
+        <toolbar-phases-multi v-model="Phases" v-if="serie != 'Frequency'" :storage="'Dashboard_' + serie" :current="serie=='Current'" :multi="true" />
+        <toolbar-export :rows="Export" :file="Title" />
+          <toolbar-expand v-model="Expanded" />
+    </q-toolbar>
       </portal>
-    </div>
-    <dlg-fs v-if="Expanded" :title="analyzer.Title[serie]" :height.sync="DialogHeight"></dlg-fs>
-  </div>
+
+    <!--dlg-fs v-if="Expanded" :title="analyzer.Title[serie]" :height.sync="DialogHeight"></dlg-fs-->
+  </q-card>
 </template>
 
 <script>
@@ -41,9 +43,15 @@
   export default {
     props: { serie: String, data: Object, last: Object, paused: Boolean },
     data: function() {
-      return { ShowSpinner: true, Phases: null, Expanded: false, DialogHeight: 300 };
+      return { ShowSpinner: true, Phases: [], Expanded: false, DialogHeight: 300 };
     },
     computed: {
+      ToolbarClass: function() {
+        return 'bg-red-9 text-white';
+      },
+      Title: function() {
+        return 'Voltage';
+      },
       Link: function() {
         if(this.serie == 'Voltage') return '/Analysis/Voltage';
         if(this.serie == 'Current') return '/Analysis/Current';
@@ -153,10 +161,6 @@
 </script>
 
 <style scoped>
-  .header-text {
-    font-size: 20px;
-    line-height: 24px;
-  }
   .phases {
     display: inline-block;
     border-left: 1px solid #FFF;

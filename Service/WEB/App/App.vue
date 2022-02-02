@@ -2,7 +2,7 @@
   <q-layout id="app" view="hHh lpR fFf" class="bg-grey-2">
     <q-header v-if="(User.User != null) && (UserLoaded == true)">
       <q-toolbar class="bg-grey-9 q-px-xs">
-        <q-btn dense flat :icon="mdiMenu" class="lt-md q-mr-xs" @click="$refs.Sidebar.toggle()" />
+        <q-btn dense flat :icon="mdiMenu" class="lt-md q-mr-xs" @click="Expanded=!Expanded" />
         <q-toolbar-title class="q-pa-none">
           <img src="MainLogo.png" style="margin-top: 12px; max-width: 428px" />
         </q-toolbar-title>
@@ -13,19 +13,29 @@
         <q-separator />
       </div>
     </q-header>
-    <q-drawer v-if="(User.User != null) && (UserLoaded == true)" ref="Sidebar" v-model="Expanded" mini-to-overlay :mini="MiniState" @mouseover="MiniState=false" @mouseleave="HideBar" :width="300"  dark class="bg-grey-9">
-      <q-list>
-        <q-separator />
-        <sidebar-analyzer :status="TransferStatus" />
-        <q-separator />
-        <sidebar-user />
-        <q-separator />
-        <sidebar-menu />
-      </q-list>
+    <q-drawer v-if="(User.User != null) && (UserLoaded == true)" show-if-above v-model="Expanded" :mini="MiniState" :mini-width="56" mini-to-overlay persistent @mouseover="MiniState=false" @mouseleave="HideBar" :width="300"  dark class="bg-grey-9">
+      <q-scroll-area class="fit">
+        <q-list>
+          <q-separator />
+          <sidebar-analyzer :status="TransferStatus" />
+          <q-separator />
+          <sidebar-user />
+          <q-separator />
+          <sidebar-menu />
+        </q-list>
+      </q-scroll-area>
     </q-drawer>
     <q-page-container>
-      <router-view class="q-pa-sm" v-if="(User.User != null) && (UserLoaded == true)" />
-      <login v-if="(User.User == null) && (UserLoaded == true)" />
+      <q-page class="row no-wrap">
+        <div class="col q-ma-none">
+          <div class="column full-height">
+            <q-scroll-area class="col q-pa-none">
+              <router-view class="q-pa-sm" v-if="(User.User != null) && (UserLoaded == true)" />
+              <login v-if="(User.User == null) && (UserLoaded == true)" />
+            </q-scroll-area>
+          </div>
+        </div>
+      </q-page>
     </q-page-container>
     <q-resize-observer @resize="onResize" />
   </q-layout>
@@ -40,12 +50,12 @@
   import SidebarAnalyzer from './SidebarAnalyzer.vue';
   export default {
     data: function() {
-      return { TwoRows: true, UserLoaded: false ,MiniState: false, Expanded: false, DesktopMode: false, NoNetwork: false, TransferStatus: this.StatusTransfer(['Events', 'Alarms']) };
+      return { TwoRows: true, UserLoaded: false, MiniState: false, Expanded: false, DesktopMode: false, NoNetwork: false, TransferStatus: this.StatusTransfer(['Events', 'Alarms']) };
     },
     created: function() {
       this.mdiMenu = mdiMenu;
       this.$q.addressbarColor.set('#a2e3fa');
-            this.User.GetCurrent().then(
+      this.User.GetCurrent().then(
         () => this.UserLoaded = true,
         () => this.UserLoaded = true
       );
@@ -100,3 +110,9 @@
     components: { Login, TopbarIndicators, SidebarUser, SidebarAnalyzer, SidebarMenu }
   }
 </script>
+
+<style scoped>
+::v-deep .fullscreen.q-drawer__backdrop:not(.no-pointer-events) {
+  background-color: rgba( 0, 47.48, 52.52, 0.9) !important;
+}
+</style>

@@ -1,7 +1,31 @@
 <template>
-  <div>
-    <graph :options="GraphOptions" :height="height"></graph>
-  </div>
+  <q-toolbar class="bg-blue-6 text-white q-pr-none">
+    <portal to="dlg-toolbar" :disabled="!Expanded">
+      <q-toolbar-title>Current</q-toolbar-title>
+      <q-separator dark vertical />
+      <toolbar-aggreg storage="Analysis_Current.Aggreg" :options="['3S', '1M', '10M', '1H']" v-model="Aggreg" />
+      <q-separator dark vertical />
+      <!--toolbar-period storage="Period" v-model="Range" ></toolbar-period>
+      <q-separator dark vertical /-->
+      <toolbar-phases-multi storage="Analysis_Voltage.Phases" :current="true" v-model="Phases" v-if="Analyzer.VoltageChannels() > 1" />
+      <q-separator dark vertical v-if="Analyzer.VoltageChannels() > 1" />
+      <toolbar-export file="Current" :rows="Export" />
+      <q-separator dark vertical />
+      <toolbar-expand v-model="Expanded" />
+    </portal>
+  </q-toolbar>
+  <q-card-section class="row q-pa-xs">
+    <!--counters class="col-md-6 col-lg-4 col-xl-3" :data1M="Transfer1M.LastData" :data3S="Transfer3S.LastData" :dataGraph="TransferGraph.Data" :height.sync="Height"></counters-->
+    <div class="col">
+      <portal to="dlg-body" :disabled="!Expanded">
+      blau
+                  <!--spinner v-if="TransferGraph.Data==null"></spinner-->
+                  <!--current :phases="Phases" :data="TransferGraph.Data" :height="Expanded?DialogHeight:Height" @range="Range=$event"></current-->
+                  <!--graph :options="GraphOptions" :height="height"></graph-->
+                </portal>
+              </div>
+  </q-card-section>
+  <dialog-fullscreen :modelValue="Expanded" color="bg-blue-6" />
 </template>
 
 <script>
@@ -12,7 +36,7 @@
   export default {
     props: { data: Object, phases: Array, height: Number },
     data: function() {
-      return { };
+      return {Aggreg: null, Range: null, Phases: [], Height: 300, Paused: false, Expanded: false, DialogHeight: 300, };
     },
     computed: {
       GraphOptions: function(val) {

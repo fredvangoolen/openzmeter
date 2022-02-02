@@ -127,16 +127,19 @@ const openZmeter = {
         return This.API.Post('getSeriesNow', { Analyzer: analyzer, Series: series });
       },
       GetSeriesRange: (analyzer, aggreg) => {
-        return This.API.Post("getSeriesRange", { Aggreg: aggreg, Analyzer: analyzer });
+        return This.API.Post('getSeriesRange', { Aggreg: aggreg, Analyzer: analyzer });
       },
       GetAlarmsRange: (analyzer) => {
-        return This.API.Post("getAlarmsRange", { Analyzer: analyzer });
+        return This.API.Post('getAlarmsRange', { Analyzer: analyzer });
       },
       GetEventsRange: (analyzer) => {
-        return This.API.Post("getEventsRange", { Analyzer: analyzer });
+        return This.API.Post('getEventsRange', { Analyzer: analyzer });
       },
       GetSeries: (analyzer, aggreg, series, from, to) => {
-        return This.API.Post("getSeries", { Aggreg: aggreg, Analyzer: analyzer, Series: series, From: from, To: to });
+        return This.API.Post('getSeries', { Aggreg: aggreg, Analyzer: analyzer, Series: series, From: from, To: to });
+      },
+      GetCosts: (analyzer, aggreg, series, from, to) => {
+        return This.API.Post('getCosts', { Analyzer: analyzer, Aggreg: aggreg, From: from, To: to, Series: series, Group: 0 });
       }
     });
     This.User = reactive({
@@ -277,7 +280,7 @@ const openZmeter = {
               Suscriber.Refresh();
             },
             Refresh: () => {
-              if(((Suscriber.Type == 'Series') && (Suscriber.Aggreg == null)) || (This.Analyzer.Analyzer == null) || (Suscriber.Range == null)) {
+              if((((Suscriber.Type == 'Series') || (Suscriber.Type == 'Costs')) && (Suscriber.Aggreg == null)) || (This.Analyzer.Analyzer == null) || (Suscriber.Range == null)) {
                 Suscriber.Rows = [];
                 return;
               }
@@ -311,9 +314,6 @@ const openZmeter = {
               for(let n = Suscriber.Rows.length - 1; n >= 0; n--) {
                 if((Suscriber.Rows[n][0] < ReqRange[0]) || (Suscriber.Rows[n][0] > ReqRange[1])) Suscriber.Rows.splice(n, 1);
               }
-
-
-//              Suscriber.Rows = Suscriber.Rows.filter(val => (val[0] >= ReqRange[0]) && (val[0] <= ReqRange[1]));
               if(ReqRange == null) {
                 throw new Exception('No valid range');
               } else if(Suscriber.Rows.length == 0) {
@@ -334,6 +334,16 @@ const openZmeter = {
                   while(true) {
                     let To = Math.min(From + MS, val[1]);
                     Promises.push(new Promise((resolve, reject) => { This.API.GetSeries(This.Analyzer.Analyzer, Suscriber.Aggreg, Suscriber.Series, From, To).then((result) => { UpdateProgress(); resolve(result); }, reject)}));
+                    if(To == val[1]) break;
+                    From = To + 1;
+                  }
+                } else if(Suscriber.Type == 'Costs') {
+                  let MS = 900000 * 1000;
+                  let From = val[0];
+                  if(Suscriber.Aggreg == '1H') MS = 3600000 * 1000;
+                  while(true) {
+                    let To = Math.min(From + MS, val[1]);
+                    Promises.push(new Promise((resolve, reject) => { This.API.GetCosts(This.Analyzer.Analyzer, Suscriber.Aggreg, Suscriber.Series, From, To).then((result) => { UpdateProgress(); resolve(result); }, reject)}));
                     if(To == val[1]) break;
                     From = To + 1;
                   }
@@ -539,11 +549,11 @@ const openZmeter = {
     };
     This.BestUnitsBin = (val, dec, html) => {
       if(val > 1024 * 1024 * 1024) {
-        return Vue.prototype.Round(val / (1024 * 1024 * 1024), dec, html) + ' GB';
+        return This.Round(val / (1024 * 1024 * 1024), dec, html) + ' GB';
       } else if(val > 1024 * 1024) {
-        return Vue.prototype.Round(val / (1024 * 1024), dec, html) + ' MB';
+        return This.Round(val / (1024 * 1024), dec, html) + ' MB';
       } else if(val > 1024) {
-        return Vue.prototype.Round(val / 1024) + ' kB';
+        return This.Round(val / 1024) + ' kB';
       } else {
         return val + ' B';
       }

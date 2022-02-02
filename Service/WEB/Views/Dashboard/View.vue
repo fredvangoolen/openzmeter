@@ -1,9 +1,9 @@
 <template>
-  <q-page class="q-gutter-sm">
+  <div class="q-gutter-sm">
     <energy />
-    <!--graphs /-->
+    <graphs />
     <variables />
-  </q-page>
+  </div>
 </template>
 
 <script>

@@ -12,19 +12,19 @@
         <toolbar-expand v-model="Expanded" />
       </portal>
     </q-toolbar>
-    <div class="row">
-      <counters class="col-auto" :height.sync="Height" :data="TransferGraph.Data" />
+    <q-card-section class="row q-pa-xs">
+      <!--counters class="col-auto" :height.sync="Height" :data="TransferGraph.Data" /-->
       <div class="col-grow">
         <portal to="dlg-body" :disabled="!Expanded">
           <!--spinner v-if="TransferGraph.Data==null"></spinner-->
           <div @mouseenter="MouseOver=true" @mouseleave="MouseOver=false">
-            <!--graph :options="GraphOptions" :height="height" :paused="MouseOver"></graph-->
+            <graph :options="GraphOptions" :height="Expanded?DialogHeight:Height-10" :paused="MouseOver"></graph>
           </div>
-                <!--energy :height="Expanded?DialogHeight:Height-10" :data="TransferGraph.Data" @range="Range=$event"></energy-->
+                <!--energy :height="" :data="TransferGraph.Data" @range="Range=$event"></energy-->
                   </portal>
       </div>
-    </div>
-    <dialog-fullscreen :modelValue="Expanded" color="bg-indigo-9" :height.sync="DialogHeight"></dialog-fullscreen>
+    </q-card-section>
+    <dialog-fullscreen :modelValue="Expanded" color="bg-indigo-9" :height.sync="DialogHeight" />
   </q-card>
 </template>
 
@@ -32,11 +32,23 @@
   import Graph from 'Components/Graph.vue';
   import Counters from './Counters.vue';
   export default {
-    props: { height: Number, data: Object },
     data: function() {
       return { Aggreg: null, Range: null, Height: 200, Expanded: false, DialogHeight: 200, MouseOver: false,
-      TransferGraph: this.PriceTransfer(['Active_Energy', 'Cost', 'Color', 'Period', 'Bill'])
+               //TransferGraph: this.PriceTransfer(['Active_Energy', 'Cost', 'Color', 'Period', 'Bill'])
+               Data: this.Analyzer.Queries.Suscribe('Costs', ['Active_Energy', 'Cost', 'Color', 'Period', 'Bill'], 60000)
       };
+    },
+    unmounted: function() {
+      this.Data.Stop();
+    },
+    watch: {
+      Aggreg: function(val) {
+        this.Data.SetAggreg(val);
+      },
+      Range: function(val) {
+
+        this.Data.SetRange(val);
+      }
     },
     computed: {
       GraphOptions: function() {
@@ -51,24 +63,24 @@
         Opt.connectSeparatedPoints = false;
         Opt.legend = 'follow';
         Opt.legendFormatter = Graph.Formatters.Legend_Follow;
-        Opt.plotter = (e) => { Graph.Plotters.BarOffset(e, ((this.data != null) && (this.data.Aggreg == '1H')) ? 3600000 : 900000); };
+        Opt.plotter = (e) => { Graph.Plotters.BarOffset(e, ((this.Data.Rows != null) && (this.Aggreg == '1H')) ? 3600000 : 900000); };
         Opt.labels = ['Time', 'Energy'];
-        Opt.colors = [this.analyzer.SerieColor('Active_Energy')];
+        Opt.colors = ['rgb(40, 53, 147)'];
         Opt.xAxisHeight = 12;
         Opt.underlayCallback = (ctx, area, dygraph) => { Graph.Callbacks.Underlay_DrawPeriods(ctx, area, dygraph, this.data); };
         Opt.drawHighlightPointCallback = Graph.Callbacks.DrawHighlightPoint_HighlightBar;
         Opt.axes.y.pixelsPerLabel = 15;
         Opt.axes.y.axisLabelWidth = 34;
         Opt.axes.y.valueFormatter = (x, opts, seriesName) => { return Graph.Formatters.Y_UnitScale(x, 'Wh', 2, true);  };
-        Opt.axes.y.axisLabelFormatter = (x, gran, opts, g) => { return Graph.Formatters.Y_UnitScaleFull(x, gran, opts, g, '', 2, true); };
+        //Opt.axes.y.axisLabelFormatter = (x, gran, opts, g) => { return Graph.Formatters.Y_UnitScaleFull(x, gran, opts, g, '', 2, true); };
         Opt.axes.x.valueFormatter = (x) => { return Graph.Formatters.X_Hourly(x, this.analyzer.TimeZone,  ((this.data != null) && (this.data.Aggreg == '1H')) ? false : true); };
         Opt.axes.x.ticker = (min, max, pixels) => { return Graph.Formatters.X_HourlyFull(min, max, pixels, (this.analyzer != null) ? this.analyzer.TimeZone : null); };
-        if(this.data != null) {
-          var TimeCol = this.data.Headers.indexOf('Time');
-          var EnergyCol = this.data.Headers.indexOf('Active_Energy');
-          for(var n in this.data.Rows) Opt.file.push([this.data.Rows[n][TimeCol], this.data.Rows[n][EnergyCol]]);
+        if(this.Data.Headers != null) {
+          var TimeCol = this.Data.Headers.indexOf('Time');
+          var EnergyCol = this.Data.Headers.indexOf('Active_Energy');
+          for(var n in this.Data.Rows) Opt.file.push([this.Data.Rows[n][TimeCol], this.Data.Rows[n][EnergyCol]]);
           Opt.axes.y.valueRange = this.MatrixColsRange(Opt.file, [false, true], { incZero: 10 });
-          Opt.dateWindow = [this.data.From, this.data.To];
+//          Opt.dateWindow = [this.data.From, this.data.To];
         }
         return Opt;
       }
@@ -88,6 +100,6 @@
       }
 
     },
-    components: { Counters }
+    components: { Counters, Graph }
   }
 </script>

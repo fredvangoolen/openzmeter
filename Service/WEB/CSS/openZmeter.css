@@ -141,7 +141,7 @@ table.dataTable thead .sorting:after {
   font-family: 'Titillium Web', sans-serif;
 }
 body {
-
+  overflow: hidden;
   overflow-x: hidden;
 }
 

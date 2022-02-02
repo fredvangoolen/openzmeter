@@ -3,6 +3,7 @@
     <q-card>
       <q-toolbar class="bg-indigo-9 text-white q-pr-none">
         <q-toolbar-title>Energy Heatmap</q-toolbar-title>
+        <q-separator dark vertical v-if="Data.Progress!=null" />
         <toolbar-aggreg storage="Stats_Heatmap.Aggreg" :options="['15M', '1H']" v-model="Aggreg" />
         <q-separator dark vertical />
         <toolbar-year storage="Stats_Heatmap.Year" aggreg="15M" v-model="Year" />

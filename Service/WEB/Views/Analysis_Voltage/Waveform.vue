@@ -21,7 +21,7 @@
   <portal to="dlg-body" :disabled="!Expanded">
     <!--spinner v-if="data==null"></spinner-->
     <div @mouseenter="MouseOver=true" @mouseleave="MouseOver=false">
-      <!--graph :analyzer="Analyzer" :options="GraphOptions" :height="Expanded?DialogHeight:300" :paused="MouseOver"></graph-->
+      <graph :analyzer="Analyzer" :options="GraphOptions" :height="Expanded?DialogHeight:300" :paused="MouseOver"></graph>
     </div>
   </portal>
   <wave-stream v-if="ShowStream" @close="ShowStream=false"></wave-stream>
@@ -34,6 +34,7 @@
   import * as oZm from 'JS/openZmeter.js';
   import WaveStream from './WaveStream.vue';
   import Dygraph from 'JS/dygraph.js';
+  import Graph from 'Components/Graph.vue';
 //  import Graph from 'Components/Graph.vue';
   export default {
     props: { data: Object, paused: Boolean },
@@ -42,14 +43,14 @@
                Transfer: this.Analyzer.NowSeries.Suscribe(['Current', 'Voltage_Samples', 'Current_Samples'])
       };
     },
-    beforeUnmount: function() {
+    unmount: function() {
       this.Analyzer.NowSeries.Unsuscribe(['Current', 'Voltage_Samples', 'Current_Samples']);
     },
     computed: {
       RmsCurrent: function() { return (this.data == null) ? 0.0 : this.ArrayAbsMax(this.data.Current); },
       GraphOptions: function() {
         var Opt = {file: [], axes: { y: {}, y2: {}, x: {} } };
-        Opt.plugins = [ Graph.Plugins.Vertical_Crosshair() ];
+//        Opt.plugins = [ Graph.Plugins.Vertical_Crosshair() ];
         Opt.interactionModel = Graph.InteractionModels.Fixed(this);
         Opt.legendFormatter = Graph.Formatters.Legend_Follow;
         Opt.underlayCallback = Graph.Callbacks.Underlay_DrawBorder;
@@ -113,6 +114,6 @@
         return Object.seal(Rows);
       }
     },
-    components: { WaveStream }
+    components: { Graph, WaveStream }
   }
 </script>
