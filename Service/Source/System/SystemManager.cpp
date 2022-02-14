@@ -152,6 +152,7 @@ void SystemManager::GetSystemCallback(HTTPRequest &req) {
   if(req.UserName() != "admin") return req.Error("", HTTP_FORBIDDEN);
   if(!req.CheckParamSet("Series", {"Log", "Status", "SystemLog"})) return;
   json Result = json::object();
+  Result["Timestamp"] = Tools::GetTime64();
   for(auto &Serie : req.Param("Series")) {
     if(Serie == "Log") {
       Result["Log"] = LogFile::ToJSON();

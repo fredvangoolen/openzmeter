@@ -27,7 +27,7 @@
         Opt.legendFormatter = Graph.Formatters.Legend_Follow;
         Opt.plotter = Graph.Plotters.MultiBar;
         Opt.labels = ['Time', 'Cost'];
-        Opt.colors = [this.Analyzer.SerieColor('Active_Energy')];
+        //Opt.colors = [this.Analyzer.SerieColor('Active_Energy')];
         Opt.includeZero = true;
         Opt.axes.y.pixelsPerLabel = 15;
         Opt.axes.y.axisLabelWidth = 30,

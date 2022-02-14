@@ -3,30 +3,20 @@
     <q-card>
       <q-toolbar class="bg-indigo-9 text-white q-pr-none">
         <q-toolbar-title>Energy costs</q-toolbar-title>
-        <toolbar-year storage="Stats_Heatmap.Year" v-model="Year" />
+        <toolbar-select v-model="Group" name="Rate" :options="[{name: 'Contracted', value: 0}, {name: 'Group 1', value: 1}, {name: 'Group 2', value: 2}, {name: 'Group 3', value: 3}, {name: 'Group 4', value: 4}, {name: 'Group 5', value: 5}, {name: 'Group 6', value: 6}, {name: 'Group 7', value: 7}, {name: 'Group 8', value: 8}, {name: 'Group 9', value: 9}, {name: 'Group 10', value: 10}]" storage="Stats_Heatmap.Group" />
+        <q-separator dark vertical />
+        <toolbar-year storage="Stats_Heatmap.Year" v-model="Year" aggreg="15M" />
+        <q-separator dark vertical />
+        <toolbar-export file="Cost" :rows="Export" />
       </q-toolbar>
-
     </q-card>
-
     <div class="row">
       <div class="col-lg-12">
-        <div class="panel panel-active-energy">
-          <div class="panel-heading">
-            <div class="header-buttons clearfix">
-              <div class="btn-group">
-                <option-picker v-model="Group" :options="[{name: 'Contracted', value: 0}, {name: 'Compare group 1', value: 1}, {name: 'Compare group 2', value: 2}, {name: 'Compare group 3', value: 3}, {name: 'Compare group 4', value: 4}, {name: 'Compare group 5', value: 5}, {name: 'Compare group 6', value: 6}, {name: 'Compare group 7', value: 7}, {name: 'Compare group 8', value: 8}, {name: 'Compare group 9', value: 9}, {name: 'Compare group 10', value: 10}]"></option-picker>
-              </div>
-
-              <div class="btn-group">
-                <button-export file="Cost" :rows="Export"></button-export>
-              </div>
-            </div>
-          </div>
           <div class="panel-body">
             <spinner v-if="Bills==null"></spinner>
             <summary-graph :data="Bills"></summary-graph>
           </div>
-        </div>
+
       </div>
       <div class="col-lg-12" v-if="Bills!=null&&Bills.length==0">
         <div class="alert alert-warning text-center" style="margin-bottom: 5px; padding: 5px">No bills in selected year. No one generated yet or no rate is assigned for required period.</div>

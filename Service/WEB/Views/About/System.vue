@@ -1,7 +1,67 @@
 <template>
   <div>
-    <q-toolbar class="bg-grey-3 q-pr-none">
-      <div>{{ (LastUpdate==null) ? 'Loading data...' : 'Last update at ' + FormatDate(LastUpdate) }}</div>
+    <!--spinner v-if="System.Loading"></spinner-->
+    <div class="row q-col-gutter-sm q-pa-sm" v-if="System.Data.Status!=null">
+      <div class="col" v-if="System.Data.Status.CPU!=null">
+        <q-card class="full-height q-pa-xs" flat bordered>
+          <q-item>
+            <q-item-section avatar><img :src="require('Imgs/chip.png')"></q-item-section>
+            <q-item-section><q-item-title class="text-h6">CPU</q-item-title></q-item-section>
+          </q-item>
+          <q-separator />
+          <div>
+            <div class="card-content"> {{ Round(System.Data.Status.CPU.Usage, 1) }} %</div>
+            <div v-if="System.Data.Status.CPU.Count!=null">Total of {{ System.Data.Status.CPU.Count }} cores<span v-if="System.Data.Status.CPU.Frequency!=null"> at {{ System.Data.Status.CPU.Frequency }} MHz</span></div>
+          </div>
+        </q-card>
+      </div>
+      <div class="col" v-if="System.Data.Status.RAM!=null">
+        <q-card class="full-height q-pa-xs" flat bordered>
+          <q-item>
+            <q-item-section avatar><img :src="require('Imgs/ddr_memory.png')"></q-item-section>
+            <q-item-section><q-item-title class="text-h6">RAM</q-item-title></q-item-section>
+          </q-item>
+          <q-separator />
+          <div>
+            <div class="card-content"> {{ Round((System.Data.Status.RAM.Total - (System.Data.Status.RAM.Free + System.Data.Status.RAM.Cached + System.Data.Status.RAM.Buffers)) / System.Data.Status.RAM.Total * 100.0, 1) }} %</div>
+            <div>Total memory {{ Round(System.Data.Status.RAM.Total / 1024 / 1024, 2) }} MB</div>
+          </div>
+        </q-card>
+      </div>
+      <div class="col" v-if="System.Data.Status.Storage!=null">
+        <q-card class="full-height q-pa-xs" flat bordered>
+          <q-item>
+            <q-item-section avatar><img :src="require('Imgs/storage.png')"></q-item-section>
+            <q-item-section><q-item-title class="text-h6">Storage</q-item-title></q-item-section>
+          </q-item>
+          <q-separator />
+          <div>
+            <div class="card-content"> {{ Round((System.Data.Status.Storage.Total - System.Data.Status.Storage.Free) / System.Data.Status.Storage.Total * 100, 1) }} %</div>
+            <div>Total space {{ Round(System.Data.Status.Storage.Total / 1024 / 1024, 1) }} MB</div>
+          </div>
+        </q-card>
+      </div>
+      <div class="col" v-if="System.Data.Status.Temperature!=null">
+        <q-card class="full-height q-pa-xs" flat bordered>
+          <q-item>
+            <q-item-section avatar><img :src="require('Imgs/temperature_normal.png')"></q-item-section>
+            <q-item-section><q-item-title class="text-h6">Temperature</q-item-title></q-item-section>
+          </q-item>
+          <q-separator />
+          <div>
+            <div class="card-title"></div>
+            <div class="card-content"> {{ Round(System.Data.Status.Temperature, 1) }} ºC</div>
+          </div>
+        </q-card>
+      </div>
+    </div>
+    <q-separator />
+    <q-toolbar class="bg-grey-9 text-white q-pr-none">
+      <q-tabs stretch v-model="ActiveTab" active-bg-color="primary">
+        <q-tab name="system" label="System Log" />
+        <q-tab name="service" label="Service Log" />
+      </q-tabs>
+      <div>{{ (System.Data.Timestamp==null) ? 'Loading data...' : 'Last update at ' + FormatDate(System.Data.Timestamp) }}</div>
       <q-space></q-space>
       <q-btn stretch flat size="sm"><div>Level<br><strong>Warnings</strong></div></q-btn>
       <!--div class="header-buttons">
@@ -10,53 +70,16 @@
       </div-->
     </q-toolbar>
     <q-separator />
-    <div class="panel-heading clearfix">
+    <q-tab-panels v-model="ActiveTab">
+      <q-tab-panel name="system" class="q-pa-sm">
+        <textarea rows="10" class="form-control" disabled :value="System.Data.SystemLog"></textarea>
+      </q-tab-panel>
+      <q-tab-panel name="service" class="q-pa-sm">
+        <q-table :hide-bottom="true" flat dense :columns="Columns" row-key="module" :rows="Modules" class="q-ma-xs" />
+      </q-tab-panel>
+    </q-tab-panels>
 
 
-    </div>
-    <div class="panel-body">
-      <spinner v-if="ShowSpinner"></spinner>
-      <div class="cards" v-if="Status!=null">
-        <div class="panel panel-other card" v-if="Status.CPU!=null">
-          <img class="card-img" :src="require('Imgs/chip.png')">
-          <div>
-            <div class="card-title">CPU</div>
-            <div class="card-content"> {{ Round(Status.CPU.Usage, 1) }} %</div>
-            <div v-if="Status.CPU.Count!=null">Total of {{ Status.CPU.Count }} cores<span v-if="Status.CPU.Frequency!=null"> at {{ Status.CPU.Frequency }} MHz</span></div>
-          </div>
-        </div>
-        <div class="panel panel-other card" v-if="Status.RAM!=null">
-          <img class="card-img" :src="require('Imgs/ddr_memory.png')">
-          <div>
-            <div class="card-title">RAM</div>
-            <div class="card-content"> {{ Round((Status.RAM.Total - (Status.RAM.Free + Status.RAM.Cached + Status.RAM.Buffers)) / Status.RAM.Total * 100.0, 1) }} %</div>
-            <div>Total memory {{ Round(Status.RAM.Total / 1024 / 1024, 2) }} MB</div>
-          </div>
-        </div>
-        <div class="panel panel-other card" v-if="Status.Storage!=null">
-          <img class="card-img" :src="require('Imgs/storage.png')">
-          <div>
-            <div class="card-title">Storage</div>
-            <div class="card-content"> {{ Round((Status.Storage.Total - Status.Storage.Free) / Status.Storage.Total * 100, 1) }} %</div>
-            <div>Total space {{ Round(Status.Storage.Total / 1024 / 1024, 1) }} MB</div>
-          </div>
-        </div>
-        <div class="panel panel-other card" v-if="Status.Temperature!=null">
-          <img class="card-img" :src="require('Imgs/temperature_normal.png')">
-          <div>
-            <div class="card-title">Temperature</div>
-            <div class="card-content"> {{ Round(Status.Temperature, 1) }} ºC</div>
-          </div>
-        </div>
-      </div>
-      <div class="col-xs-12">
-        <label class="control-label">System log messages</label>
-        <textarea rows="10" class="form-control" disabled :value="SysMessages"></textarea>
-      </div>
-      <div class="col-xs-12">
-        <vuetable ref="table" :data="FilterMessages" :fields="Columns" :api-mode="false" class="table small table-striped"></vuetable>
-      </div>
-    </div>
   </div>
 </template>
 
@@ -64,20 +87,21 @@
 //  import moment from 'moment';
   export default {
     data: function() {
-      return { ShowSpinner: true, SysMessages: '', AllMessages: [], Messages: [], FilterMessages: [], Options: {}, LastUpdate: null, Timer: null, Status: {},
-              Columns: [
-                { name: 'Type', title: 'Type', callback: this.FormatType },
-                { name: 'Date', title: 'Date', callback: this.FormatDate },
-                { name: 'Message', title: 'Message' }
-              ]
-            };
+      return { ActiveTab: 'system', AllMessages: [], Messages: [], FilterMessages: [], Options: {}, LastUpdate: null, Status: {},
+               System: this.APIUpdate(this.API.GetSystem, ['Status', 'Log', 'SystemLog']),
+               Columns: [
+                 { name: 'Type', title: 'Type', callback: this.FormatType },
+                 { name: 'Date', title: 'Date', callback: this.FormatDate },
+                 { name: 'Message', title: 'Message' }
+               ]
+             };
     },
-    created: function() {
-      this.UpdateSystem();
+    unmounted: function() {
+      this.System.Stop();
     },
-    beforeDestroy: function() {
-      if(this.Timer != null) clearTimeout(this.Timer);
-    },
+//    beforeDestroy: function() {
+//      if(this.Timer != null) clearTimeout(this.Timer);
+//    },
     watch: {
       AllMessages: function() { this.Filter(); },
       Options: function() { this.Filter(); }
@@ -102,78 +126,12 @@
           this.Messages.push(this.AllMessages[n]);
         }
       },
-      UpdateSystem: function() {
-        this.Post('getSystem', { Series: ['Status', 'Log', 'SystemLog']}).then(
-          (result) => {
-            this.AllMessages = [];
-            this.LastUpdate = moment();
-            for(var n = 1; n < result.Log.Messages.length; n++) this.AllMessages.push({Type: result.Log.Messages[n][0], Date: result.Log.Messages[n][1], Message: result.Log.Messages[n][2]});
-            this.Status = result.Status;
-            this.SysMessages = result.SystemLog;
-            this.ShowSpinner = false;
-            this.Timer = setTimeout(this.UpdateSystem, 5000);
-          },
-          (fail) => {
-            this.Timer = setTimeout(this.UpdateSystem, 5000);
-            this.Status = null;
-            this.ShowSpinner = false;
-          }
-        );
-      }
+
     }
   }
 </script>
 
 <style scoped>
-  .cards {
-    display: flex;
-    flex-wrap: wrap;
-  }
-  .card {
-    min-width: 100px;
-    max-width: 1000px;
-    margin: 3px;
-    padding: 10px;
-    display: flex;
-    flex-grow: 2;
-    font-size: 12px;
-  }
-  .card-img {
-    margin: 6px;
-    width: 32px;
-    height: 32px;
-  }
-  .card-title {
-    font-weight: bold;
-    line-height: 16px;
-    font-size: 16px;
-  }
-  .card-content {
-    line-height: 28px;
-    font-size: 28px;
-    font-weight: bold;
-  }
-  .header-text {
-    font-size: 14px;
-  }
-  .table >>> th:nth-child(1) {
-    text-align: center;
-    width: 72px;
-  }
-  .table >>> td:nth-child(1) {
-    text-align: center;
-  }
-  .table >>> th:nth-child(2) {
-    text-align: center;
-    width: 160px;
-  }
-  .table >>> td:nth-child(2) {
-    text-align: center;
-  }
-  .main-panel {
-    border-top-left-radius: 0px;
-    border-top-right-radius: 0px;
-  }
   textarea {
     resize: none;
     font-family: 'Fira Code';

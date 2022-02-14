@@ -1,8 +1,16 @@
 <template>
   <q-toolbar class="bg-grey-3 q-pr-none">
     <portal to="dlg-toolbar" :disabled="!Expanded">
-      <q-toolbar-title>{{ (data==null) ? 'Loading data...' : 'Last update at ' + analyzer.FormatTimeMS(data.Sampletime) }} {{ paused ? '(Paused)' : MouseOver ? '(Graph paused)' : '' }}</q-toolbar-title>
-      <div v-if="RmsCurrent<Analyzer.MinCurrent" class="title-warning"><img :src="require('Imgs/exclamation.png')">No current or current too low</div>
+      <q-toolbar-title class="full-height">
+        <div class="text-body2">
+          {{ (data==null) ? 'Loading data...' : 'Last update at ' + analyzer.FormatTimeMS(data.Sampletime) }} {{ paused ? '(Paused)' : MouseOver ? '(Graph paused)' : '' }}
+        </div>
+        <div class="q-gutter-xs">
+          <q-chip v-if="RmsCurrent<Analyzer.MinCurrent" square :icon="mdiAlertBox" color="amber-2" size="12px">No current or current too low</q-chip>
+          <q-chip v-if="RmsCurrent<Analyzer.MinCurrent" square :icon="mdiCrosshairsGps" color="green-2" size="12px">Time fixed by GPS</q-chip>
+        </div>
+      </q-toolbar-title>
+
       <q-separator vertical />
       <toolbar-phases-multi storage="Analysis_Voltage.Harmonics.Phases" :current="true" v-model="Phases" v-show="Analyzer.VoltageChannels() > 1" />
       <q-separator vertical v-if="Analyzer.VoltageChannels() > 1" />
@@ -19,7 +27,7 @@
   <portal to="dlg-body" :disabled="!Expanded">
     <!--spinner v-if="data==null"></spinner-->
     <div @mouseenter="MouseOver=true" @mouseleave="MouseOver=false"  style="min-height:300px">
-      <!--graph :options="GraphOptions" :paused="MouseOver" :height="Expanded?DialogHeight:300"></graph-->
+      <graph :options="GraphOptions" :paused="MouseOver" :height="Expanded?DialogHeight:300"></graph>
     </div>
   </portal>
   <dlg-fs v-if="Expanded" title="Harmonics" :height.sync="DialogHeight"></dlg-fs>
@@ -30,10 +38,15 @@
   import chroma from 'chroma-js';
   import Dygraph from 'JS/dygraph.js';
   import Graph from 'Components/Graph.vue';
+    import { mdiAlertBox,mdiCrosshairsGps } from '@quasar/extras/mdi-v6';
   export default {
     props: { data: Object, paused: Boolean },
     data: function() {
       return { MouseOver: false, Options: null, Phases: [], VOffset: 0, COffset: 0, Expanded: false, DialogHeight: 300 };
+    },
+    created: function() {
+      this.mdiAlertBox = mdiAlertBox;
+      this.mdiCrosshairsGps = mdiCrosshairsGps;
     },
     computed: {
       RmsCurrent: function() { return (this.data == null) ? 0.0 : this.ArrayAbsMax(this.data.Current); },

@@ -30,10 +30,9 @@
 Database::Database(const string &schema, const bool create) {
   pDBConn       = NULL;
   pResult       = NULL;
-  for(uint8_t Retry = 0; Retry < 10; Retry++) {
+  while(pDBConn == NULL) {
     pDBConn = DatabasePool::PopConnection();
-    if(pDBConn != NULL) break;
-    usleep(1000000);
+    if(pDBConn == NULL) usleep(1000000);
   }
   if((create == true) && (ExecSentenceNoResult("CREATE SCHEMA IF NOT EXISTS " + BindID(schema)) == false)) {
     char *Save;

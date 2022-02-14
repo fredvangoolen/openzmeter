@@ -140,6 +140,9 @@ const openZmeter = {
       },
       GetCosts: (analyzer, aggreg, series, from, to) => {
         return This.API.Post('getCosts', { Analyzer: analyzer, Aggreg: aggreg, From: from, To: to, Series: series, Group: 0 });
+      },
+      GetSystem: (series) => {
+        return This.API.Post('getSystem', { Series: series });
       }
     });
     This.User = reactive({
@@ -170,6 +173,42 @@ const openZmeter = {
         });
       }
     });
+    This.APIUpdate = (method, params, interval) => {
+      let APIUpdate = reactive({ Timer: null, Interval: (interval == null) ? 5000 : interval, Method: method, Loading: true, Data: {}, Aborts: [], Params: params,
+        CancelPrev: () => {
+          if(APIUpdate.Timer != null) {
+            clearTimeout(APIUpdate.Timer);
+            APIUpdate.Timer = null;
+          }
+          while(APIUpdate.Aborts.length > 0) APIUpdate.Aborts.pop()();
+        },
+        Stop: () => {
+          for(let member in APIUpdate.Data) delete APIUpdate.Data[member];
+          APIUpdate.CancelPrev();
+        },
+        Refresh: () => {
+          let Cancelled = false;
+          APIUpdate.CancelPrev();
+          APIUpdate.Aborts.push(() => Cancelled = true );
+          APIUpdate.Method(APIUpdate.Params).then(
+            (result) => {
+              if(Cancelled == true) return;
+              for(let member in APIUpdate.Data) delete APIUpdate.Data[member];
+              APIUpdate.Loading = false;
+              Object.assign(APIUpdate.Data, result);
+              APIUpdate.Timer = setTimeout(APIUpdate.Refresh, APIUpdate.Interval);
+            },
+            () => {
+              if(Cancelled == true) return;
+              APIUpdate.Loading = false;
+              APIUpdate.Timer = setTimeout(APIUpdate.Refresh, APIUpdate.Interval);
+            }
+          );
+        }
+      });
+      APIUpdate.Refresh();
+      return APIUpdate;
+    };
     This.APIList = (method, interval) => {
       let APIList = reactive({ Timer: null, Interval: (interval == null) ? 5000 : interval, Method: method, Loading: true, Rows: [], Aborts: [],
         CancelPrev: () => {
