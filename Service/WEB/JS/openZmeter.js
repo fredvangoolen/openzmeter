@@ -250,7 +250,7 @@ const openZmeter = {
       return APIList;
     };
     This.Analyzer = reactive({
-      Aborts: [], PhaseNames: null, NeutralName: null,
+      Aborts: [], PhaseNames: null, NeutralName: null, TimeZone: 'UTC',
       Ranges: {
         Loading: true, Aggreg3S: null, Aggreg1M: null, Aggreg10M: null, Aggreg15M: null, Aggreg1H: null, Alarms: null, Events: null, Timer: null, Aborts: [],
         CancelPrev: () => {
@@ -520,6 +520,7 @@ const openZmeter = {
         }
         This.AnalyzerPhaseNames = null;
         This.Analyzer.NeutralName = null;
+        This.Analyzer.TimeZone = 'UTC';
       },
       GetCurrent: () => {
         return new Promise((resolve, reject) => {
@@ -557,15 +558,26 @@ const openZmeter = {
       },
       CurrentChannels: () => {
          return This.Analyzer.VoltageChannels() + ((This.Analyzer.NeutralName != null) ? 1 : 0);
+      },
+      FormatTime: (val) => {
+        return This.$dayjs(val).tz(This.Analyzer.TimeZone).format('HH:mm:ss');
+      },
+      FormatDate: function(val) {
+        return This.$dayjs(val).tz(This.Analyzer.TimeZone).format('DD/MM/YYYY');
+      },
+      FormatTimeMS: function(val) {
+        return This.$dayjs(val).tz(This.Analyzer.TimeZone).format('HH:mm:ss.SSS');
+      },
+      FormatDateTime: function(val, spacer) {
+        if(spacer == null) spacer = ' - ';
+        return This.$dayjs(val).tz(This.Analyzer.TimeZone).format('HH:mm:ss') + spacer + This.$dayjs(val).tz(This.Analyzer.TimeZone).format('DD/MM/YYYY');
       }
     });
 
-//    This.Aggregations = (series) => {
-//      let Options = [];
-//      let All = [{value: '3S',  name: '3 seconds'}, {value: '1M',  name: '1 minute'}, {value: '10M', name: '10 minutes'}, {value: '15M', name: '15 minutes'}, {value: '1H',  name: '1 hour'}, {value: '1D',  name: '1 day'}];
-//      All.forEach(val => { if(series.includes(val.value)) Options.push(val); } );
-//      return Options;
-//    };
+    This.FormatAggregation = (val) => {
+      if(val == null) return '?';
+      return (val == '1H') ? '1 hour' : (val == '15M') ? '15 minutes' : (val == '10M') ? '10 minutes' : (val == '1M') ? '1 minute' : (val == '3S') ? '3 seconds' : (val == '200MS') ? '200 miliseconds' : 'unknown';
+    };
     This.SerieViewColor = (serie) => {
       if(serie == 'Frequency') return '#5CB85C';
       if(serie == 'Voltage') return '#D9534F';

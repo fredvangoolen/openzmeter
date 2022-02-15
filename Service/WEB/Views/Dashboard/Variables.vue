@@ -3,7 +3,7 @@
     <q-toolbar class="bg-grey-9 text-white q-pr-none">
       <q-toolbar-title>
         Main variables
-        <!--span v-if="data!=null">From {{ analyzer.FormatAggregation(data.Aggreg) }} aggregation {{ Paused ? '(Paused)' : '' }}</span-->
+        <!--span v-if="data!=null">From {{ FormatAggregation(data.Aggreg) }} aggregation {{ Paused ? '(Paused)' : '' }}</span-->
       </q-toolbar-title>
       <toolbar-phases-single storage="Dashboard.Details.Phase" v-model="Phase" v-if="Analyzer.VoltageChannels() > 1" />
       <q-separator dark vertical v-if="Analyzer.VoltageChannels() > 1" />
@@ -45,13 +45,13 @@
         let Phi_Col = this.Transfer1M.Headers.indexOf('Phi');
         let Voltage_THD_Col = this.Transfer1M.Headers.indexOf('Voltage_THD');
         let Current_THD_Col = this.Transfer1M.Headers.indexOf('Current_THD');
-        for(let i = 0; i < this.Transfer1M.Rows.length; i++) 
-          Ret.push([this.Transfer1M.Rows[i][Time_Col], 
-                    this.Transfer1M.Rows[i][Active_Power_Col][this.Phase], 
-                    this.Transfer1M.Rows[i][Reactive_Power_Col][this.Phase], 
-                    this.Transfer1M.Rows[i][Power_Factor_Col][this.Phase], 
-                    this.Transfer1M.Rows[i][Phi_Col][this.Phase], 
-                    this.Transfer1M.Rows[i][Voltage_THD_Col][this.Phase], 
+        for(let i = 0; i < this.Transfer1M.Rows.length; i++)
+          Ret.push([this.Transfer1M.Rows[i][Time_Col],
+                    this.Transfer1M.Rows[i][Active_Power_Col][this.Phase],
+                    this.Transfer1M.Rows[i][Reactive_Power_Col][this.Phase],
+                    this.Transfer1M.Rows[i][Power_Factor_Col][this.Phase],
+                    this.Transfer1M.Rows[i][Phi_Col][this.Phase],
+                    this.Transfer1M.Rows[i][Voltage_THD_Col][this.Phase],
                     this.Transfer1M.Rows[i][Current_THD_Col][this.Phase]]);
         return Ret;
 //        return { From: this.data.From, To: this.data.To, TimeZone: this.analyzer.TimeZone, Rows: Data };

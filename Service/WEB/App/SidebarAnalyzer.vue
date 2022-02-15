@@ -108,22 +108,6 @@
         if(((serie == 'Current') || (serie == 'Current_THD')) && (this.analyzer.NeutralName != null)) Result.push(Name + ' (' + this.analyzer.NeutralName + ')');
         return Result;
       },
-      FormatAggregation: function(val) {
-        return (val == '1H') ? '1 hour' : (val == '15M') ? '15 minutes' : (val == '10M') ? '10 minutes' : (val == '1M') ? '1 minute' : (val == '3S') ? '3 seconds' : (val == '200MS') ? '200 miliseconds' : 'unknown';
-      },
-      FormatTime: function(val) {
-        return moment(val).tz(this.analyzer.TimeZone).format('HH:mm:ss');
-      },
-      FormatDate: function(val) {
-        return moment(val).tz(this.analyzer.TimeZone).format('DD/MM/YYYY');
-      },
-      FormatTimeMS: function(val) {
-        return moment(val).tz(this.analyzer.TimeZone).format('HH:mm:ss.SSS');
-      },
-      FormatDateTime: function(val, spacer) {
-        if(spacer == null) spacer = ' - ';
-        return moment(val).tz(this.analyzer.TimeZone).format('HH:mm:ss') + spacer + moment(val).tz(this.analyzer.TimeZone).format('DD/MM/YYYY');
-      },
       Style: function(serie, primary) {
         if(this.analyzer.Channels[serie] == 1) return { Colors: [this.analyzer.Color[serie]], Width: (primary == true) ? 0.5 : 1.5 };
         var Colors = ['#d9534f', '#5cb85c', '#318ce7', '#333333'];

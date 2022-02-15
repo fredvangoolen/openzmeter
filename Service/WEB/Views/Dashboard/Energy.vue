@@ -13,11 +13,11 @@
       </portal>
     </q-toolbar>
     <q-card-section class="row q-pa-xs">
-      <!--counters class="col-auto" :height.sync="Height" :data="TransferGraph.Data" /-->
+      <counters class="col-auto" :height.sync="Height" :data="Data" />
       <div class="col-grow">
         <portal to="dlg-body" :disabled="!Expanded">
           <!--spinner v-if="TransferGraph.Data==null"></spinner-->
-          <div @mouseenter="MouseOver=true" @mouseleave="MouseOver=false">
+          <div @mouseenter="MouseOver=true" @mouseleave="MouseOver=false" class="q-ma-xs">
             <graph :options="GraphOptions" :height="Expanded?DialogHeight:Height-10" :paused="MouseOver"></graph>
           </div>
                 <!--energy :height="" :data="TransferGraph.Data" @range="Range=$event"></energy-->
@@ -62,7 +62,7 @@
         Opt.drawGapEdgePoints = true;
         Opt.connectSeparatedPoints = false;
         Opt.legend = 'follow';
-        Opt.legendFormatter = Graph.Formatters.Legend_Follow;
+//        Opt.legendFormatter = Graph.Formatters.Legend_Follow;
         Opt.plotter = (e) => { Graph.Plotters.BarOffset(e, ((this.Data.Rows != null) && (this.Aggreg == '1H')) ? 3600000 : 900000); };
         Opt.labels = ['Time', 'Energy'];
         Opt.colors = ['rgb(40, 53, 147)'];
@@ -73,7 +73,7 @@
         Opt.axes.y.axisLabelWidth = 34;
         Opt.axes.y.valueFormatter = (x, opts, seriesName) => { return Graph.Formatters.Y_UnitScale(x, 'Wh', 2, true);  };
         //Opt.axes.y.axisLabelFormatter = (x, gran, opts, g) => { return Graph.Formatters.Y_UnitScaleFull(x, gran, opts, g, '', 2, true); };
-        Opt.axes.x.valueFormatter = (x) => { return Graph.Formatters.X_Hourly(x, this.analyzer.TimeZone,  ((this.data != null) && (this.data.Aggreg == '1H')) ? false : true); };
+        //Opt.axes.x.valueFormatter = (x) => { return Graph.Formatters.X_Hourly(x, this.analyzer.TimeZone,  ((this.data != null) && (this.data.Aggreg == '1H')) ? false : true); };
         Opt.axes.x.ticker = (min, max, pixels) => { return Graph.Formatters.X_HourlyFull(min, max, pixels, (this.analyzer != null) ? this.analyzer.TimeZone : null); };
         if(this.Data.Headers != null) {
           var TimeCol = this.Data.Headers.indexOf('Time');

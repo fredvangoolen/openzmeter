@@ -99,9 +99,6 @@
     unmounted: function() {
       this.System.Stop();
     },
-//    beforeDestroy: function() {
-//      if(this.Timer != null) clearTimeout(this.Timer);
-//    },
     watch: {
       AllMessages: function() { this.Filter(); },
       Options: function() { this.Filter(); }

@@ -82,10 +82,3 @@
     components: { SummaryGraph, Bill }
   }
 </script>
-
-<style scoped>
-  .header-text {
-    font-size: 20px;
-    line-height: 24px;
-  }
-</style>

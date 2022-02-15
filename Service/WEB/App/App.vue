@@ -29,7 +29,7 @@
       <q-page class="row no-wrap">
         <div class="col q-ma-none">
           <div class="column full-height">
-            <q-scroll-area class="col q-pa-none">
+            <q-scroll-area class="col q-pa-none fit">
               <router-view class="q-pa-sm" v-if="(User.User != null) && (UserLoaded == true)" />
               <login v-if="(User.User == null) && (UserLoaded == true)" />
             </q-scroll-area>

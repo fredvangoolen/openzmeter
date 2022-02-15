@@ -3,7 +3,7 @@
     <q-toolbar :class="ToolbarClass">
       <div>
         <q-toolbar-title>{{ Title }}</q-toolbar-title>
-        <div class="aggreg-row" v-if="data!=null">From {{ analyzer.FormatAggregation(data.Aggreg) }} aggregation {{ paused ? '(Paused)' : '' }}</div>
+        <div class="aggreg-row" v-if="data!=null">From {{ FormatAggregation(data.Aggreg) }} aggregation {{ paused ? '(Paused)' : '' }}</div>
       </div>
       <!--div class="header-buttons">
         <div class="main-value"><span v-html="LastValue.Value"></span> <span class="huge-small-unit">{{ LastValue.Units }}</span></div>
@@ -107,7 +107,7 @@
         Opt.colors = this.analyzer.SerieColors(this.serie);
         Opt.selectMode = 'euclidian';
         Opt.xAxisHeight = 12;
-        Opt.axes.x.valueFormatter = (x) => { return this.analyzer.FormatTime(x); };
+        Opt.axes.x.valueFormatter = (x) => { return this.FormatTime(x); };
         Opt.axes.x.ticker = (min, max) => {
           var ticks = [];
           if(this.analyzer == null) return ticks;

@@ -2,7 +2,7 @@
   <q-tab-panel class="q-pa-none">
   <div class="panel panel-other">
     <div class="panel-heading clearfix">
-      <div class="header-text">From {{ (data!=null) ? analyzer.FormatAggregation(data.Aggreg) : '-' }} aggregation {{ MouseOver ? '(Graph paused)' : '' }}</div>
+      <div class="header-text">From {{ (data!=null) ? FormatAggregation(data.Aggreg) : '-' }} aggregation {{ MouseOver ? '(Graph paused)' : '' }}</div>
       <div class="header-buttons">
         <toolbar-phases storage="DetailsPhases" :multi="false" :current="false" v-model="Phase"></toolbar-phases>
         <div class="btn-group">

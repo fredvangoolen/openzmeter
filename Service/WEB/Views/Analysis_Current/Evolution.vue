@@ -1,7 +1,7 @@
 <template>
   <div class="panel panel-other">
     <div class="panel-heading clearfix">
-      <div class="header-text">From {{ (data!=null) ? analyzer.FormatAggregation(data.Aggreg) : '-' }} aggregation {{ MouseOver ? '(Graph paused)' : '' }}</div>
+      <div class="header-text">From {{ (data!=null) ? FormatAggregation(data.Aggreg) : '-' }} aggregation {{ MouseOver ? '(Graph paused)' : '' }}</div>
       <div class="header-buttons">
         <toolbar-phases storage="DetailsPhases" :multi="false" :current="true" v-model="Phase"></toolbar-phases>
         <toolbar-options storage="DetailsOptions" :options="['Log']" v-model="Options"></toolbar-options>

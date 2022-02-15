@@ -2,7 +2,7 @@
   <div>
     <div class="subpanel clearfix">
       <div class="counters-title">Last value:</div>
-      <div class="counters-aggreg" v-if="data3S!=null">From 3 seconds aggregation<br>{{ analyzer.FormatTime(data3S.Sampletime) }}</div>
+      <div class="counters-aggreg" v-if="data3S!=null">From 3 seconds aggregation<br>{{ FormatTime(data3S.Sampletime) }}</div>
       <div class="clearfix"></div>
       <div>
         <div class="current-value" v-html="(data3S!=null) ? FormatRMS(data3S) : '-'"></div>
@@ -13,7 +13,7 @@
     </div>
     <div class="subpanel clearfix">
       <div class="counters-title">Last value:</div>
-      <div class="counters-aggreg" v-if="data1M!=null">From 1 minute aggregation<br>{{ analyzer.FormatTime(data1M.Sampletime) }}</div>
+      <div class="counters-aggreg" v-if="data1M!=null">From 1 minute aggregation<br>{{ FormatTime(data1M.Sampletime) }}</div>
       <div class="clearfix"></div>
       <div>
         <div class="current-value" v-html="(data1M!=null) ? FormatRMS(data1M) : '-'"></div>
@@ -24,7 +24,7 @@
     </div>
     <div class="subpanel clearfix">
       <div class="counters-title">Period stats:</div>
-      <div class="counters-aggreg" v-if="dataGraph!=null">From {{ analyzer.FormatAggregation(dataGraph.Aggreg) }} aggregation<br>From {{ analyzer.FormatDateTime(dataGraph.From) }} to {{ analyzer.FormatDateTime(dataGraph.To) }}</div>
+      <div class="counters-aggreg" v-if="dataGraph!=null">From {{ FormatAggregation(dataGraph.Aggreg) }} aggregation<br>From {{ analyzer.FormatDateTime(dataGraph.From) }} to {{ analyzer.FormatDateTime(dataGraph.To) }}</div>
             <div class="line">
         <div class="float-left">
           <div class="counters-stat-type">Min value:</div>

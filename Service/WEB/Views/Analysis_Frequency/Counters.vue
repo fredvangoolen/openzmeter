@@ -2,13 +2,13 @@
   <div>
     <div class="subpanel clearfix">
       <div class="counters-title">Current value:</div>
-      <div class="counters-aggreg" v-if="dataNow!=null">From 3 seconds aggregation<br>{{ analyzer.FormatTime(dataNow.Sampletime) }}</div>
+      <div class="counters-aggreg" v-if="dataNow!=null">From 3 seconds aggregation<br>{{ FormatTime(dataNow.Sampletime) }}</div>
         <div class="clearfix"></div>
         <div class="current-value" v-html="dataNow!=null ? Round(dataNow.Frequency, 3, true) + ' Hz' : 'No data'"></div>
       </div>
       <div class="subpanel clearfix">
         <div class="counters-title">Period stats:</div>
-        <div class="counters-aggreg" v-if="dataGraph!=null">From {{ analyzer.FormatAggregation(dataGraph.Aggreg) }} aggregation<br>From {{ analyzer.FormatDateTime(dataGraph.From) }} to {{ analyzer.FormatDateTime(dataGraph.To) }}</div>
+        <div class="counters-aggreg" v-if="dataGraph!=null">From {{ FormatAggregation(dataGraph.Aggreg) }} aggregation<br>From {{ analyzer.FormatDateTime(dataGraph.From) }} to {{ analyzer.FormatDateTime(dataGraph.To) }}</div>
         <div class="line">
           <div class="float-left">
             <div class="counters-stat-type">Min value:</div>

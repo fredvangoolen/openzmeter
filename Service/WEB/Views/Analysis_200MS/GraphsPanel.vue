@@ -79,8 +79,8 @@
         Opt.colors = this.Analyzer.SerieColors(this.serie);
         Opt.selectMode = 'euclidian';
         Opt.xAxisHeight = 12;
-        Opt.axes.x.valueFormatter = (x) => { return this.Analyzer.FormatTime(x); };
-        Opt.axes.x.axisLabelFormatter = (x) => { return this.Analyzer.FormatTime(x); };
+        Opt.axes.x.valueFormatter = (x) => { return this.FormatTime(x); };
+        Opt.axes.x.axisLabelFormatter = (x) => { return this.FormatTime(x); };
         Opt.axes.y.pixelsPerLabel = 15;
         Opt.axes.y.axisLabelWidth = 30;
         if(this.Phases != null) Opt.visibility =  this.Phases;
