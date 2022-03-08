@@ -28,7 +28,7 @@
         </div>
       </portal>
     </div>
-    <dlg-fs v-if="Expanded" :title="analyzer.Title[serie]" :height.sync="DialogHeight"></dlg-fs>
+    <dlg-fs v-if="Expanded" :title="analyzer.SerieName(serie)" :height.sync="DialogHeight"></dlg-fs>
   </div>
 </template>
 

@@ -6,9 +6,7 @@
     <div class="panel-body">
       <vuetable ref="table" :fields="Columns" :data="Modules" :api-mode="false" class="table small table-striped">
         <template slot="actions" slot-scope="props">
-          <div class="btn-group" >
-            <button class="btn btn-xs btn-default" :disabled="props.rowData.Avaliable==false" @click="LoadModule(props.rowData, true)">Configure</button>
-          </div>
+          <z-button :disabled="!props.rowData.Avaliable" @click="LoadModule(props.rowData, true)" caption="Configure" />
         </template>
       </vuetable>
       <bluetooth :settings="Settings" v-if="View=='Bluetooth'" @close="Update"></bluetooth>

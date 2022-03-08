@@ -1,7 +1,7 @@
 <template>
   <div class="btn-group" v-if="analyzer.Mode != '1PHASE'">
-    <button type="button" v-for="(item, index) in analyzer.PhaseNames" @click="Toggle(index)" :key="index" :class="{ active: (Active[index]==true) }" class="btn btn-default btn-xs" :title="'Show phase ' + item"><img :src="PhaseImgs[index]"></button>
-    <button type="button" v-if="(analyzer.NeutralName!=null)&&(current==true)" @click="Toggle(analyzer.PhaseNames.length)" :class="{ active: (Active[analyzer.PhaseNames.length]==true) }" class="btn btn-default btn-xs" :title="'Show phase ' + analyzer.NeutralName"><img :src="NeutralImg"></button>
+    <z-button v-for="(item, index) in analyzer.PhaseNames" @click="Toggle(index)" :key="index" :active="Active[index]" :tooltip="'Show phase ' + item" :image="PhaseImgs[index]" />
+    <z-button v-if="(analyzer.NeutralName!=null)&&(current==true)" @click="Toggle(analyzer.PhaseNames.length)" :active="Active[analyzer.PhaseNames.length]" :tooltip="'Show phase ' + analyzer.NeutralName" :image="NeutralImg" />
   </div>
 </template>
 

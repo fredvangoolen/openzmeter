@@ -4,8 +4,8 @@
       <template v-slot:header>
         <div class="pull-left"><h4 class="modal-title">User</h4></div>
         <div class="pull-right btn-group">
-          <button type="button" class="btn btn-default btn-xs" title="Save changes" @click="Save"><img :src="require('Imgs/diskette.png')"></button>
-          <button type="button" class="btn btn-default btn-xs" title="Discard" @click="$emit('close')"><img :src="require('Imgs/arrow_undo.png')"></button>
+          <z-button tooltip="Save changes" @click="Save" :image="require('Imgs/diskette.png')" />
+          <z-button tooltip="Discard" @click="$emit('close')" :image="require('Imgs/arrow_undo.png')" />
         </div>
       </template>
       <div class="row">

@@ -5,7 +5,7 @@
       <toolbar-phases :analyzer="analyzer" v-model="Phases" storage="Events" :current="false" :multi="true"></toolbar-phases>
       <div class="btn-group">
         <button-export :rows="Export" :file="'Event_' + mode"></button-export>
-        <button type="button" class="btn btn-default btn-xs" @click="$emit('close')"><img :src="require('Imgs/arrow_undo.png')"></button>
+        <z-button @click="$emit('close')" :image="require('Imgs/arrow_undo.png')" />
       </div>
     </portal>
     <portal to="fs-body" class="panel-body">

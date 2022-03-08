@@ -3,8 +3,8 @@
     <template v-slot:header>
       <div class="pull-left"><h4 class="modal-title">Events &raquo; Delete</h4></div>
       <div class="pull-right btn-group">
-        <button type="button" class="btn btn-default btn-xs btn-danger" :disabled="ShowSpinner" @click="Delete">Delete</button>
-        <button type="button" class="btn btn-default btn-xs" @click="$emit('close', false)"><img :src="require('Imgs/arrow_undo.png')" alt="Discard"></button>
+        <z-button variant="danger" :disabled="ShowSpinner" @click="Delete" caption="Delete" />
+        <z-button @click="$emit('close', false)" :image="require('Imgs/arrow_undo.png')" tooltip="Discard" />
       </div>
     </template>
     <div class="alert alert-danger text-center" style="margin-bottom: 5px; padding: 5px">Delete {{ event.length }} events?<br>Select event deletion mode</div>

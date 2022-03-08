@@ -4,9 +4,9 @@
       <div class="pull-left"><h4 class="modal-title">OpenVPN</h4></div>
       <div class="pull-right btn-group">
         <div class="pull-right btn-group">
-        <button type="button" class="btn btn-default btn-xs" @click="Save"><img :src="require('Imgs/diskette.png')" alt="Save changes and close"></button>
-          <button type="button" class="btn btn-default btn-xs" @click="Apply"><img :src="require('Imgs/update.png')" alt="Apply changes"></button>
-          <button type="button" class="btn btn-default btn-xs" title="Back" @click="Back"><img :src="require('Imgs/arrow_undo.png')"></button>
+          <z-button @click="Save" :image="require('Imgs/diskette.png')" tooltip="Save changes and close" />
+          <z-button @click="Apply" :image="require('Imgs/update.png')" tooltip="Apply changes" />
+          <z-button @click="Back" :image="require('Imgs/arrow_undo.png')" tooltip="Back" />
         </div>
       </div>
     </template>

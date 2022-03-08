@@ -27,6 +27,11 @@ import Vuetable from 'vuetable-2';
 Vue.component('Vuetable', Vuetable);
 import Avatar from 'Components/Avatar.vue';
 Vue.component('Avatar', Avatar);
+
+import zButton from 'Components/Button.vue';
+Vue.component('zButton', zButton);
+
+
 import ButtonExpand from 'Components/ButtonExpand.vue';
 Vue.component('ButtonExpand', ButtonExpand);
 import ButtonExport from 'Components/ButtonExport.vue';

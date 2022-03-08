@@ -7,7 +7,7 @@
         <div class="btn-group">
           <button-export :rows="Export" :file="PanelTitle"></button-export>
           <button-expand v-model="Expanded"></button-expand>
-          <button type="button" class="btn btn-default btn-xs" @click="$emit('remove', serie)"><img :src="require('Imgs/cross.png')" alt="Remove this serie"></button>
+          <z-button @click="$emit('remove', serie)" :image="require('Imgs/cross.png')" tooltip="Remove this serie" />
         </div>
       </portal>
     </div>

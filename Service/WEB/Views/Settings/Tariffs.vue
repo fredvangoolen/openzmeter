@@ -3,7 +3,7 @@
     <div class="panel-heading clearfix">
       <div class="huge-small pull-left">Tariffs</div>
       <div class="pull-right btn-group">
-        <button type="button" class="btn btn-default btn-xs" title="Add tariff" @click="Add"><img :src="require('Imgs/plus.png')"> Add</button>
+        <z-button tooltip="Add tariff" @click="Add" :image="require('Imgs/plus.png')" caption="Add" />
       </div>
       <toolbar-pager class="pull-right" :pageSize="10" :input="Tariffs" :output.sync="FilterTariffs" :filtercols="['TimeZone', 'Name', 'StartDate', 'EndDate']"></toolbar-pager>
     </div>
@@ -15,9 +15,9 @@
           <vuetable :fields="ColumnsTariffs" :api-mode="false" :data="FilterTariffs" class="table small table-striped">
             <template slot="actions" slot-scope="props">
               <div class="btn-group">
-                <button class="btn btn-xs btn-default" @click="Edit(props.rowData)">Edit</button>
-                <button class="btn btn-xs btn-default" @click="Duplicate(props.rowData)" title="Duplicate tariff"><img :src="require('Imgs/page_copy.png')"></button>
-                <button class="btn btn-xs btn-danger" @click="Delete(props.rowData)">Delete</button>
+                <z-button @click="Edit(props.rowData)" caption="Edit" />
+                <z-button @click="Duplicate(props.rowData)" tooltip="Duplicate tariff" :image="require('Imgs/page_copy.png')" />
+                <z-button @click="Delete(props.rowData)" variant="danger" caption="Delete" />
               </div>
             </template>
           </vuetable>
@@ -27,7 +27,7 @@
           <vuetable :fields="ColumnsModules" :api-mode="false" :data="Modules" class="table small table-striped modules">
             <template slot="actions" slot-scope="props">
               <div class="btn-group">
-                <button class="btn btn-xs btn-default" @click="Configure(props.rowData)">Configure</button>
+                <z-button @click="Configure(props.rowData)" caption="Configure" />
               </div>
             </template>
           </vuetable>

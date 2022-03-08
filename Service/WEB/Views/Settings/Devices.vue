@@ -8,7 +8,7 @@
       <vuetable ref="table" :fields="Columns" :data="Devices" :api-mode="false" class="table small table-striped">
         <template slot="actions" slot-scope="props">
           <div class="btn-group" >
-            <button class="btn btn-xs btn-default" @click="Configure(props.rowData)">Configure</button>
+            <z-button @click="Configure(props.rowData)" caption="Configure" />
           </div>
         </template>
       </vuetable>

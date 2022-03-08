@@ -3,7 +3,7 @@
     <template v-slot:header>
       <div class="pull-left"><h4 class="modal-title">Analyzers &raquo; Information</h4></div>
       <div class="pull-right btn-group">
-        <button type="button" class="btn btn-default btn-xs" @click="$emit('close')"><img :src="require('Imgs/arrow_undo.png')"></button>
+        <z-button @click="$emit('close')" :image="require('Imgs/arrow_undo.png')" />
       </div>
     </template>
     <template v-slot:footer v-if="(TransferStatus.Data!=null)&&(TransferStatus.Data.Version!=null)">

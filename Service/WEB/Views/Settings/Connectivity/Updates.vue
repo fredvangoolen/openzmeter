@@ -3,8 +3,8 @@
     <template v-slot:header>
       <div class="pull-left"><h4 class="modal-title">Automatic updates</h4></div>
       <div class="pull-right btn-group">
-        <button type="button" class="btn btn-default btn-xs" @click="Save"><img :src="require('Imgs/diskette.png')" alt="Save changes and close"></button>
-        <button type="button" class="btn btn-default btn-xs" @click="$emit('close')"><img :src="require('Imgs/arrow_undo.png')" alt="Discard"></button>
+        <z-button @click="Save" :image="require('Imgs/diskette.png')" tooltip="Save changes and close" />
+        <z-button @click="$emit('close')" :image="require('Imgs/arrow_undo.png')" tooltip="Discard" />
       </div>
     </template>
     <div class="row">

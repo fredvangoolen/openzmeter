@@ -5,7 +5,7 @@
       <div class="header-buttons clearfix">
         <toolbar-pager :pageSize="50" :input="Alarms" :output.sync="FilterAlarms" :filtercols="['Date', 'Name']"></toolbar-pager>
         <div class="btn-group">
-          <button class="btn btn-default btn-xs btn-danger" type="button" @click="DeleteSelected">Delete selection</button>
+          <z-button variant="danger" @click="DeleteSelected" caption="Delete selection" />
           <button-export :rows="Export" file="Alarms"></button-export>
         </div>
       </div>
@@ -15,7 +15,7 @@
       <vuetable ref="table" :fields="Columns" :api-mode="false" :data="FilterAlarms" class="table small table-striped">
         <template slot="actions" slot-scope="props">
           <div class="btn-group">
-            <button type="button" class="btn btn-danger btn-xs"  @click="Delete(props.rowData)">Delete</button>
+            <z-button variant="danger" @click="Delete(props.rowData)" caption="Delete" />
           </div>
         </template>
       </vuetable>

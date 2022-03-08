@@ -4,15 +4,15 @@
     <template v-slot:header>
       <div class="pull-left"><h4 class="modal-title">Analyzers &raquo; Rates &raquo; Edit</h4></div>
       <div class="pull-right btn-group" v-if="Rate.Periods==null">
-        <button type="button" class="btn btn-default btn-xs" @click="$emit('update', Rate)"><img :src="require('Imgs/arrow_undo.png')" alt="Back"></button>
+        <z-button @click="$emit('update', Rate)" :image="require('Imgs/arrow_undo.png')" tooltip="Back" />
       </div>
       <toolbar-pager v-if="Rate.Periods==null" class="pull-right" :pageSize="10" :input="Tariffs" :output.sync="FilterTariffs" :filtercols="['Name', 'StartDate', 'EndDate']"></toolbar-pager>
       <div class="pull-right btn-group" v-if="Rate.Periods!=null">
-        <button type="button" class="btn btn-default btn-xs" :class="{ active: View=='Main' }" @click="View='Main'">Main</button>
-        <button type="button" class="btn btn-default btn-xs" :class="{ active: View=='Periods' }" @click="View='Periods'">Periods</button>
-        <button type="button" class="btn btn-default btn-xs" :class="{ active: View=='Concepts' }" @click="View='Concepts'">Concepts</button>
-        <button type="button" class="btn btn-default btn-xs" :class="{ active: View=='Cycles' }" @click="View='Cycles'">Cycles</button>
-        <button type="button" class="btn btn-default btn-xs" @click="$emit('update', Rate)"><img :src="require('Imgs/arrow_undo.png')" alt="Back"></button>
+        <z-button :active="View=='Main'" @click="View='Main'" caption="Main" />
+        <z-button :active="View=='Periods'" @click="View='Periods'" caption="Periods" />
+        <z-button :active="View=='Concepts'" @click="View='Concepts'" caption="Concepts" />
+        <z-button :active="View=='Cycles'" @click="View='Cycles'" caption="Cycles" />
+        <z-button @click="$emit('update', Rate)" :image="require('Imgs/arrow_undo.png')" tooltip="Back" />
       </div>
     </template>
     <div class="row" v-if="Rate.Periods==null">
@@ -20,7 +20,7 @@
       <vuetable :fields="ColumnsTariffs" :api-mode="false" :data="FilterTariffs" class="tariffs table small table-striped">
         <template slot="actions" slot-scope="props">
           <div class="btn-group" >
-            <button class="btn btn-xs btn-default" @click="LoadTariff(props.rowData)">Load</button>
+            <z-button @click="LoadTariff(props.rowData)" caption="Load" />
           </div>
         </template>
       </vuetable>
@@ -65,7 +65,7 @@
             <div class="panel-heading">
               Contracted Power
               <div class="pull-right btn-group">
-                <button type="button" class="btn btn-default btn-xs" :class="{ active: !Array.isArray(Rate.ContractedPower) }" @click="Rate.ContractedPower=Array.isArray(Rate.ContractedPower) ? Rate.ContractedPower[0] : Array(Rate.Periods.length).fill(Rate.ContractedPower)" title="Link all periods value"><img :src="require('Imgs/link.png')"></button>
+                <z-button :active="!Array.isArray(Rate.ContractedPower)" @click="Rate.ContractedPower=Array.isArray(Rate.ContractedPower) ? Rate.ContractedPower[0] : Array(Rate.Periods.length).fill(Rate.ContractedPower)" tooltip="Link all periods value" :image="require('Imgs/link.png')" />
               </div>
               <div class="clearfix"></div>
             </div>

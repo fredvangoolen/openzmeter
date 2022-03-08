@@ -9,7 +9,7 @@
               <toolbar-aggregation storage="AggregationEnergy" :options="['15M', '1H']" v-model="Aggreg"></toolbar-aggregation>
               <toolbar-period storage="Period" v-model="Range" :analyzer="analyzer"></toolbar-period>
               <div class="btn-group">
-                <button type="button" class="btn btn-default btn-xs" :class="{ active: ShowContracted }" @click="ShowContracted=!ShowContracted" title="Scale includes contracted power limit"><img :src="require('Imgs/tag_blue.png')"></button>
+                <z-button :active="ShowContracted" @click="ShowContracted=!ShowContracted" tooltip="Scale includes contracted power limit" :image="require('Imgs/tag_blue.png')" />
                 <button-export file="Power" :rows="Export"></button-export>
                 <button-expand v-model="ExpandedActive"></button-expand>
               </div>

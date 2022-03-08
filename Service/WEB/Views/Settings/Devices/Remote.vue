@@ -3,8 +3,8 @@
     <template v-slot:header>
       <div class="pull-left"><h4 class="modal-title">Device &raquo; {{ Settings.Serial }}</h4></div>
       <div class="pull-right btn-group">
-        <button type="button" class="btn btn-default btn-xs" @click="Save"><img :src="require('Imgs/diskette.png')"></button>
-        <button type="button" class="btn btn-default btn-xs" @click="$emit('close', false)"><img :src="require('Imgs/arrow_undo.png')"></button>
+        <z-button @click="Save" :image="require('Imgs/diskette.png')" />
+        <z-button @click="$emit('close', false)" :image="require('Imgs/arrow_undo.png')" />
       </div>
       <toolbar-pager class="pull-right" :pageSize="10" :input="Settings.Analyzers" :output.sync="FilterAnalyzers" :filtercols="['User', 'Analyzer']"></toolbar-pager>
     </template>
@@ -20,14 +20,14 @@
         <div class="input-group input-group-xs">
           <span class="input-group-addon">Analyzer</span>
           <input type="text" class="form-control" v-model="NewAnalyzer">
-          <span class="input-group-btn"><button type="button" class="btn btn-default" @click="Add" :disabled="!CanAdd"><img :src="require('Imgs/plus.png')"></button></span>
+          <span class="input-group-btn"><z-button @click="Add" :disabled="!CanAdd" :image="require('Imgs/plus.png')" /></span>
         </div>
       </div>
     </div>
     <vuetable ref="table" :fields="Columns" :api-mode="false" :data="FilterAnalyzers" class="table small table-striped">
       <template slot="actions" slot-scope="props">
         <div class="btn-group">
-          <button type="button" class="btn btn-danger btn-xs" @click="Delete(props.rowData.Analyzer)">Delete</button>
+          <z-button variant="danger" @click="Delete(props.rowData.Analyzer)" caption="Delete" />
         </div>
       </template>
       <template slot="user" slot-scope="props">

@@ -3,7 +3,7 @@
     <div class="panel-heading">
       <div class="header">Users</div>
       <div class="pull-right btn-group">
-        <button type="button" class="btn btn-default btn-xs" title="Add user" @click="Add"><img :src="require('Imgs/plus.png')"> Add</button>
+        <z-button tooltip="Add user" @click="Add" :image="require('Imgs/plus.png')" caption="Add" />
       </div>
       <toolbar-pager class="pull-right" :pageSize="10" :input="Users" :output.sync="FilterUsers" :filtercols="['User', 'Name', 'TimeZone', 'Email']"></toolbar-pager>
     </div>
@@ -12,8 +12,8 @@
       <vuetable ref="table" :fields="Columns" :data="FilterUsers" :api-mode="false" class="table small table-striped">
         <template slot="actions" slot-scope="props">
           <div class="btn-group" >
-            <button class="btn btn-xs btn-default" @click="Edit(props.rowData)">Edit</button>
-            <button class="btn btn-xs btn-danger" @click="Delete(props.rowData)">Delete</button>
+            <z-button @click="Edit(props.rowData)" caption="Edit" />
+            <z-button variant="danger" @click="Delete(props.rowData)" caption="Delete" />
           </div>
         </template>
       </vuetable>

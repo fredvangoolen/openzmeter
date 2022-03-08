@@ -1,8 +1,5 @@
 <template>
-  <button type="button" class="btn btn-default btn-xs" @click="$emit('input', !value)" :title="value?'Minimize graph' : 'Maximize graph'">
-    <img v-if="!value" :src="require('Imgs/arrow_out.png')">
-    <img v-if="value" :src="require('Imgs/arrow_in.png')">
-  </button>
+  <z-button @click="$emit('input', !value)" :tooltip="value ? 'Minimize graph' : 'Maximize graph'" :image="value ? require('Imgs/arrow_in.png') : require('Imgs/arrow_out.png')" />
 </template>
 
 <script>

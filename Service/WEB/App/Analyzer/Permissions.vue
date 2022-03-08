@@ -3,21 +3,23 @@
     <template v-slot:header>
       <div class="pull-left"><h4 class="modal-title">Analyzers &raquo; Permissions</h4></div>
       <div class="pull-right btn-group">
-        <button type="button" class="btn btn-default btn-xs" @click="Save"><img :src="require('Imgs/diskette.png')" alt="Save users permissions"></button>
-        <button type="button" class="btn btn-default btn-xs" @click="$emit('close', null)"><img :src="require('Imgs/arrow_undo.png')" alt="Back"></button>
+        <z-button @click="Save" :image="require('Imgs/diskette.png')" tooltip="Save users permissions" />
+        <z-button @click="$emit('close', null)" :image="require('Imgs/arrow_undo.png')" tooltip="Back" />
       </div>
     </template>
     <div class="col-xs-12">
       <div class="input-group input-group-xs">
         <span class="input-group-addon">User</span>
         <input type="text" class="form-control" v-model="NewUser">
-        <span class="input-group-btn"><button type="button" class="btn btn-default" @click="Add" :disabled="NewUser.length==0"><img :src="require('Imgs/plus.png')"></button></span>
+        <span class="input-group-btn">
+          <button type="button" class="btn btn-default" @click="Add" :disabled="NewUser.length==0"><img :src="require('Imgs/plus.png')"></button>
+        </span>
       </div>
     </div>
     <vuetable :fields="Columns" :api-mode="false" :data="Analyzer.Users" class="table small table-striped">
       <template slot="actions" slot-scope="props">
         <div class="btn-group" v-if="(props.rowData.User!='admin')&&(props.rowData.User!=Analyzer.User)">
-          <button type="button" class="btn btn-danger btn-xs" @click="Delete(props.rowData.User)">Delete</button>
+          <z-button variant="danger" @click="Delete(props.rowData.User)" caption="Delete" />
         </div>
       </template>
       <template slot="read" slot-scope="props">

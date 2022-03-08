@@ -8,7 +8,7 @@
     <tr>
       <td class="first-row">
         <div class="btn-group" v-if="this.$listeners.evaluate">
-          <button type="button" class="btn btn-default btn-xs" title="Reload variables and evaluate" @click="$emit('evaluate')"><img :src="require('Imgs/evaluate_formula.png')"></button>
+          <z-button tooltip="Reload variables and evaluate" @click="$emit('evaluate')" :image="require('Imgs/evaluate_formula.png')" />
         </div>
         <option-adder :icon="require('Imgs/math_functions.png')" :options="Functions" @add="Insert"></option-adder>
         <option-adder :icon="require('Imgs/sql_join_outer_exclude.png')" :options="Operators" @add="Insert"></option-adder>
@@ -20,7 +20,7 @@
         <vuetable :fields="Columns" :api-mode="false" :data="FilterVars" class="table small table-striped">
           <template slot="actions" slot-scope="props">
             <div class="btn-group">
-              <button type="button" class="btn btn-default btn-xs" @click="Insert(props.rowData.Name)"><img :src="require('Imgs/plus.png')" alt="Add variable"></button>
+              <z-button @click="Insert(props.rowData.Name)" :image="require('Imgs/plus.png')" tooltip="Add variable" />
             </div>
           </template>
         </vuetable>

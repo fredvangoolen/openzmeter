@@ -4,17 +4,17 @@
       <template v-slot:header>
         <div class="pull-left"><h4 class="modal-title">Analyzers &raquo; Rates</h4></div>
         <div class="pull-right btn-group">
-          <button type="button" class="btn btn-default btn-xs" @click="Save"><img :src="require('Imgs/diskette.png')" alt="Save configured rates"></button>
-          <button type="button" class="btn btn-default btn-xs" @click="Add"><img :src="require('Imgs/plus.png')" alt="Add rate"></button>
-          <button type="button" class="btn btn-default btn-xs" @click="$emit('close', analyzer.Analyzer)"><img :src="require('Imgs/arrow_undo.png')" alt="Back"></button>
+          <z-button @click="Save" :image="require('Imgs/diskette.png')" tooltip="Save configured rates" />
+          <z-button @click="Add" :image="require('Imgs/plus.png')" tooltip="Add rate" />
+          <z-button @click="$emit('close', analyzer.Analyzer)" :image="require('Imgs/arrow_undo.png')" tooltip="Back" />
         </div>
       </template>
       <div class="alert alert-info text-center" style="margin-bottom: 5px; padding: 5px">All dates/times are in analyzer timezone.</div>
       <vuetable key="rates" :fields="Columns" :data="Analyzer.Rates" :api-mode="false" class="table small table-striped">
         <template slot="actions" slot-scope="props">
           <div class="btn-group">
-            <button type="button" class="btn btn-default btn-xs" @click="Edit(props.rowIndex)">Edit</button>
-            <button type="button" class="btn btn-danger btn-xs" @click="Delete(props.rowIndex)">Delete</button>
+            <z-button @click="Edit(props.rowIndex)" caption="Edit" />
+            <z-button variant="danger" @click="Delete(props.rowIndex)" caption="Delete" />
           </div>
         </template>
       </vuetable>

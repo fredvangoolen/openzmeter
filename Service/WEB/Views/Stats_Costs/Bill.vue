@@ -8,8 +8,8 @@
       <portal to="fs-toolbar" :disabled="!Expanded" class="float-right">
         <toolbar-aggregation storage="AggregationBill" v-model="Aggreg" :options="['15M', '1H', '1D']"></toolbar-aggregation>
           <div class="btn-group">
-            <button type="button" class="btn btn-default btn-xs" :class="{ active: GraphSeries=='Energy' }" @click="GraphSeries='Energy'">Energy</button>
-            <button type="button" class="btn btn-default btn-xs" :class="{ active: GraphSeries=='Power' }" @click="GraphSeries='Power'">Power</button>
+            <z-button :active="GraphSeries=='Energy'" @click="GraphSeries='Energy'" caption="Energy" />
+            <z-button :active="GraphSeries=='Power'" @click="GraphSeries='Power'" caption="Power" />
           </div>
           <div class="btn-group">
             <!--button-export :rows="Export" file="Evolution"></button-export-->

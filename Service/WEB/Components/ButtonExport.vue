@@ -4,9 +4,9 @@
       <template v-slot:header>
         <div class="pull-left"><h4 class="modal-title">Export</h4></div>
         <div class="pull-right btn-group">
-          <button type="button" class="btn btn-default btn-xs" @click="Clipboard"><img :src="require('Imgs/page_copy.png')"></button>
-          <button type="button" class="btn btn-default btn-xs" @click="Save"><img :src="require('Imgs/diskette.png')"></button>
-          <button type="button" class="btn btn-default btn-xs" @click="ShowDialog=false"><img :src="require('Imgs/arrow_undo.png')"></button>
+          <z-button @click="Clipboard" :image="require('Imgs/page_copy.png')" />
+          <z-button @click="Save" :image="require('Imgs/diskette.png')" />
+          <z-button @click="ShowDialog=false" :image="require('Imgs/arrow_undo.png')" />
         </div>
         <toolbar-pager class="pull-right" :pageSize="100" :input="Rows" :output.sync="FilterRows"></toolbar-pager>
       </template>

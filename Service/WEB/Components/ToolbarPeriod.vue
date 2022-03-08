@@ -29,8 +29,8 @@
       <template v-slot:header>
         <div class="pull-left"><h4 class="modal-title">Data range</h4></div>
         <div class="pull-right btn-group">
-          <button type="button" class="btn btn-default btn-xs" @click="$emit('input', Array.from(Range))"><img :src="require('Imgs/tick.png')" alt="Apply"></button>
-          <button type="button" class="btn btn-default btn-xs" @click="ShowDialog=false"><img :src="require('Imgs/arrow_undo.png')" alt="Discard"></button>
+          <z-button @click="$emit('input', Array.from(Range))" :imgage="require('Imgs/tick.png')" tooltip="Apply" />
+          <z-button @click="ShowDialog=false" :image="require('Imgs/arrow_undo.png')" tooltip="Discard" />
         </div>
       </template>
       <div class="row">

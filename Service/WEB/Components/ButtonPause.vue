@@ -1,6 +1,5 @@
 <template>
-  <button type="button" class="btn btn-default btn-xs" v-if="(value == true)" @click="$emit('input', false)" title="Resume live update"><img :src="require('Imgs/play.png')"></button>
-  <button type="button" class="btn btn-default btn-xs" v-else @click="$emit('input', true)" title="Pause"><img :src="require('Imgs/pause.png')"></button>
+  <z-button v-if="(value == true)" @click="$emit('input', !value)" :tooltip="value ? 'Resume live update' : 'Pause'" :image="value ? require('Imgs/play.png') : require('Imgs/pause.png')" />
 </template>
 
 <script>

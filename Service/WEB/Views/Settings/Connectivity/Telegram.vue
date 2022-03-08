@@ -4,8 +4,8 @@
       <div class="pull-left"><h4 class="modal-title">Telegram Bot</h4></div>
       <div class="pull-right btn-group">
         <div class="pull-right btn-group">
-          <button type="button" class="btn btn-default btn-xs" title="Save and close" @click="Save"><img :src="require('Imgs/diskette.png')"></button>
-          <button type="button" class="btn btn-default btn-xs" title="Back" @click="$emit('close')"><img :src="require('Imgs/arrow_undo.png')"></button>
+          <z-button tooltip="Save and close" @click="Save" :image="require('Imgs/diskette.png')" />
+          <z-button tooltip="Back" @click="$emit('close')" :image="require('Imgs/arrow_undo.png')" />
         </div>
       </div>
     </template>
