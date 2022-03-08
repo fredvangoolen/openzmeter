@@ -9,7 +9,7 @@
         </div>
       </div>
     </template>
-    <div class="row">
+    <z-row>
       <div class="col-xs-12">
         <label class="control-label" style="line-height: 22px">Enable</label>
         <toggle class="float-right" onText="Yes" offText="No" v-model="Config.Enabled"></toggle>
@@ -23,7 +23,7 @@
         <label class="control-label">Last data requested</label>
         <date-picker :options="{ format: 'DD/MM/YYYY - HH:MM:ss', viewMode: 'months', timeZone: 'Europe/Madrid' }" :disabled="true" v-model="Config.LastDate"></date-picker>
       </div>
-    </div>
+    </z-row>
   </dlg>
 </template>
 

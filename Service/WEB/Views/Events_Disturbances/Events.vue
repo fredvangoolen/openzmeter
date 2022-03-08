@@ -4,22 +4,22 @@
       <div class="header-text">Last events</div>
       <div class="header-buttons clearfix">
         <toolbar-pager :pageSize="pagesize" :input="Events" :output.sync="FilterEvents" :filtercols="['Date', 'Type', 'Notes']"></toolbar-pager>
-        <div class="btn-group">
+        <z-button-group>
           <z-button variant="danger" @click="DeleteSelected" caption="Delete selection" />
           <button-export file="Events" :rows="Export"></button-export>
-        </div>
+        </z-button-group>
       </div>
     </div>
     <div class="panel-body">
       <spinner v-if="(events==null)||ShowSpinner"></spinner>
       <vuetable ref="table" :fields="Columns" :api-mode="false" :data="FilterEvents" track-by="StartTime" class="table small table-striped">
         <template slot="actions" slot-scope="props">
-          <div class="btn-group">
+          <z-button-group>
             <z-button variant="success" @click="Edit(props.rowData)" caption="Add notes" />
             <z-button :disabled="!props.rowData.AvaliableRAW" @click="RMS(props.rowData)" caption="RMS" />
             <z-button :disabled="!props.rowData.AvaliableRAW" @click="RAW(props.rowData)" caption="Wave" />
             <z-button variant="danger"  @click="DeleteEvent(props.rowData)" caption="Delete" />
-          </div>
+          </z-button-group>
         </template>
       </vuetable>
     </div>

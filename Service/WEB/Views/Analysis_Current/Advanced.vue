@@ -6,11 +6,11 @@
       <portal to="fs-toolbar" :disabled="!Expanded" class="header-buttons">
         <toolbar-phases storage="DetailsPhases" :analyzer="analyzer" :multi="true" :current="true" v-model="Phases"></toolbar-phases>
         <toolbar-options storage="DetailsOptions" :options="['Voltage', 'Log']" v-model="Options"></toolbar-options>
-        <div class="btn-group">
+        <z-button-group>
           <button-export file="FFT" :rows="Export"></button-export>
           <button-expand v-model="Expanded"></button-expand>
           <button-pause :value="paused" @input="$emit('update:paused', $event)"></button-pause>
-        </div>
+        </z-button-group>
       </portal>
     </div>
     <portal to="fs-body" :disabled="!Expanded" class="panel-body">

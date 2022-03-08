@@ -14,10 +14,10 @@
       </span>
       <img class="badge-icon" :src="require('Imgs/bullet_red.png')" v-else>
     </div>
-    <div class="btn-group">
+    <z-button-group>
       <button type="button" class="btn btn-default btn-xs" @click="Dialog='Table'" title="Select and configure avaliable analyzers"><img :src="require('Imgs/magnifier.png')"></button>
       <button type="button" class="btn btn-default btn-xs" :disabled="analyzer==null" @click="Dialog='Info'" title="Analyzer information and status"><img :src="require('Imgs/system_monitor.png')"></button>
-    </div>
+    </z-button-group>
     <div class="name">{{ (analyzer == null) ? 'None selected' : analyzer.Name }}</div>
     <analyzer-table v-if="Dialog=='Table'" :analyzer="analyzer" @update:analyzer="SetAnalyzer($event)" @close="Dialog=null"></analyzer-table>
     <analyzer-info v-if="Dialog=='Info'" :analyzer="analyzer" @close="Dialog=null"></analyzer-info>

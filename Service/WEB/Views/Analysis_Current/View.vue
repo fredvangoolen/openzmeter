@@ -1,6 +1,6 @@
 <template>
   <div v-if="analyzer != null">
-    <div class="row">
+    <z-row>
       <div class="col-lg-12">
         <div class="panel panel-current">
           <div class="panel-heading">
@@ -9,14 +9,14 @@
               <toolbar-aggregation storage="Aggregation" :options="['3S', '1M', '10M', '1H']" v-model="Aggreg"></toolbar-aggregation>
               <toolbar-period storage="Period" v-model="Range" :analyzer="analyzer"></toolbar-period>
               <toolbar-phases storage="ViewPhases" :analyzer="analyzer" :current="true" :multi="true" v-model="Phases"></toolbar-phases>
-              <div class="btn-group">
+              <z-button-group>
                 <button-export file="Current" :rows="Export"></button-export>
                 <button-expand v-model="Expanded"></button-expand>
-              </div>
+              </z-button-group>
             </portal>
           </div>
           <div class="panel-body">
-            <div class="row">
+            <z-row>
               <counters class="col-md-6 col-lg-4 col-xl-3" :analyzer="analyzer" :data1M="Transfer1M.LastData" :data3S="Transfer3S.LastData" :dataGraph="TransferGraph.Data" :height.sync="Height"></counters>
               <div class="col-md-6 col-lg-8 col-xl-9">
                 <portal to="fs-body" :disabled="!Expanded" class="panel-body">
@@ -24,7 +24,7 @@
                   <current :phases="Phases" :analyzer="analyzer" :data="TransferGraph.Data" :height="Expanded?DialogHeight:Height" @range="Range=$event"></current>
                 </portal>
               </div>
-            </div>
+            </z-row>
           </div>
         </div>
       </div>
@@ -37,7 +37,7 @@
         <advanced v-if="ActiveTab=='Advanced'" :data="TransferNow.Data" :analyzer="analyzer" :paused.sync="Paused"></advanced>
         <parameters v-if="ActiveTab=='Parameters'" :data="TransferCubism.Data" :dataNow="TransferNow.Data" :analyzer="analyzer" :paused.sync="Paused"></parameters>
       </div>
-    </div>
+    </z-row>
     <dlg-fs v-if="Expanded" title="Voltage" :height.sync="DialogHeight"></dlg-fs>
   </div>
   <div v-else-if="analyzer == null">

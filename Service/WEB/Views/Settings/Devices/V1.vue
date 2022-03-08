@@ -8,7 +8,7 @@
       </div>
     </template>
     <div class="alert alert-danger text-center" style="margin-bottom: 5px; padding: 5px" v-if="Error!=null">{{Error }}</div>
-    <div class="row">
+    <z-row>
       <div class="col-xs-12">
         <label class="control-label" style="line-height: 22px">Enabled</label>
         <toggle class="float-right" onText="Yes" offText="No" v-model="Settings.Enabled"></toggle>
@@ -47,7 +47,7 @@
           <z-button @click="SetCurrentOffset" :disabled="Settings.Wave_Average.Current == 0.0" :tooltip="'Last second offset: ' + Round(Settings.Wave_Average.Current, 2, false)" :image="require('Imgs/wand.png')" />
         </div>
       </div>
-    </div>
+    </z-row>
   </dlg>
 </template>
 

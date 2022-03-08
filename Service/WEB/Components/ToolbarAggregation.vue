@@ -1,6 +1,6 @@
 <template>
   <span>
-    <div class="btn-group">
+    <z-button-group>
       <div class="input-group input-group-xs">
         <span class="input-group-addon"><img :src="require('Imgs/clock_15.png')"></span>
         <div class="input-group-btn">
@@ -10,7 +10,7 @@
           </ul>
         </div>
       </div>
-    </div>
+    </z-button-group>
     <dlg v-if="showDialog">
       <template v-slot:header>
         <h4 class="modal-title">Aggregation change</h4>

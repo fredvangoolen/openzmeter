@@ -45,12 +45,12 @@
         </div>
       </div>
     </div>
-    <div class="row">
+    <z-row>
       <div class="col-xs-12">
         <label class="control-label">Log messages</label>
         <textarea rows="10" class="form-control" disabled :value="Messages"></textarea>
       </div>
-    </div>
+    </z-row>
   </dlg>
 </template>
 

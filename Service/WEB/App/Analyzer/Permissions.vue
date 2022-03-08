@@ -18,9 +18,9 @@
     </div>
     <vuetable :fields="Columns" :api-mode="false" :data="Analyzer.Users" class="table small table-striped">
       <template slot="actions" slot-scope="props">
-        <div class="btn-group" v-if="(props.rowData.User!='admin')&&(props.rowData.User!=Analyzer.User)">
+        <z-button-group v-if="(props.rowData.User!='admin')&&(props.rowData.User!=Analyzer.User)">
           <z-button variant="danger" @click="Delete(props.rowData.User)" caption="Delete" />
-        </div>
+        </z-button-group>
       </template>
       <template slot="read" slot-scope="props">
         <input type="checkbox" v-model="props.rowData.Read" :disabled="(props.rowData.User=='admin')||(props.rowData.User==Analyzer.User)">

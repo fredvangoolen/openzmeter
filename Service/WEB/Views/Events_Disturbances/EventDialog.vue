@@ -3,10 +3,10 @@
     <dlg-fs :title="'Event » ' + mode" :height.sync="DialogHeight"></dlg-fs>
     <portal to="fs-toolbar" class="header-buttons">
       <toolbar-phases :analyzer="analyzer" v-model="Phases" storage="Events" :current="false" :multi="true"></toolbar-phases>
-      <div class="btn-group">
+      <z-button-group>
         <button-export :rows="Export" :file="'Event_' + mode"></button-export>
         <z-button @click="$emit('close')" :image="require('Imgs/arrow_undo.png')" />
-      </div>
+      </z-button-group>
     </portal>
     <portal to="fs-body" class="panel-body">
       <graph :options="GraphOptions" :height="DialogHeight"></graph>

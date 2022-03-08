@@ -10,7 +10,7 @@
         </div>
       </div>
     </template>
-    <div class="row">
+    <z-row>
       <div class="col-xs-12">
         <label class="control-label" style="line-height: 22px">Enable</label>
         <toggle class="float-right" onText="Yes" offText="No" v-model="Config.Enabled"></toggle>
@@ -24,7 +24,7 @@
         <label class="control-label">System log messages</label>
         <textarea rows="10" class="form-control" disabled :value="SysMessages"></textarea>
       </div>
-    </div>
+    </z-row>
   </dlg>
 </template>
 

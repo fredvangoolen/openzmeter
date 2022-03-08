@@ -1,6 +1,6 @@
 <template>
   <div v-if="analyzer != null">
-    <div class="row">
+    <z-row>
       <div class="col-lg-12">
         <div class="panel panel-active-power">
           <div class="panel-heading">
@@ -8,23 +8,23 @@
             <portal to="fs-toolbar" :disabled="!ExpandedActive" class="header-buttons">
               <toolbar-aggregation storage="AggregationEnergy" :options="['15M', '1H']" v-model="Aggreg"></toolbar-aggregation>
               <toolbar-period storage="Period" v-model="Range" :analyzer="analyzer"></toolbar-period>
-              <div class="btn-group">
+              <z-button-group>
                 <z-button :active="ShowContracted" @click="ShowContracted=!ShowContracted" tooltip="Scale includes contracted power limit" :image="require('Imgs/tag_blue.png')" />
                 <button-export file="Power" :rows="Export"></button-export>
                 <button-expand v-model="ExpandedActive"></button-expand>
-              </div>
+              </z-button-group>
             </portal>
           </div>
           <div class="panel-body">
             <spinner v-if="TransferGraph.Data==null"></spinner>
-            <div class="row">
+            <z-row>
               <counters class="col-md-6 col-lg-4 col-xl-3" serie="Active_Power" :analyzer="analyzer" :data3S="Transfer3S.LastData" :data1M="Transfer1M.LastData" :dataGraph="TransferGraph.Data" :height.sync="ActiveHeight"></counters>
               <div class="col-md-6 col-lg-8 col-xl-9">
                 <portal to="fs-body" :disabled="!ExpandedActive" class="panel-body">
                   <power serie="Active_Power" :analyzer="analyzer" :data="TransferGraph.Data" :showContracted="ShowContracted" :height="ExpandedActive?DialogHeight:ActiveHeight" @range="Range=$event"></power>
                 </portal>
               </div>
-            </div>
+            </z-row>
           </div>
         </div>
       </div>
@@ -33,22 +33,22 @@
           <div class="panel-heading">
             <div class="header-text">Fund. Reactive Power</div>
             <portal to="fs-toolbar" :disabled="!ExpandedReactive" class="header-buttons">
-              <div class="btn-group">
+              <z-button-group>
                 <button-export file="Power" :rows="Export"></button-export>
                 <button-expand v-model="ExpandedReactive"></button-expand>
-              </div>
+              </z-button-group>
             </portal>
           </div>
           <div class="panel-body">
             <spinner v-if="TransferGraph.Data==null"></spinner>
-            <div class="row">
+            <z-row>
               <counters class="col-md-6 col-lg-4 col-xl-3" serie="Reactive_Power" :analyzer="analyzer" :data3S="Transfer3S.LastData" :data1M="Transfer1M.LastData" :dataGraph="TransferGraph.Data" :height.sync="ReactiveHeight"></counters>
               <div class="col-md-6 col-lg-8 col-xl-9">
                 <portal to="fs-body" :disabled="!ExpandedReactive" class="panel-body">
                   <power serie="Reactive_Power" :analyzer="analyzer" :data="TransferGraph.Data" :height="ExpandedReactive?DialogHeight:ReactiveHeight" @range="Range=$event"></power>
                 </portal>
               </div>
-            </div>
+            </z-row>
           </div>
         </div>
       </div>
@@ -57,22 +57,22 @@
           <div class="panel-heading">
             <div class="header-text">Apparent Power</div>
             <portal to="fs-toolbar" :disabled="!ExpandedApparent" class="header-buttons">
-              <div class="btn-group">
+              <z-button-group>
                 <button-export file="Power" :rows="Export"></button-export>
                 <button-expand v-model="ExpandedApparent"></button-expand>
-              </div>
+              </z-button-group>
             </portal>
           </div>
           <div class="panel-body">
             <spinner v-if="TransferGraph.Data==null"></spinner>
-            <div class="row">
+            <z-row>
               <counters class="col-md-6 col-lg-4 col-xl-3" serie="Apparent_Power" :analyzer="analyzer" :data3S="Transfer3S.LastData" :data1M="Transfer1M.LastData" :dataGraph="TransferGraph.Data" :height.sync="ReactiveHeight"></counters>
               <div class="col-md-6 col-lg-8 col-xl-9">
                 <portal to="fs-body" :disabled="!ExpandedApparent" class="panel-body">
                   <power serie="Apparent_Power" :analyzer="analyzer" :data="TransferGraph.Data" :height="ExpandedApparent?DialogHeight:AppaerentHeight" @range="Range=$event"></power>
                 </portal>
               </div>
-            </div>
+            </z-row>
           </div>
         </div>
       </div>
@@ -87,7 +87,7 @@
         <parameters v-if="ActiveTab=='Parameters'" :data="TransferCubism.Data" :dataNow="TransferNow.Data" :analyzer="analyzer" :paused.sync="Paused"></parameters>
         <lissajou v-if="ActiveTab=='Lissajou'" :data="TransferNow.Data" :analyzer="analyzer" :paused.sync="Paused"></lissajou>
       </div>
-    </div>
+    </z-row>
     <dlg-fs v-if="ExpandedActive" title="Active Power" :height.sync="DialogHeight"></dlg-fs>
     <dlg-fs v-if="ExpandedReactive" title="Reactive Power" :height.sync="DialogHeight"></dlg-fs>
     <dlg-fs v-if="ExpandedApparent" title="Apparent Power" :height.sync="DialogHeight"></dlg-fs>

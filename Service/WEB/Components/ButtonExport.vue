@@ -10,7 +10,7 @@
         </div>
         <toolbar-pager class="pull-right" :pageSize="100" :input="Rows" :output.sync="FilterRows"></toolbar-pager>
       </template>
-      <div class="row">
+      <z-row>
         <div class="col-md-12">
           <label class="control-label">File name</label>
           <div class="input-group">
@@ -28,7 +28,7 @@
             </tr>
           </table>
         </div>
-      </div>
+      </z-row>
       <textarea type="text" ref="copyInput" style="max-height: 1px; position: absolute; top: -1000px;"></textarea>
       <template v-slot:footer>
         Document have {{ Rows.length }} rows.

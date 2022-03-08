@@ -1,24 +1,19 @@
 <template>
-  <div class="panel panel-other">
-    <div class="panel-heading">
-      <div class="huge-small header-text">Connectivity</div>
-    </div>
-    <div class="panel-body">
-      <vuetable ref="table" :fields="Columns" :data="Modules" :api-mode="false" class="table small table-striped">
-        <template slot="actions" slot-scope="props">
-          <z-button :disabled="!props.rowData.Avaliable" @click="LoadModule(props.rowData, true)" caption="Configure" />
-        </template>
-      </vuetable>
-      <bluetooth :settings="Settings" v-if="View=='Bluetooth'" @close="Update"></bluetooth>
-      <wifi :settings="Settings" v-if="View=='Wifi'" @close="Update"></wifi>
-      <ethernet :settings="Settings" v-if="View=='Ethernet'" @close="Update"></ethernet>
-      <ntp :settings="Settings" v-if="View=='NTP'" @close="Update"></ntp>
-      <telegram :settings="Settings" v-if="View=='Telegram'" @close="Update"></telegram>
-      <modbus-tcp :settings="Settings" v-if="View=='ModbusTCP'" @close="Update"></modbus-tcp>
-      <vpn :settings="Settings" v-if="View=='OpenVPN'" @close="Update"></vpn>
-      <updates :settings="Settings" v-if="View=='Updates'" @close="Update"></updates>
-    </div>
-  </div>
+  <z-panel title="Connectivity" color="#474544">
+    <vuetable ref="table" :fields="Columns" :data="Modules" :api-mode="false" class="table small table-striped">
+      <template slot="actions" slot-scope="props">
+        <z-button :disabled="!props.rowData.Avaliable" @click="LoadModule(props.rowData, true)" caption="Configure" />
+      </template>
+    </vuetable>
+    <bluetooth :settings="Settings" v-if="View=='Bluetooth'" @close="Update"></bluetooth>
+    <wifi :settings="Settings" v-if="View=='Wifi'" @close="Update"></wifi>
+    <ethernet :settings="Settings" v-if="View=='Ethernet'" @close="Update"></ethernet>
+    <ntp :settings="Settings" v-if="View=='NTP'" @close="Update"></ntp>
+    <telegram :settings="Settings" v-if="View=='Telegram'" @close="Update"></telegram>
+    <modbus-tcp :settings="Settings" v-if="View=='ModbusTCP'" @close="Update"></modbus-tcp>
+    <vpn :settings="Settings" v-if="View=='OpenVPN'" @close="Update"></vpn>
+    <updates :settings="Settings" v-if="View=='Updates'" @close="Update"></updates>
+  </z-panel>
 </template>
 
 <script>

@@ -9,7 +9,7 @@
       <toolbar-pager class="pull-right" :pageSize="10" :input="Settings.Analyzers" :output.sync="FilterAnalyzers" :filtercols="['User', 'Analyzer']"></toolbar-pager>
     </template>
     <div class="alert alert-danger text-center" style="margin-bottom: 5px; padding: 5px" v-if="Error!=null">{{ Error }}</div>
-    <div class="row">
+    <z-row>
       <div class="col-xs-12">
         <label class="control-label" style="line-height: 22px">Enabled</label>
         <toggle class="float-right" onText="Yes" offText="No" v-model="Settings.Enabled"></toggle>
@@ -23,12 +23,12 @@
           <span class="input-group-btn"><z-button @click="Add" :disabled="!CanAdd" :image="require('Imgs/plus.png')" /></span>
         </div>
       </div>
-    </div>
+    </z-row>
     <vuetable ref="table" :fields="Columns" :api-mode="false" :data="FilterAnalyzers" class="table small table-striped">
       <template slot="actions" slot-scope="props">
-        <div class="btn-group">
+        <z-button-group>
           <z-button variant="danger" @click="Delete(props.rowData.Analyzer)" caption="Delete" />
-        </div>
+        </z-button-group>
       </template>
       <template slot="user" slot-scope="props">
         <div class="input-group input-group-xs">

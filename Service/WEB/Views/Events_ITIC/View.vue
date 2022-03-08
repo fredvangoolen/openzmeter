@@ -1,15 +1,15 @@
 <template>
   <div id="wrapper">
-    <div class="row">
+    <z-row>
       <div class="col-lg-12">
         <div class="panel panel-other">
           <div class="panel-heading">
             <span class="header-text">ITIC Curve (CBEMA)</span>
             <div class="header-buttons">
               <toolbar-years :analyzer="analyzer" v-model="Year" storage="StatYear" aggreg="1H"></toolbar-years>
-              <div class="btn-group">
+              <z-button-group>
                 <button-export file="Events" :rows="Export"></button-export>
-              </div>
+              </z-button-group>
             </div>
           </div>
           <div class="panel-body">
@@ -18,8 +18,8 @@
           </div>
         </div>
       </div>
-    </div>
-    <div class="row">
+    </z-row>
+    <z-row>
       <div class="col-xs-12 col-md-6">
         <by-date :data="TransferEvents.Data" :analyzer="analyzer"></by-date>
       </div>
@@ -32,7 +32,7 @@
       <div class="col-xs-12 col-md-6">
         <by-duration :data="TransferEvents.Data" :analyzer="analyzer"></by-duration>
       </div>
-    </div>
+    </z-row>
   </div>
 </template>
 

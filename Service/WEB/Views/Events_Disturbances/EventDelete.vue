@@ -8,12 +8,12 @@
       </div>
     </template>
     <div class="alert alert-danger text-center" style="margin-bottom: 5px; padding: 5px">Delete {{ event.length }} events?<br>Select event deletion mode</div>
-    <div class="row">
+    <z-row>
       <div class="col-xs-12">
         <label>Mode:</label>
         <option-picker :options="[{name: 'All', value: 'All'}, {name: 'Only samples', value: 'Samples'}, {name: 'RMS samples only', value: 'RMS'}, {name: 'RAW samples only', value: 'RAW'}]" v-model="Mode"></option-picker>
       </div>
-    </div>
+    </z-row>
   </dlg>
 </template>
 

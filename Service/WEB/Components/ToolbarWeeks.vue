@@ -1,5 +1,5 @@
 <template>
-  <div class="btn-group">
+  <z-button-group>
     <div class="input-group input-group-xs">
       <span class="input-group-addon"><img :src="require('Imgs/calendar_view_day.png')"></span>
       <div class="input-group-btn">
@@ -12,7 +12,7 @@
         </ul>
       </div>
     </div>
-  </div>
+  </z-button-group>
 </template>
 
 <script>

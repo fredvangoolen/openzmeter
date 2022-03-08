@@ -1,6 +1,6 @@
 <template>
   <div v-if="analyzer != null">
-    <div class="row">
+    <z-row>
       <div class="col-lg-12">
         <div class="panel panel-active-energy">
           <div class="panel-heading">
@@ -8,14 +8,14 @@
             <portal to="fs-toolbar" :disabled="!ExpandedActive" class="header-buttons">
               <toolbar-aggregation storage="AggregationEnergy" :options="['15M', '1H']" v-model="Aggreg"></toolbar-aggregation>
               <toolbar-period storage="Period" v-model="Range" :analyzer="analyzer"></toolbar-period>
-              <div class="btn-group">
+              <z-button-group>
                 <button-export file="Energy" :rows="Export"></button-export>
                 <button-expand v-model="ExpandedActive"></button-expand>
-              </div>
+              </z-button-group>
             </portal>
           </div>
           <div class="panel-body">
-            <div class="row">
+            <z-row>
               <counters class="col-md-6 col-lg-4 col-xl-3" serie="Active_Energy" :analyzer="analyzer" :data15M="Transfer15M.LastData" :data1H="Transfer1H.LastData" :dataGraph="TransferGraph.Data" :height.sync="ActiveHeight"></counters>
               <div class="col-md-6 col-lg-8 col-xl-9">
                 <portal to="fs-body" :disabled="!ExpandedActive" class="panel-body">
@@ -23,7 +23,7 @@
                   <energy serie="Active_Energy" :analyzer="analyzer" :data="TransferGraph.Data" :height="ExpandedActive?DialogHeight:ActiveHeight" @range="Range=$event"></energy>
                 </portal>
               </div>
-            </div>
+            </z-row>
           </div>
         </div>
       </div>
@@ -32,14 +32,14 @@
           <div class="panel-heading">
             <div class="header-text">Fund. Reactive Energy</div>
             <portal to="fs-toolbar" :disabled="!ExpandedReactive" class="header-buttons">
-              <div class="btn-group">
+              <z-button-group>
                 <button-export file="Energy" :rows="Export"></button-export>
                 <button-expand v-model="ExpandedReactive"></button-expand>
-              </div>
+              </z-button-group>
             </portal>
           </div>
           <div class="panel-body">
-            <div class="row">
+            <z-row>
               <counters class="col-md-6 col-lg-4 col-xl-3" serie="Reactive_Energy" :analyzer="analyzer" :data15M="Transfer15M.LastData" :data1H="Transfer1H.LastData" :dataGraph="TransferGraph.Data" :height.sync="ReactiveHeight"></counters>
               <div class="col-md-6 col-lg-8 col-xl-9">
                 <portal to="fs-body" :disabled="!ExpandedReactive" class="panel-body">
@@ -47,11 +47,11 @@
                   <energy serie="Reactive_Energy" :analyzer="analyzer" :data="TransferGraph.Data" :height="ExpandedReactive?DialogHeight:ReactiveHeight" @range="Range=$event"></energy>
                 </portal>
               </div>
-            </div>
+            </z-row>
           </div>
         </div>
       </div>
-    </div>
+    </z-row>
     <dlg-fs v-if="ExpandedActive" title="Active Energy" :height.sync="DialogHeight"></dlg-fs>
     <dlg-fs v-if="ExpandedReactive" title="Reactive Energy" :height.sync="DialogHeight"></dlg-fs>
   </div>

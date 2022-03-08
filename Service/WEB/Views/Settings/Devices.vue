@@ -1,25 +1,18 @@
 <template>
-  <div class="panel panel-other" v-show="Enabled">
-    <div class="panel-heading">
-      <div class="huge-small header-text">Device manager</div>
-    </div>
-    <div class="panel-body">
-      <spinner v-if="ShowSpinner"></spinner>
-      <vuetable ref="table" :fields="Columns" :data="Devices" :api-mode="false" class="table small table-striped">
-        <template slot="actions" slot-scope="props">
-          <div class="btn-group" >
-            <z-button @click="Configure(props.rowData)" caption="Configure" />
-          </div>
-        </template>
-      </vuetable>
-    </div>
+  <z-panel title="Device manager" color="#474544" v-show="Enabled">
+    <spinner v-if="ShowSpinner"></spinner>
+    <vuetable ref="table" :fields="Columns" :data="Devices" :api-mode="false" class="table small table-striped">
+      <template slot="actions" slot-scope="props">
+        <z-button @click="Configure(props.rowData)" caption="Configure" />
+      </template>
+    </vuetable>
     <device-virtual v-if="Driver=='DeviceVirtual'" :settings="Settings" @close="LoadTable"></device-virtual>
     <device-v1 v-if="Driver=='DeviceV1'" :settings="Settings" @close="LoadTable"></device-v1>
     <device-v2 v-if="Driver=='DeviceV2'" :settings="Settings" @close="LoadTable"></device-v2>
     <device-v3 v-if="Driver=='DeviceV3'" :settings="Settings" @close="LoadTable"></device-v3>
     <device-v4 v-if="Driver=='DeviceV4'" ></device-v4>
     <device-remote v-if="Driver=='DeviceRemote'" :settings="Settings" @close="LoadTable"></device-remote>
-  </div>
+  </z-panel>
 </template>
 
 <script>

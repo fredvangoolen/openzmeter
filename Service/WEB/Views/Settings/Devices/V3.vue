@@ -7,7 +7,7 @@
         <z-button @click="$emit('close', false)" :image="require('Imgs/arrow_undo.png')" />
       </div>
     </template>
-    <div class="row">
+    <z-row>
       <div class="col-xs-12">
         <label class="control-label" style="line-height: 22px">Start on boot</label>
         <toggle class="float-right" onText="Yes" offText="No" v-model="Settings.Enabled"></toggle>
@@ -65,7 +65,7 @@
           </tr>
         </table>
       </div>
-    </div>
+    </z-row>
   </dlg>
 </template>
 

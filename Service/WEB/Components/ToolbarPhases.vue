@@ -1,8 +1,8 @@
 <template>
-  <div class="btn-group" v-if="analyzer.Mode != '1PHASE'">
+  <z-button-group v-if="analyzer.Mode != '1PHASE'">
     <z-button v-for="(item, index) in analyzer.PhaseNames" @click="Toggle(index)" :key="index" :active="Active[index]" :tooltip="'Show phase ' + item" :image="PhaseImgs[index]" />
     <z-button v-if="(analyzer.NeutralName!=null)&&(current==true)" @click="Toggle(analyzer.PhaseNames.length)" :active="Active[analyzer.PhaseNames.length]" :tooltip="'Show phase ' + analyzer.NeutralName" :image="NeutralImg" />
-  </div>
+  </z-button-group>
 </template>
 
 <script>

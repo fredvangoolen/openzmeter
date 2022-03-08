@@ -9,7 +9,7 @@
         </div>
       </div>
     </template>
-    <div class="row">
+    <z-row>
       <div class="col-xs-12">
         <label class="control-label" style="line-height: 22px">Enable</label>
         <toggle class="float-right" onText="Yes" offText="No" v-model="Config.Enabled"></toggle>
@@ -22,7 +22,7 @@
   Device IP   : 10.0.0.1
   Clients IP  : 10.0.0.2 - 10.0.0.254</textarea>
       </div>
-    </div>
+    </z-row>
   </dlg>
 </template>
 

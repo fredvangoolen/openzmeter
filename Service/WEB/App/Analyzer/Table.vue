@@ -19,7 +19,7 @@
           <img :src="require('Imgs/bullet_red.png')" v-if="props.rowData.State=='OFFLINE'">
         </template>
         <template slot="actions" slot-scope="props">
-          <div class="btn-group">
+          <z-button-group>
             <button type="button" class="btn btn-success btn-xs" :disabled="((analyzer != null) && (analyzer.Analyzer == props.rowData.Analyzer))" @click="Select(props.rowData.Analyzer, true)">Select</button>
             <button type="button" class="btn btn-default dropdown-toggle btn-xs" data-toggle="dropdown"><span class="caret"></span></button>
             <ul class="dropdown-menu pull-right">
@@ -31,7 +31,7 @@
               <li role="separator" class="divider"></li>
               <li><a @click="LoadView('Maintenance', props.rowData.Analyzer)">Maintenance</a></li>
             </ul>
-          </div>
+          </z-button-group>
         </template>
       </vuetable>
     </dlg>

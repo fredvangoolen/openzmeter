@@ -1,42 +1,37 @@
 <template>
-  <div class="panel panel-other" v-show="Enabled">
-    <div class="panel-heading clearfix">
-      <div class="huge-small pull-left">Tariffs</div>
-      <div class="pull-right btn-group">
+  <z-panel title="Tariffs" color="#474544" v-show="Enabled">
+    <template v-slot:toolbar>
+      <z-button-group>
+        <z-button tooltip="Template definitions" @click="View='Templates'" :active="View=='Templates'" caption="Templates" />
+        <z-button tooltip="Price fetch modules" @click="View='Modules'" :active="View=='Modules'" caption="Price modules" />
+      </z-button-group>
+    </template>
+    <template v-slot:subright v-if="View=='Templates'">
+      <z-button-group>
         <z-button tooltip="Add tariff" @click="Add" :image="require('Imgs/plus.png')" caption="Add" />
-      </div>
+      </z-button-group>
       <toolbar-pager class="pull-right" :pageSize="10" :input="Tariffs" :output.sync="FilterTariffs" :filtercols="['TimeZone', 'Name', 'StartDate', 'EndDate']"></toolbar-pager>
-    </div>
-    <div class="panel-body">
-      <spinner v-if="ShowSpinner"></spinner>
-      <div class="row">
-        <div class="col-sm-12">
-          <label class="control-label">Template definitions</label>
-          <vuetable :fields="ColumnsTariffs" :api-mode="false" :data="FilterTariffs" class="table small table-striped">
-            <template slot="actions" slot-scope="props">
-              <div class="btn-group">
-                <z-button @click="Edit(props.rowData)" caption="Edit" />
-                <z-button @click="Duplicate(props.rowData)" tooltip="Duplicate tariff" :image="require('Imgs/page_copy.png')" />
-                <z-button @click="Delete(props.rowData)" variant="danger" caption="Delete" />
-              </div>
-            </template>
-          </vuetable>
-        </div>
-        <div class="col-sm-12">
-          <label class="control-label">Price fetch modules</label>
-          <vuetable :fields="ColumnsModules" :api-mode="false" :data="Modules" class="table small table-striped modules">
-            <template slot="actions" slot-scope="props">
-              <div class="btn-group">
-                <z-button @click="Configure(props.rowData)" caption="Configure" />
-              </div>
-            </template>
-          </vuetable>
-        </div>
-      </div>
-    </div>
+    </template>
+    <spinner v-if="ShowSpinner" />
+    <vuetable v-if="View=='Templates'" :fields="ColumnsTariffs" :api-mode="false" :data="FilterTariffs" class="table small table-striped">
+      <template slot="actions" slot-scope="props">
+        <z-button-group>
+          <z-button @click="Edit(props.rowData)" caption="Edit" />
+          <z-button @click="Duplicate(props.rowData)" tooltip="Duplicate tariff" :image="require('Imgs/page_copy.png')" />
+          <z-button @click="Delete(props.rowData)" variant="danger" caption="Delete" />
+        </z-button-group>
+      </template>
+    </vuetable>
+    <vuetable v-if="View=='Modules'" :fields="ColumnsModules" :api-mode="false" :data="Modules" class="table small table-striped modules">
+      <template slot="actions" slot-scope="props">
+        <z-button-group>
+          <z-button @click="Configure(props.rowData)" caption="Configure" />
+        </z-button-group>
+      </template>
+    </vuetable>
     <tariff v-if="ShowDialog" :tariff="Tariff" :source="SourceTariff" @close="LoadTariffs"></tariff>
     <esp-esios v-if="Module!=null && Module.Name=='ESP_ESIOS'" :settings="Module" @close="Module=null"></esp-esios>
-  </div>
+  </z-panel>
 </template>
 
 <script>
@@ -46,7 +41,7 @@
   import * as oZm from 'JS/openZmeter.js';
   export default {
     data: function() {
-      return { ShowSpinner: true, Tariffs: [], FilterTariffs: [], ShowDialog: false, Enabled: false, Tariff: null, SourceTariff: null, Module: null,
+      return { View: 'Templates', ShowSpinner: true, Tariffs: [], FilterTariffs: [], ShowDialog: false, Enabled: false, Tariff: null, SourceTariff: null, Module: null,
         Modules: [
           { Name: 'ESP_ESIOS', Description: 'Fetch hourly prices from spanish ESIOS (Sistema de informacion del operador del sistema)' }
         ],

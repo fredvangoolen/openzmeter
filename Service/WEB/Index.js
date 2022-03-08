@@ -30,6 +30,12 @@ Vue.component('Avatar', Avatar);
 
 import zButton from 'Components/Button.vue';
 Vue.component('zButton', zButton);
+import zButtonGroup from 'Components/ButtonGroup.vue';
+Vue.component('zButtonGroup', zButtonGroup);
+import zPanel from 'Components/Panel.vue';
+Vue.component('zPanel', zPanel);
+import zRow from 'Components/Row.vue';
+Vue.component('zRow', zRow);
 
 
 import ButtonExpand from 'Components/ButtonExpand.vue';

@@ -1,7 +1,7 @@
 <template>
-  <div class="btn-group">
+  <z-button-group>
     <button type="button" v-for="(i, idx) in names" :key="idx" @click="$emit('input', idx)" :class="{ active: (idx==value) }" class="btn btn-default btn-xs" :title="i"><img :src="PhaseImgs[idx]"></button>
-  </div>
+  </z-button-group>
 </template>
 
 <script>

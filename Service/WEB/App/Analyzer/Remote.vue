@@ -66,9 +66,9 @@
       </div>
       <vuetable ref="table" :fields="Columns" :api-mode="false" :data="Rows" class="table small table-striped">
         <template slot="actions" slot-scope="props">
-          <div class="btn-group">
+          <z-button-group>
             <input type="checkbox" v-model="Analyzer.MQTT[props.rowData.Export]"/>
-          </div>
+          </z-button-group>
         </template>
       </vuetable>
     </div>

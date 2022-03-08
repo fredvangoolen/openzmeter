@@ -12,10 +12,10 @@
       <div class="alert alert-info text-center" style="margin-bottom: 5px; padding: 5px">All dates/times are in analyzer timezone.</div>
       <vuetable key="rates" :fields="Columns" :data="Analyzer.Rates" :api-mode="false" class="table small table-striped">
         <template slot="actions" slot-scope="props">
-          <div class="btn-group">
+          <z-button-group>
             <z-button @click="Edit(props.rowIndex)" caption="Edit" />
             <z-button variant="danger" @click="Delete(props.rowIndex)" caption="Delete" />
-          </div>
+          </z-button-group>
         </template>
       </vuetable>
     </dlg>

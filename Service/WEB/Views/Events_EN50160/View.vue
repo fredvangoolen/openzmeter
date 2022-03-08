@@ -1,6 +1,6 @@
 <template>
   <div v-if="analyzer!=null">
-    <div class="row">
+    <z-row>
       <div class="col-lg-12">
         <div class="panel panel-other">
           <div class="panel-heading">
@@ -16,8 +16,8 @@
           </div>
         </div>
       </div>
-    </div>
-    <div class="row" v-if="Ready">
+    </z-row>
+    <z-row v-if="Ready">
       <div :class="[(analyzer.VoltageChannels==1) ? 'col-lg-4' : 'col-lg-6', 'col-md-12']">
         <frequency :data="Weeks[Index]" :analyzer="analyzer" :ranges="Frequencies"></frequency>
       </div>
@@ -30,7 +30,7 @@
       <div v-if="analyzer.VoltageChannels>1" class="col-lg-6 col-md-12">
         <unbalance :data="Weeks[Index]" :analyzer="analyzer" :ranges="Unbalances"></unbalance>
       </div>
-    </div>
+    </z-row>
   </div>
   <div v-else-if="analyzer == null">
     <div class="alert alert-danger text-center">

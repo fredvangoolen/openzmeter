@@ -1,5 +1,5 @@
 <template>
-  <div class="btn-group">
+  <z-button-group>
     <div class="input-group input-group-xs">
       <div class="input-group-btn">
         <button class="btn btn-default narrow" type="button" @click="Previous"><img :src="require('Imgs/resultset_previous.png')"></button>
@@ -33,7 +33,7 @@
           <z-button @click="ShowDialog=false" :image="require('Imgs/arrow_undo.png')" tooltip="Discard" />
         </div>
       </template>
-      <div class="row">
+      <z-row>
         <div class="col-xs-12 col-sm-6">
           <label class="control-label">From</label>
           <date-picker :options="{ format: 'DD/MM/YYYY - HH:mm:ss', viewMode: 'days', timeZone: analyzer.TimeZone }" v-model="Range[0]"></date-picker>
@@ -42,9 +42,9 @@
           <label class="control-label">To</label>
           <date-picker :options="{ format: 'DD/MM/YYYY - HH:mm:ss', viewMode: 'days', timeZone: analyzer.TimeZone }" v-model="Range[1]"></date-picker>
         </div>
-      </div>
+      </z-row>
     </dlg>
-  </div>
+  </z-button-group>
 </template>
 
 <script>

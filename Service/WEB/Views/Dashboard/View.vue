@@ -1,6 +1,6 @@
 <template>
   <div v-if="analyzer != null">
-    <div class="row">
+    <z-row>
       <div class="col-lg-12">
         <div class="panel panel-active-energy">
           <div class="panel-heading">
@@ -8,14 +8,14 @@
             <portal to="fs-toolbar" :disabled="!Expanded" class="header-buttons">
               <toolbar-aggregation storage="AggregationEnergy" v-model="Aggreg" :options="['15M', '1H']"></toolbar-aggregation>
               <toolbar-period storage="Period" v-model="Range" :analyzer="analyzer"></toolbar-period>
-              <div class="btn-group">
+              <z-button-group>
                 <button-export file="Energy" :rows="Export"></button-export>
                 <button-expand v-model="Expanded"></button-expand>
-              </div>
+              </z-button-group>
             </portal>
           </div>
           <div class="panel-body">
-            <div class="row">
+            <z-row>
               <counters class="col-md-5 col-lg-4 col-xl-3" :analyzer="analyzer" :height.sync="Height" :data="TransferGraph.Data"></counters>
               <div class="col-md-7 col-lg-8 col-xl-9">
                 <portal to="fs-body" :disabled="!Expanded" class="panel-body">
@@ -23,13 +23,13 @@
                   <energy :analyzer="analyzer" :height="Expanded?DialogHeight:Height-10" :data="TransferGraph.Data" @range="Range=$event"></energy>
                 </portal>
               </div>
-            </div>
+            </z-row>
           </div>
         </div>
       </div>
       <dlg-fs v-if="Expanded" title="Energy consumption" :height.sync="DialogHeight"></dlg-fs>
-    </div>
-    <div class="row">
+    </z-row>
+    <z-row>
       <div class="col-lg-6 col-md-12">
         <graphs ref="g0" serie="Voltage" :analyzer="analyzer" :data="Transfer3S.Data" :last="Transfer3S.LastData" :paused.sync="Paused3S"></graphs>
       </div>
@@ -42,7 +42,7 @@
       <div class="col-lg-6 col-md-12" v-if="analyzer.NominalFrequency > 0.0">
         <graphs ref="g3" serie="Frequency" :analyzer="analyzer" :data="Transfer3S.Data" :last="Transfer3S.LastData" :paused.sync="Paused3S"></graphs>
       </div>
-    </div>
+    </z-row>
     <div class="row" v-if="analyzer.NominalFrequency > 0.0">
       <div class="col-lg-12">
         <variables :analyzer="analyzer" :data="Transfer1M.Data" :dataNow="TransferNow.Data"></variables>

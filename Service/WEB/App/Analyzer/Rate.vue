@@ -19,9 +19,9 @@
       <spinner v-if="ShowSpinner"></spinner>
       <vuetable :fields="ColumnsTariffs" :api-mode="false" :data="FilterTariffs" class="tariffs table small table-striped">
         <template slot="actions" slot-scope="props">
-          <div class="btn-group" >
+          <z-button-group>
             <z-button @click="LoadTariff(props.rowData)" caption="Load" />
-          </div>
+          </z-button-group>
         </template>
       </vuetable>
     </div>
@@ -100,9 +100,9 @@
                     <input-spin :max="100000" :min="0" :prepend="Rate.Currency + '/' + Rate.PowerUnits + '/day'" :decimals="6" :increment="0.1" v-model="Rate.PowerCost[idx]"></input-spin>
                   </td>
                   <td style="width:30px">
-                    <div class="btn-group">
+                    <z-button-group>
                       <button type="button" class="btn btn-default btn-xs" @click="$set(Rate.PowerCost, idx, Rate.Periods[idx].DefaultPowerCost)" title="Set tariff default costs"><img :src="require('Imgs/wand.png')"></button>
-                    </div>
+                    </z-button-group>
                   </td>
                 </tr>
               </table>
@@ -133,9 +133,9 @@
                     <input-spin :max="100000" :min="0" :prepend="Rate.Currency + '/' + Rate.EnergyUnits" :decimals="6" :increment="0.1" v-model="Rate.EnergyCost[idx]"></input-spin>
                   </td>
                   <td style="width:30px">
-                    <div class="btn-group">
+                    <z-button-group>
                       <button type="button" class="btn btn-default btn-xs" @click="Rate.EnergyCost[idx]=Rate.Periods[idx].DefaultEnergyCost" title="Set tariff default costs"><img :src="require('Imgs/wand.png')"></button>
-                    </div>
+                    </z-button-group>
                   </td>
                 </tr>
               </table>
@@ -200,15 +200,15 @@
               <div class="clearfix"></div>
             </div>
             <div class="panel-body">
-              <div class="row">
+              <z-row>
                 <vuetable :fields="ColumnsCycles" :api-mode="false" :data="FilterCycles" class="bills table small table-striped">
                   <template slot="actions" slot-scope="props">
-                    <div class="btn-group" v-if="!props.rowData.IsLast">
+                    <z-button-group v-if="!props.rowData.IsLast">
                       <button class="btn btn-xs btn-danger" @click="DelBill(props.rowData)">Delete</button>
-                    </div>
+                    </z-button-group>
                   </template>
                 </vuetable>
-              </div>
+              </z-row>
             </div>
           </div>
         </div>
@@ -222,12 +222,12 @@
           <button type="button" class="btn btn-default btn-xs" @click="View='Periods'"><img :src="require('Imgs/arrow_undo.png')" alt="Go back"></button>
         </div>
       </template>
-      <div class="row">
+      <z-row>
         <div class="col-xs-12">
           <label class="control-label">Expresion</label>
           <input-math v-model="Rate.PowerCost" :vars="Vars"></input-math>
         </div>
-      </div>
+      </z-row>
     </dlg>
     <dlg v-if="View=='EnergyCostExpression'">
       <template v-slot:header>
@@ -236,12 +236,12 @@
           <button type="button" class="btn btn-default btn-xs" @click="View='Periods'"><img :src="require('Imgs/arrow_undo.png')" alt="Go back"></button>
         </div>
       </template>
-      <div class="row">
+      <z-row>
         <div class="col-xs-12">
           <label class="control-label">Expresion</label>
           <input-math v-model="Rate.EnergyCost" :vars="Vars"></input-math>
         </div>
-      </div>
+      </z-row>
     </dlg>
   </div>
 </template>

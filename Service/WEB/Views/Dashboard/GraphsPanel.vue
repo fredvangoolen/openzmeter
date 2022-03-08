@@ -22,10 +22,10 @@
       <router-link :to="Link"><span class="pull-left">View Details</span></router-link>
       <portal to="fs-toolbar" :disabled="!Expanded" class="header-buttons">
         <toolbar-phases :analyzer="analyzer" v-model="Phases" v-if="serie != 'Frequency'" :storage="'Dashboard_' + serie" :current="serie=='Current'" :multi="true"></toolbar-phases>
-        <div class="btn-group">
+        <z-button-group>
           <button-export :rows="Export" :file="analyzer.SerieName(serie)"></button-export>
           <button-expand v-model="Expanded"></button-expand>
-        </div>
+        </z-button-group>
       </portal>
     </div>
     <dlg-fs v-if="Expanded" :title="analyzer.SerieName(serie)" :height.sync="DialogHeight"></dlg-fs>

@@ -68,9 +68,9 @@
     <div v-if="View=='Scan'">
       <vuetable ref="table" :fields="Columns" :api-mode="false" :data="WifiList" class="table small table-striped">
         <template slot="actions" slot-scope="props">
-          <div class="btn-group">
+          <z-button-group>
             <z-button variant="success" @click="Select(props.rowData)" caption="Select" />
-          </div>
+          </z-button-group>
         </template>
         <template slot="signal" slot-scope="props">
           <progress-bar :value="props.rowData.Quality"></progress-bar>

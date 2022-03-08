@@ -26,10 +26,10 @@
           <table style="width: 100%"><tr><td>
             <detail-tabs key="Period_Tabs" :tabs="['General'].concat(Array(Tariff.Template.Periods.length).fill(0).map((n, idx) => { return 'P' + (idx + 1)}))" v-model="ActivePeriod" :light="true"></detail-tabs>
           </td><td style="width: 64px; text-align: right;">
-            <div class="btn-group">
+            <z-button-group>
               <z-button :disabled="Tariff.Template.Periods.length==1" @click="DeletePeriod" tooltip="Delete last period" :image="require('Imgs/cross.png')" />
               <z-button :image="require('Imgs/plus.png')" @click="AddPeriod" tooltip="Add new period" />
-            </div>
+            </z-button-group>
           </td></tr></table>
           <div class="panel-tab panel panel-dialog" style="margin-bottom: 0px" v-if="ActivePeriod=='General'">
             <div class="panel-heading">
@@ -41,7 +41,7 @@
               <div class="clearfix"></div>
             </div>
             <div class="panel-body">
-              <div class="row">
+              <z-row>
                 <div class="col-xs-4">
                   <label class="small">Currency</label>
                   <div class="input-group input-group-xs" style="width: 100%">
@@ -78,7 +78,7 @@
                     <option-picker v-model="props.rowData.Type" :options="[ {name: 'Info', value: 'INFO'}, {name: 'General cost', value: 'COST'}, {name: 'Energy cost', value: 'COST_ENERGY'}, {name: 'Power cost', value: 'COST_POWER'} ]" ></option-picker>
                   </template>
                 </vuetable>
-              </div>
+              </z-row>
             </div>
           </div>
           <div v-for="(period, idx) in Tariff.Template.Periods" :key="idx">
@@ -92,7 +92,7 @@
                 <div class="clearfix"></div>
               </div>
               <div class="panel-body">
-                <div class="row">
+                <z-row>
                   <div class=" col-xs-12" style="display:flex">
                     <div style="flex-grow:2">
                       <label class="small">Period name</label>
@@ -133,7 +133,7 @@
                       <option-picker v-model="props.rowData.Type" :options="[ {name: 'Info', value: 'INFO'}, {name: 'General cost', value: 'COST'}, {name: 'Energy cost', value: 'COST_ENERGY'}, {name: 'Power cost', value: 'COST_POWER'} ]" ></option-picker>
                     </template>
                   </vuetable>
-                </div>
+                </z-row>
               </div>
             </div>
           </div>
@@ -144,10 +144,10 @@
           <table style="width: 100%;"><tr><td>
             <detail-tabs key="Day_Tabs" :tabs="new Array(Tariff.Template.Days.length).fill(0).map((n, idx) => { return 'D' + (idx + 1)})" v-model="ActiveDay" :light="true"></detail-tabs>
           </td><td style="width: 64px; text-align: right">
-            <div class="btn-group">
+            <z-button-group>
               <z-button :disabled="Tariff.Template.Days.length==1" tooltip="Delete last day" @click="DeleteDay" :image="require('Imgs/cross.png')" />
               <z-button @click="AddDay" :image="require('Imgs/plus.png')" tooltip="Add new day" />
-            </div>
+            </z-button-group>
           </td></tr></table>
           <div v-for="(day, idx) in Tariff.Template.Days" :key="idx">
             <div class="panel panel-tab panel-dialog" v-if="ActiveDay=='D'+(idx+1)">
@@ -179,16 +179,16 @@
               <detail-tabs key="Year_Tabs" :tabs="Tariff.Template.Years.map((year) => { return String(year.Year); }).sort()" v-model="ActiveYear" :light="true"></detail-tabs>
             </td>
             <td style="width:130px; text-align: right;">
-              <div class="btn-group">
+              <z-button-group>
                 <z-button :disabled="Tariff.Template.Years.length==1" @click="DeleteYear" tooltip="Delete this year" :image="require('Imgs/cross.png')" />
-              </div>
-              <div class="btn-group">
+              </z-button-group>
+              <z-button-group>
                 <input-spin :max="2100" :min="2000" :decimals="0" :increment="1" v-model="NewYearSelect" style="width:90px">
                   <template v-slot:buttons>
                     <z-button :disabled="Tariff.Template.Years.map((year) => { return year.Year; }).includes(NewYearSelect)" @click="AddYear" tooltip="Add new year" :image="require('Imgs/plus.png')" />
                   </template>
                 </input-spin>
-              </div>
+              </z-button-group>
             </td>
             </tr>
           </table>
@@ -212,12 +212,12 @@
           <z-button @click="View='Periods'" :image="require('Imgs/arrow_undo.png')" tooltip="Go back" />
         </div>
       </template>
-      <div class="row">
+      <z-row>
         <div class="col-xs-12">
           <label class="control-label">Expresion</label>
           <input-math v-model="Tariff.Template.Script" :vars="VarsMain"></input-math>
         </div>
-      </div>
+      </z-row>
     </dlg>
     <dlg v-if="View=='ExpresionPeriods'">
       <template v-slot:header>
@@ -226,12 +226,12 @@
           <z-button @click="View='Periods'" :image="require('Imgs/arrow_undo.png')" tooltip="Go back" />
         </div>
       </template>
-      <div class="row">
+      <z-row>
         <div class="col-xs-12">
           <label class="control-label">Expresion</label>
           <input-math v-model="Tariff.Template.Periods[parseInt(ActivePeriod.substr(1)) - 1].Script" :vars="VarsPeriod"></input-math>
         </div>
-      </div>
+      </z-row>
     </dlg>
   </div>
 </template>

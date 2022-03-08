@@ -1,5 +1,5 @@
 <template>
-  <div class="btn-group">
+  <z-button-group>
     <div class="input-group input-group-xs">
       <span class="form-control"><div class="colorbox" :style="{ backgroundColor: value }"></div></span>
       <div class="input-group-btn">
@@ -11,7 +11,7 @@
         </ul>
       </div>
     </div>
-  </div>
+  </z-button-group>
 </template>
 
 <script>

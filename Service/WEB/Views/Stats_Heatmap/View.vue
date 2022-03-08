@@ -1,6 +1,6 @@
 <template>
   <div v-if="analyzer != null">
-    <div class="row">
+    <z-row>
       <div class="col-lg-12">
         <div class="panel panel-active-energy stats-headmap">
           <div class="panel-heading">
@@ -9,9 +9,9 @@
               <color-bar :width="140" :height="10" :range="Range" units="Wh"></color-bar>
               <toolbar-aggregation storage="HeatmapAggreg" :options="['15M', '1H']" v-model="Aggreg"></toolbar-aggregation>
               <toolbar-years :analyzer="analyzer" v-model="Year" aggreg="15M" storage="StatsYear"></toolbar-years>
-              <div class="btn-group">
+              <z-button-group>
                 <button-export file="Heatmap" :rows="Export"></button-export>
-              </div>
+              </z-button-group>
             </div>
           </div>
           <div class="panel-body" style="min-height: 300px">
@@ -20,7 +20,7 @@
           </div>
         </div>
       </div>
-    </div>
+    </z-row>
   </div>
   <div v-else-if="analyzer == null">
     <div class="alert alert-danger text-center">

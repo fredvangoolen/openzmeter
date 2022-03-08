@@ -1,18 +1,18 @@
 <template>
   <div v-if="analyzer != null">
-    <div class="row">
+    <z-row>
       <div class="col-lg-12">
         <div class="panel panel-active-energy">
           <div class="panel-heading">
             <span class="header-text">Energy costs</span>
             <div class="header-buttons clearfix">
-              <div class="btn-group">
+              <z-button-group>
                 <option-picker v-model="Group" :options="[{name: 'Contracted', value: 0}, {name: 'Compare group 1', value: 1}, {name: 'Compare group 2', value: 2}, {name: 'Compare group 3', value: 3}, {name: 'Compare group 4', value: 4}, {name: 'Compare group 5', value: 5}, {name: 'Compare group 6', value: 6}, {name: 'Compare group 7', value: 7}, {name: 'Compare group 8', value: 8}, {name: 'Compare group 9', value: 9}, {name: 'Compare group 10', value: 10}]"></option-picker>
-              </div>
+              </z-button-group>
               <toolbar-years :analyzer="analyzer" v-model="Year" aggreg="1H" storage="StatsYear"></toolbar-years>
-              <div class="btn-group">
+              <z-button-group>
                 <button-export file="Cost" :rows="Export"></button-export>
-              </div>
+              </z-button-group>
             </div>
           </div>
           <div class="panel-body">
@@ -30,7 +30,7 @@
           <bill :analyzer="analyzer" :bill="bill" :group="Group" v-if="BillNames[idx]==Active"></bill>
         </div>
       </div>
-    </div>
+    </z-row>
   </div>
   <div v-else-if="analyzer == null">
     <div class="alert alert-danger text-center">

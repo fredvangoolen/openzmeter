@@ -8,9 +8,9 @@
           <z-button tooltip="Discard" @click="$emit('close')" :image="require('Imgs/arrow_undo.png')" />
         </div>
       </template>
-      <div class="row">
+      <z-row>
         <div class="col-xs-12 col-lg-4 col-sm-6">
-          <div class="row">
+          <z-row>
             <div class="col-xs-12">
               <div class="rounded-panel">
                 <div class="popover-title"><strong>Profile image</strong>
@@ -24,10 +24,10 @@
                 </div>
               </div>
             </div>
-          </div>
+          </z-row>
         </div>
         <div class="col-xs-12 col-lg-8 col-sm-6">
-          <div class="row">
+          <z-row>
             <div class="col-xs-12" v-if="user!=null">
               <label class="control-label">Username</label>
               <div class="input-group input-group-xs">
@@ -79,9 +79,9 @@
               <label class="control-label">Time zone</label>
               <option-picker :options="TimeZones" v-model="User.TimeZone"></option-picker>
             </div>
-          </div>
+          </z-row>
         </div>
-      </div>
+      </z-row>
     </dlg>
     <pass-dlg :user.sync="User" v-if="ShowDialog" @close="ShowDialog=false"></pass-dlg>
   </div>

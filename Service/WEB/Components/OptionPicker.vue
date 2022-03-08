@@ -1,5 +1,5 @@
 <template>
-  <div class="btn-group">
+  <z-button-group>
     <div class="input-group input-group-xs">
       <span class="input-group-addon" v-if="prefix!=null">{{ prefix }}</span>
       <span class="form-control">{{ Selected.name }}</span>
@@ -11,7 +11,7 @@
         </ul>
       </div>
     </div>
-  </div>
+  </z-button-group>
 </template>
 
 <script>

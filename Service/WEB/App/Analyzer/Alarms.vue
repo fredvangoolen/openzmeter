@@ -9,7 +9,7 @@
           <z-button @click="$emit('close', null)" tooltip="Back" :image="require('Imgs/arrow_undo.png')" />
         </div>
       </template>
-      <div class="row">
+      <z-row>
         <div class="col-xs-12">
           <label class="control-label" style="line-height: 22px">Events detection</label>
           <toggle class="float-right" onText="Yes" offText="No" v-model="Analyzer.Events.Enabled"></toggle>
@@ -41,13 +41,13 @@
           <toggle class="float-right" onText="Yes" offText="No" v-model="Analyzer.AlarmsEnabled"></toggle>
           <div class="help">Evaluate math expressions with analysis params and generate alarms</div>
         </div>
-      </div>
+      </z-row>
       <vuetable :fields="columns_alarms" :api-mode="false" :data="Analyzer.Alarms" track-by="ID" class="table small table-striped">
         <template slot="actions" slot-scope="props">
-          <div class="btn-group">
+          <z-button-group>
             <z-button @click="Edit(props.rowIndex)" caption="Edit" />
             <z-button variant="danger" @click="Delete(props.rowIndex)" caption="Delete" />
-          </div>
+          </z-button-group>
         </template>
       </vuetable>
     </dlg>

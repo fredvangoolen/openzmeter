@@ -7,19 +7,19 @@
       </div>
       <portal to="fs-toolbar" :disabled="!Expanded" class="float-right">
         <toolbar-aggregation storage="AggregationBill" v-model="Aggreg" :options="['15M', '1H', '1D']"></toolbar-aggregation>
-          <div class="btn-group">
+          <z-button-group>
             <z-button :active="GraphSeries=='Energy'" @click="GraphSeries='Energy'" caption="Energy" />
             <z-button :active="GraphSeries=='Power'" @click="GraphSeries='Power'" caption="Power" />
-          </div>
-          <div class="btn-group">
+          </z-button-group>
+          <z-button-group>
             <!--button-export :rows="Export" file="Evolution"></button-export-->
             <button-expand v-model="Expanded"></button-expand>
-          </div>
+          </z-button-group>
         </portal>
       <div class="float-right"><strong style="font-size: 16px; padding-right: 10px" v-html="Round(bill.Total, 2, true) + ' ' + bill.Currency"></strong></div>
     </div>
     <div class="panel-body">
-      <div class="row">
+      <z-row>
         <div class="col-md-12">
           <portal to="fs-body" :disabled="!Expanded" class="panel-body">
             <spinner v-if="TransferGraph.Data==null"></spinner>
@@ -56,7 +56,7 @@
             </td></tr>
           </table>
         </div>
-      </div>
+      </z-row>
     </div>
     <dlg-fs v-if="Expanded" title="Evolution" :height.sync="DialogHeight"></dlg-fs>
   </div>

@@ -1,5 +1,5 @@
 <template>
-  <div class="row">
+  <z-row>
     <div class="col col-lg-3 col-md-6 col-xs-12">
       <div class="panel panel-other-light text-center">
         <div class="panel-body">
@@ -41,7 +41,7 @@
         </div>
       </div>
     </div>
-  </div>
+  </z-row>
 </template>
 
 <script>
