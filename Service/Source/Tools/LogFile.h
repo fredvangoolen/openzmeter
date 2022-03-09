@@ -19,6 +19,7 @@
 #include <pthread.h>
 #include <stdarg.h>
 #include "nlohmann/json.hpp"
+#include "RWLocks.h"
 // ---------------------------------------------------------------------------------------------------------------------
 using namespace std;
 using json = nlohmann::json;
@@ -43,7 +44,7 @@ class LogFile final {
     static deque<Message_t>  pError;
     static uint64_t          pErrorCount;
     static pthread_mutex_t   pMutex;
-    static pthread_rwlock_t  pLock;
+    static RWLocks           pLock;
     static bool              pConsole;
     static int               pFile;
     static Type              pLevel;

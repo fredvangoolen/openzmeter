@@ -25,7 +25,6 @@
 int                        LogFile::pFile         = 0;
 LogFile::Type              LogFile::pLevel        = LogFile::NONE;
 bool                       LogFile::pConsole      = true;
-pthread_rwlock_t           LogFile::pLock         = PTHREAD_RWLOCK_INITIALIZER;
 pthread_mutex_t            LogFile::pMutex        = PTHREAD_MUTEX_INITIALIZER;
 bool                       LogFile::pDebugEnabled = false;
 uint64_t                   LogFile::pDebugCount   = 0;
@@ -36,6 +35,7 @@ uint64_t                   LogFile::pInfoCount    = 0;
 deque<LogFile::Message_t>  LogFile::pInfo;
 uint64_t                   LogFile::pWarningCount = 0;
 deque<LogFile::Message_t>  LogFile::pWarning;
+RWLocks                    LogFile::pLock;
 //----------------------------------------------------------------------------------------------------------------------
 LogFile::LogFile() {
   LogFile::Info("Starting LogFile...");
@@ -64,7 +64,7 @@ LogFile::~LogFile() {
 }
 json LogFile::ToJSON() {
   json Result = json::object();
-  pthread_rwlock_rdlock(&pLock);
+  pLock.ReadLock();
   Result["Debug_Total"]   = pDebugCount;
   Result["Warning_Total"] = pWarningCount;
   Result["Info_Total"]    = pInfoCount;
@@ -79,7 +79,7 @@ json LogFile::ToJSON() {
   for(auto &Msg : pWarning) Result["Messages"].push_back(ToJSON(WARNING, Msg));
   for(auto &Msg : pInfo)    Result["Messages"].push_back(ToJSON(INFO, Msg));
   for(auto &Msg : pError)   Result["Messages"].push_back(ToJSON(ERROR, Msg));
-  pthread_rwlock_unlock(&pLock);
+  pLock.Unlock();
   return Result;
 }
 json LogFile::ToJSON(const Type type, const Message_t &msg) {
@@ -127,7 +127,7 @@ void LogFile::Msg(Type type, const char *msg, va_list params) {
   va_end(Args);
   char    *MsgStr = (char*)malloc(MsgLen + 1);
   vsnprintf(MsgStr, MsgLen + 1, msg, params);
-  pthread_rwlock_wrlock(&pLock);
+  pLock.WriteLock();
   if(type == ERROR) {
     if(pError.size() > MaxMessages) pError.pop_front();
     pError.emplace_back(Time, MsgStr);
@@ -145,7 +145,7 @@ void LogFile::Msg(Type type, const char *msg, va_list params) {
     pInfo.emplace_back(Time, MsgStr);
     pInfoCount++;
   }
-  pthread_rwlock_unlock(&pLock);
+  pLock.Unlock();
   if((pDebugEnabled == false) && (type == DEBUG)) {
     free(MsgStr);
     return;

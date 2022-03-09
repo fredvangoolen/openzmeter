@@ -19,6 +19,7 @@
 #include "Device.h"
 #include "HTTPServer.h"
 #include "Tools.h"
+#include "RWLocks.h"
 //----------------------------------------------------------------------------------------------------------------------
 using namespace std;
 //----------------------------------------------------------------------------------------------------------------------
@@ -26,7 +27,7 @@ class DeviceManager final {
   private :
     static vector<void (*)()>   pDrivers;
     static map<string, Device*> pDevices;         //Initiated by devices, cleared on destroy
-    static pthread_rwlock_t     pDevicesLock;     //Control access to critical sections
+    static RWLocks              pDevicesLock;     //Control access to critical sections
   private :
     static void CallDeviceFunction(HTTPRequest &req, void (Device::*method)(HTTPRequest &req));
     static void GetDevicesCallback(HTTPRequest &req);
