@@ -16,8 +16,8 @@ AnalyzerSoftCyclicHistogram::AnalyzerSoftCyclicHistogram(const string &analyzer_
     endTime = 0;
 }
 
-AnalyzerSoftCyclicHistogram::~AnalyzerSoftCyclicHistogram(){
-
+AnalyzerSoftCyclicHistogram::~AnalyzerSoftCyclicHistogram()
+{
 }
 
 json AnalyzerSoftCyclicHistogram::GetConfig()
@@ -317,6 +317,10 @@ void AnalyzerSoftCyclicHistogram::Clear()
     nomVoltageSamples = vector<vector<float>>();
     nomVoltageSamplesCount = vector<vector<uint64_t>>();
     nominalSamplesSaved = false;
+
+    currentHistogram = vector<vector<vector<uint64_t>>>();
+    nomCurrentSamples = vector<vector<float>>();
+    nomCurrentSamplesCount = vector<vector<uint64_t>>();
 }
 
 void AnalyzerSoftCyclicHistogram::ResizeVoltageHistogram(uint8_t numVoltageChannels, size_t numSamples)
