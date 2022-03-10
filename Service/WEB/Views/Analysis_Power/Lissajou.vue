@@ -5,11 +5,11 @@
       <div v-if="RmsCurrent<analyzer.MinCurrent" class="title-warning"><img :src="require('Imgs/exclamation.png')">No current or current too low</div>
       <portal to="fs-toolbar" :disabled="!Expanded" class="header-buttons">
         <toolbar-phases storage="DetailsPhases" :multi="false" :analyzer="analyzer" v-model="Phase"></toolbar-phases>
-        <div class="btn-group">
+        <z-button-group>
           <button-export file="Lissajou" :rows="Export"></button-export>
           <button-expand v-model="Expanded"></button-expand>
           <button-pause :value="paused" @input="$emit('update:paused', $event)"></button-pause>
-        </div>
+        </z-button-group>
       </portal>
     </div>
     <portal to="fs-body" :disabled="!Expanded" class="panel-body">

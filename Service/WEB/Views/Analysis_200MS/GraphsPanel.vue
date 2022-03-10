@@ -4,11 +4,11 @@
       <div class="header-text">{{ PanelTitle }} {{ paused ? '(Paused)' : '' }}</div>
       <portal to="fs-toolbar" :disabled="!Expanded" class="header-buttons">
         <toolbar-phases :analyzer="analyzer" v-model="Phases" v-if="serie != 'Frequency'" :storage="'Dashboard_' + serie" :current="serie=='Current'" :multi="true"></toolbar-phases>
-        <div class="btn-group">
+        <z-button-group>
           <button-export :rows="Export" :file="PanelTitle"></button-export>
           <button-expand v-model="Expanded"></button-expand>
-          <button type="button" class="btn btn-default btn-xs" @click="$emit('remove', serie)"><img :src="require('Imgs/cross.png')" alt="Remove this serie"></button>
-        </div>
+          <z-button @click="$emit('remove', serie)" :image="require('Imgs/cross.png')" tooltip="Remove this serie" />
+        </z-button-group>
       </portal>
     </div>
     <portal to="fs-body" :disabled="!Expanded" class="panel-body">

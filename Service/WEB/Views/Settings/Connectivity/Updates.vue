@@ -3,18 +3,18 @@
     <template v-slot:header>
       <div class="pull-left"><h4 class="modal-title">Automatic updates</h4></div>
       <div class="pull-right btn-group">
-        <button type="button" class="btn btn-default btn-xs" @click="Save"><img :src="require('Imgs/diskette.png')" alt="Save changes and close"></button>
-        <button type="button" class="btn btn-default btn-xs" @click="$emit('close')"><img :src="require('Imgs/arrow_undo.png')" alt="Discard"></button>
+        <z-button @click="Save" :image="require('Imgs/diskette.png')" tooltip="Save changes and close" />
+        <z-button @click="$emit('close')" :image="require('Imgs/arrow_undo.png')" tooltip="Discard" />
       </div>
     </template>
-    <div class="row">
+    <z-row>
       <div class="col-xs-12">
         <label class="control-label" style="line-height: 22px">Enable</label>
         <toggle class="float-right" onText="Yes" offText="No" v-model="Config.Enabled"></toggle>
       </div>
       <div class="col-xs-12"><hr style="margin-top: 5px; margin-bottom: 5px; "/></div>
-    </div>
-    <div class="row">
+    </z-row>
+    <z-row>
       <div class="col-sm-12">
         <label class="control-label">Update URL</label>
           <div class="input-group input-group-xs">
@@ -22,7 +22,7 @@
           <span class="input-group-addon">/{{ Config.Arch }}/{{ Config.Branch }}</span>
         </div>
       </div>
-    </div>
+    </z-row>
   </dlg>
 </template>
 

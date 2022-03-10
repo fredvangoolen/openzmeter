@@ -33,7 +33,6 @@ const     uint8_t Analyzer::UnbalanceRangesLen;
 //----------------------------------------------------------------------------------------------------------------------
 Analyzer::Analyzer(const string &id, const AnalyzerMode mode, const string &user) : pSerial(id), pOwner(user), pMode(mode) {
   LogFile::Debug("Starting Analyzer...");
-  pMembersLocks = PTHREAD_RWLOCK_INITIALIZER;
   pName         = "Unnamed analyzer";
   pState        = UNCONFIGURED;
   LogFile::Debug("Analyzer started");
@@ -47,28 +46,28 @@ string Analyzer::Owner() {
   return pOwner;
 }
 string Analyzer::Name() {
-  pthread_rwlock_rdlock(&pMembersLocks);
+  pMembersLocks.ReadLock();
   string Name = pName;
-  pthread_rwlock_unlock(&pMembersLocks);
+  pMembersLocks.Unlock();
   return Name;
 }
 void Analyzer::Name(const string &name) {
-  pthread_rwlock_wrlock(&pMembersLocks);
+  pMembersLocks.WriteLock();
   pName = name;
-  pthread_rwlock_unlock(&pMembersLocks);
+  pMembersLocks.Unlock();
 }
 void Analyzer::State(const Analyzer::AnalyzerState state) {
-  pthread_rwlock_wrlock(&pMembersLocks);
+  pMembersLocks.WriteLock();
   pState    = state;
   pLastTime = Tools::GetTime64();
-  pthread_rwlock_unlock(&pMembersLocks);
+  pMembersLocks.Unlock();
 }
 Analyzer::AnalyzerState Analyzer::State() {
   uint64_t Now = Tools::GetTime64() - 10000;
-  pthread_rwlock_rdlock(&pMembersLocks);
+  pMembersLocks.ReadLock();
   AnalyzerState State = pState;
   if((State != UNCONFIGURED) && (pLastTime < Now)) State = OFFLINE;
-  pthread_rwlock_unlock(&pMembersLocks);
+  pMembersLocks.Unlock();
   return State;
 }
 uint8_t Analyzer::VoltageChannels(const AnalyzerMode mode) {

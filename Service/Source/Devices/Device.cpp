@@ -24,14 +24,14 @@ Device::Device(const string &serial, const string &driver, const string &name) :
 }
 Device::~Device() {
 }
-json Device::GetJSONDescriptor() {
-  json Device = json::object();
-  Device["Driver"]    = pDriver;
-  Device["Name"]      = pName;
-  Device["Serial"]    = pSerial;
-  Device["Enabled"]   = pEnabled;
-  Device["Analyzers"] = AnalyzersCount();
-  return Device;
+string Device::Driver() const {
+  return pDriver;
+}
+string Device::Name() const {
+  return pName;
+}
+bool Device::Enabled() const {
+  return pEnabled;
 }
 string Device::Serial() const {
   return pSerial;

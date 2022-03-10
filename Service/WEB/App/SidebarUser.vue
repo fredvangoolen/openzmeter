@@ -1,10 +1,10 @@
 <template>
   <div class="this" :class="{ expanded: expanded }">
     <img class="icon" :src="require('Imgs/user32.png')">
-    <div class="btn-group">
+    <z-button-group>
       <button type="button" class="btn btn-default btn-xs" title="User edit" @click="ShowDialog=true"><img :src="require('Imgs/user_edit.png')"></button>
       <button type="button" class="btn btn-default btn-xs" title="User logout" @click="Logout"><img :src="require('Imgs/user_go.png')"></button>
-    </div>
+    </z-button-group>
     <div class="name">{{ (user==null) ? '-' : user.Name }}</div>
     <user-edit v-if="ShowDialog" :user="user" @close="ShowDialog=false"></user-edit>
   </div>

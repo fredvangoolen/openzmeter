@@ -1,25 +1,18 @@
 <template>
-  <div class="panel panel-other" v-show="Enabled">
-    <div class="panel-heading">
-      <div class="huge-small header-text">Device manager</div>
-    </div>
-    <div class="panel-body">
-      <spinner v-if="ShowSpinner"></spinner>
-      <vuetable ref="table" :fields="Columns" :data="Devices" :api-mode="false" class="table small table-striped">
-        <template slot="actions" slot-scope="props">
-          <div class="btn-group" >
-            <button class="btn btn-xs btn-default" @click="Configure(props.rowData)">Configure</button>
-          </div>
-        </template>
-      </vuetable>
-    </div>
+  <z-panel title="Device manager" color="#474544" v-show="Enabled">
+    <spinner v-if="ShowSpinner"></spinner>
+    <vuetable ref="table" :fields="Columns" :data="Devices" :api-mode="false" class="table small table-striped">
+      <template slot="actions" slot-scope="props">
+        <z-button @click="Configure(props.rowData)" caption="Configure" />
+      </template>
+    </vuetable>
     <device-virtual v-if="Driver=='DeviceVirtual'" :settings="Settings" @close="LoadTable"></device-virtual>
     <device-v1 v-if="Driver=='DeviceV1'" :settings="Settings" @close="LoadTable"></device-v1>
     <device-v2 v-if="Driver=='DeviceV2'" :settings="Settings" @close="LoadTable"></device-v2>
     <device-v3 v-if="Driver=='DeviceV3'" :settings="Settings" @close="LoadTable"></device-v3>
     <device-v4 v-if="Driver=='DeviceV4'" ></device-v4>
     <device-remote v-if="Driver=='DeviceRemote'" :settings="Settings" @close="LoadTable"></device-remote>
-  </div>
+  </z-panel>
 </template>
 
 <script>
@@ -50,9 +43,17 @@
         this.ShowSpinner = true;
         this.Post('getDevices', {}).then(
           (result) => {
+            var DriverCol = result[0].indexOf("Driver");
+            var NameCol = result[0].indexOf("Name");
+            var SerialCol = result[0].indexOf("Serial");
+            var EnabledCol = result[0].indexOf("Enabled");
+            var AnalyzersCol = result[0].indexOf("Analyzers");
             this.Enabled = true;
-            this.Devices = result;
+            this.Devices = [];
             this.ShowSpinner = false;
+            for(var n = 1; n < result.length; n++) {
+              this.Devices.push({ Driver: result[n][DriverCol], Name: result[n][NameCol], Serial: result[n][SerialCol], Enabled: result[n][EnabledCol], Analyzers: result[n][AnalyzersCol] });
+            }
           },
           (fail) => {}
         );

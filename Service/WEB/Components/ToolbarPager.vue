@@ -1,5 +1,5 @@
 <template>
-  <div class="btn-group">
+  <z-button-group>
     <div class="input-group input-group-xs">
       <div class="input-group-btn">
         <button class="btn btn-default narrow" type="button" @click="CalcView(-1)"><img :src="require('Imgs/resultset_previous.png')"></button>
@@ -16,7 +16,7 @@
         <button class="btn btn-default narrow" type="button" @click="CalcView(+1)"><img :src="require('Imgs/resultset_next.png')"></button>
       </div>
     </div>
-  </div>
+  </z-button-group>
 </template>
 
 <script>

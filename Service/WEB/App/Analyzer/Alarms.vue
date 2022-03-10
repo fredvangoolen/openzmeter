@@ -4,12 +4,12 @@
       <template v-slot:header>
         <div class="pull-left"><h4 class="modal-title">Analyzers &raquo; Alarms and events</h4></div>
         <div class="pull-right btn-group">
-          <button type="button" class="btn btn-default btn-xs" @click="Save" data-toggle="tooltip" title="Save alarm and events config"><img :src="require('Imgs/diskette.png')"></button>
-          <button type="button" class="btn btn-default btn-xs" @click="Add" data-toggle="tooltip" title="Add new alarm"><img :src="require('Imgs/plus.png')"></button>
-          <button type="button" class="btn btn-default btn-xs" @click="$emit('close', null)" data-toggle="tooltip" title="Back"><img :src="require('Imgs/arrow_undo.png')"></button>
+          <z-button @click="Save" tooltip="Save alarm and events config" :image="require('Imgs/diskette.png')" />
+          <z-button @click="Add" tooltip="Add new alarm" :image="require('Imgs/plus.png')" />
+          <z-button @click="$emit('close', null)" tooltip="Back" :image="require('Imgs/arrow_undo.png')" />
         </div>
       </template>
-      <div class="row">
+      <z-row>
         <div class="col-xs-12">
           <label class="control-label" style="line-height: 22px">Events detection</label>
           <toggle class="float-right" onText="Yes" offText="No" v-model="Analyzer.Events.Enabled"></toggle>
@@ -41,13 +41,13 @@
           <toggle class="float-right" onText="Yes" offText="No" v-model="Analyzer.AlarmsEnabled"></toggle>
           <div class="help">Evaluate math expressions with analysis params and generate alarms</div>
         </div>
-      </div>
+      </z-row>
       <vuetable :fields="columns_alarms" :api-mode="false" :data="Analyzer.Alarms" track-by="ID" class="table small table-striped">
         <template slot="actions" slot-scope="props">
-          <div class="btn-group">
-            <button type="button" class="btn btn-default btn-xs" @click="Edit(props.rowIndex)">Edit</button>
-            <button type="button" class="btn btn-danger btn-xs" @click="Delete(props.rowIndex)">Delete</button>
-          </div>
+          <z-button-group>
+            <z-button @click="Edit(props.rowIndex)" caption="Edit" />
+            <z-button variant="danger" @click="Delete(props.rowIndex)" caption="Delete" />
+          </z-button-group>
         </template>
       </vuetable>
     </dlg>

@@ -22,13 +22,12 @@ AnalyzerSoftAlarms::AnalyzerSoftAlarms(const string &serial, AnalyzerSoftMQTT *m
   pNominalFrequency = 50.0;
   pEnabled          = false;
   pMQTT             = mqtt;
-  pLock             = PTHREAD_RWLOCK_INITIALIZER;
   pTask             = NULL;
 }
 AnalyzerSoftAlarms::~AnalyzerSoftAlarms() {
-  pthread_rwlock_wrlock(&pLock);
+  pLock.WriteLock();
   if(pTask != NULL) TaskPool::Wait(pTask);
-  pthread_rwlock_unlock(&pLock);
+  pLock.Unlock();
 }
 json AnalyzerSoftAlarms::CheckConfig(const json &config) {
   json ConfigOUT = json::array();
@@ -37,7 +36,7 @@ json AnalyzerSoftAlarms::CheckConfig(const json &config) {
   return ConfigOUT;
 }
 void AnalyzerSoftAlarms::Config(const bool enabled, const string &tz, const json &alarms, const float nominalVoltage, const float nominalFreq) {
-  pthread_rwlock_wrlock(&pLock);
+  pLock.WriteLock();
   pNominalVoltage   = nominalVoltage;
   pNominalFrequency = nominalFreq;
   cctz::load_time_zone(tz, &pTimeZone);
@@ -59,10 +58,10 @@ void AnalyzerSoftAlarms::Config(const bool enabled, const string &tz, const json
   } else {
     DB.ExecSentenceNoResult("DELETE FROM alarms WHERE id NOT IN(" + IDs + ")");
   }
-  pthread_rwlock_unlock(&pLock);
+  pLock.Unlock();
 }
 void AnalyzerSoftAlarms::Alarms_Func(const string &name, AnalyzerSoftAggreg *params) {
-  pthread_rwlock_rdlock(&pLock);
+  pLock.ReadLock();
   auto List = pAlarms.find(name);
   if(List != pAlarms.end()) {
     for(auto &Alarm : List->second) {
@@ -76,17 +75,17 @@ void AnalyzerSoftAlarms::Alarms_Func(const string &name, AnalyzerSoftAggreg *par
       }
     }
   }
-  pthread_rwlock_unlock(&pLock);
+  pLock.Unlock();
 }
 void AnalyzerSoftAlarms::Run(const string &aggreg, AnalyzerSoftAggreg *params) {
-  pthread_rwlock_rdlock(&pLock);
+  pLock.ReadLock();
   if(pEnabled) pTask = TaskPool::Run([&, aggreg, params]() { this->Alarms_Func(aggreg, params); }, TaskPool::ABOUTNORMAL);
-  pthread_rwlock_unlock(&pLock);
+  pLock.Unlock();
 }
 void AnalyzerSoftAlarms::Wait() {
-  pthread_rwlock_rdlock(&pLock);
+  pLock.ReadLock();
   if(pTask != NULL) TaskPool::Wait(pTask);
-  pthread_rwlock_unlock(&pLock);
+  pLock.Unlock();
 }
 void AnalyzerSoftAlarms::TestAlarm(HTTPRequest &req, AnalyzerSoftAggreg200MS *aggreg) const {
   if(!req.CheckParamString("Expression")) return;

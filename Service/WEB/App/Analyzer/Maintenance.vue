@@ -3,14 +3,14 @@
     <template v-slot:header>
       <div class="pull-left"><h4 class="modal-title">Analyzers &raquo; Maintenance</h4></div>
       <div class="pull-right btn-group">
-        <button type="button" class="btn btn-default btn-xs" @click="$emit('close', null)"><img :src="require('Imgs/arrow_undo.png')" alt="Discard"></button>
+        <z-button @click="$emit('close', null)" :image="require('Imgs/arrow_undo.png')" tooltip="Discard" />
       </div>
     </template>
     <input type="file" name="name" style="display: none;" ref="filename" @change="FileSet" accept="application/gzip, .gz"/>
     <div class="alert-info alert text-center" style="margin-bottom: 5px; padding: 5px">
       Analyzer data takes currently <strong>{{ BestUnitsBin(TotalSize) }}</strong>
     </div>
-    <div class="row">
+    <z-row>
       <div class="col-xs-12">
         <detail-tabs :tabs="['200MS','3S', '1M', '10M', '15M', '1H', 'Events', 'Alarms', 'Settings']" v-model="ActiveTab"></detail-tabs>
         <table v-if="ActiveTab=='200MS'">
@@ -25,13 +25,13 @@
           <tr class="line">
             <td>Download all table data to a file</td>
             <td class="action">
-              <div class="btn-group">
+              <z-button-group>
                 <button type="button" class="btn btn-default dropdown-toggle btn-xs" data-toggle="dropdown">Execute <span class="caret"></span></button>
                 <ul class="dropdown-menu">
                   <li><a class="dropdown-item" @click="Download('200MS', false, 'application/json')">As JSON text file</a></li>
                   <li><a class="dropdown-item" @click="Download('200MS', false, 'application/cbor')">As CBOR binary file</a></li>
                 </ul>
-              </div>
+              </z-button-group>
             </td>
           </tr>
           <tr class="line">
@@ -63,13 +63,13 @@
               </div>
             </td>
             <td class="action">
-              <div class="btn-group">
+              <z-button-group>
                 <button type="button" class="btn btn-default dropdown-toggle btn-xs" data-toggle="dropdown">Execute <span class="caret"></span></button>
                 <ul class="dropdown-menu">
                   <li><a class="dropdown-item" @click="Download('3S', Get3SRanged, 'application/json')">As JSON text file</a></li>
                   <li><a class="dropdown-item" @click="Download('3S', Get3SRanged, 'application/cbor')">As CBOR binary file</a></li>
                 </ul>
-              </div>
+              </z-button-group>
             </td>
           </tr>
           <tr class="line">
@@ -101,13 +101,13 @@
               </div>
             </td>
             <td class="action">
-              <div class="btn-group">
+              <z-button-group>
                 <button type="button" class="btn btn-default dropdown-toggle btn-xs" data-toggle="dropdown">Execute <span class="caret"></span></button>
                 <ul class="dropdown-menu">
                   <li><a class="dropdown-item" @click="Download('1M', Get1MRanged, 'application/json')">As JSON text file</a></li>
                   <li><a class="dropdown-item" @click="Download('1M', Get1MRanged, 'application/cbor')">As CBOR binary file</a></li>
                 </ul>
-              </div>
+              </z-button-group>
             </td>
           </tr>
           <tr class="line">
@@ -143,13 +143,13 @@
               </div>
             </td>
             <td class="action">
-              <div class="btn-group">
+              <z-button-group>
                 <button type="button" class="btn btn-default dropdown-toggle btn-xs" data-toggle="dropdown">Execute <span class="caret"></span></button>
                 <ul class="dropdown-menu">
                   <li><a class="dropdown-item" @click="Download('10M', Get10MRanged, 'application/json')">As JSON text file</a></li>
                   <li><a class="dropdown-item" @click="Download('10M', Get10MRanged, 'application/cbor')">As CBOR binary file</a></li>
                 </ul>
-              </div>
+              </z-button-group>
             </td>
           </tr>
           <tr class="line">
@@ -189,13 +189,13 @@
               </div>
             </td>
             <td class="action">
-              <div class="btn-group">
+              <z-button-group>
                 <button type="button" class="btn btn-default dropdown-toggle btn-xs" data-toggle="dropdown">Execute <span class="caret"></span></button>
                 <ul class="dropdown-menu">
                   <li><a class="dropdown-item" @click="Download('15M', Get15MRanged, 'application/json')">As JSON text file</a></li>
                   <li><a class="dropdown-item" @click="Download('15M', Get15MRanged, 'application/cbor')">As CBOR binary file</a></li>
                 </ul>
-              </div>
+              </z-button-group>
             </td>
           </tr>
           <tr class="line">
@@ -235,13 +235,13 @@
               </div>
             </td>
             <td class="action">
-              <div class="btn-group">
+              <z-button-group>
                 <button type="button" class="btn btn-default dropdown-toggle btn-xs" data-toggle="dropdown">Execute <span class="caret"></span></button>
                 <ul class="dropdown-menu">
                   <li><a class="dropdown-item" @click="Download('1H', Get1HRanged, 'application/json')">As JSON text file</a></li>
                   <li><a class="dropdown-item" @click="Download('1H', Get1HRanged, 'application/cbor')">As CBOR binary file</a></li>
                 </ul>
-              </div>
+              </z-button-group>
             </td>
           </tr>
           <tr class="line">
@@ -283,13 +283,13 @@
               </div>
             </td>
             <td class="action">
-              <div class="btn-group">
+              <z-button-group>
                 <button type="button" class="btn btn-default dropdown-toggle btn-xs" data-toggle="dropdown">Execute <span class="caret"></span></button>
                 <ul class="dropdown-menu">
                   <li><a class="dropdown-item" @click="Download('Events', GetEventsRanged, 'application/json')">As JSON text file</a></li>
                   <li><a class="dropdown-item" @click="Download('Events', GetEventsRanged, 'application/cbor')">As CBOR binary file</a></li>
                 </ul>
-              </div>
+              </z-button-group>
             </td>
           </tr>
           <tr class="line">
@@ -329,13 +329,13 @@
               </div>
             </td>
             <td class="action">
-              <div class="btn-group">
+              <z-button-group>
                 <button type="button" class="btn btn-default dropdown-toggle btn-xs" data-toggle="dropdown">Execute <span class="caret"></span></button>
                 <ul class="dropdown-menu">
                   <li><a class="dropdown-item" @click="Download('Alarms', GetAlarmsRanged, 'application/json')">As JSON text file</a></li>
                   <li><a class="dropdown-item" @click="Download('Alarms', GetAlarmsRanged, 'application/cbor')">As CBOR binary file</a></li>
                 </ul>
-              </div>
+              </z-button-group>
             </td>
           </tr>
           <tr class="line">
@@ -354,13 +354,13 @@
           <tr class="line">
             <td>Save analyzer settings</td>
             <td class="action">
-              <div class="btn-group">
+              <z-button-group>
                 <button type="button" class="btn btn-default dropdown-toggle btn-xs" data-toggle="dropdown">Execute <span class="caret"></span></button>
                 <ul class="dropdown-menu">
                   <li><a class="dropdown-item" @click="Download('Analyzer', null, 'application/json')">As JSON text file</a></li>
                   <li><a class="dropdown-item" @click="Download('Analyzer', null, 'application/cbor')">As CBOR binary file</a></li>
                 </ul>
-              </div>
+              </z-button-group>
             </td>
           </tr>
           <tr class="line">
@@ -371,7 +371,7 @@
           </tr>
         </table>
       </div>
-    </div>
+    </z-row>
   </dlg>
 </template>
 

@@ -16,6 +16,7 @@
 #pragma once
 #include "nlohmann/json.hpp"
 #include "HTTPRequest.h"
+#include "RWLocks.h"
 //----------------------------------------------------------------------------------------------------------------------
 using json = nlohmann::json;
 using namespace std;
@@ -36,7 +37,7 @@ class Analyzer {
     static constexpr float   HarmonicsAllowed[]  = {2, 5, 1, 6, 0.5, 5, 0.5, 1.5, 0.5, 3.5, 0.5, 3, 0.5, 0.5, 0.5, 2, 0.5, 1.5, 0.5, 0.5, 0.5, 1.5, 0.5, 1.5};
     static constexpr uint8_t HarmonicsAllowedLen = (sizeof(HarmonicsAllowed) / sizeof(float));
   private :
-    pthread_rwlock_t   pMembersLocks;            //Locks for configurations
+    RWLocks            pMembersLocks;            //Locks for configurations
     AnalyzerState      pState;                   //Timestamp of last save or communication
     string             pName;                    //Analyzer description
     uint64_t           pLastTime;                //Last state change timestamp

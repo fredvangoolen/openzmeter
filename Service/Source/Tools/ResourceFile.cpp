@@ -14,7 +14,6 @@
 // along with openZmeter.  If not, see <https://www.gnu.org/licenses/>
 // ---------------------------------------------------------------------------------------------------------------------
 #include "ResourceFile.h"
-#include <string.h>
 #include "LogFile.h"
 //----------------------------------------------------------------------------------------------------------------------
 extern char _binary_ResourceFiles_start[];

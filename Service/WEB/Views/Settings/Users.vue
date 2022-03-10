@@ -1,25 +1,22 @@
 <template>
-  <div class="panel panel-other" v-show="Enabled">
-    <div class="panel-heading">
-      <div class="header">Users</div>
-      <div class="pull-right btn-group">
-        <button type="button" class="btn btn-default btn-xs" title="Add user" @click="Add"><img :src="require('Imgs/plus.png')"> Add</button>
-      </div>
+  <z-panel title="Users" color="#474544" v-show="Enabled">
+    <template v-slot:toolbar>
       <toolbar-pager class="pull-right" :pageSize="10" :input="Users" :output.sync="FilterUsers" :filtercols="['User', 'Name', 'TimeZone', 'Email']"></toolbar-pager>
-    </div>
-    <div class="panel-body">
-      <spinner v-if="ShowSpinner"></spinner>
-      <vuetable ref="table" :fields="Columns" :data="FilterUsers" :api-mode="false" class="table small table-striped">
-        <template slot="actions" slot-scope="props">
-          <div class="btn-group" >
-            <button class="btn btn-xs btn-default" @click="Edit(props.rowData)">Edit</button>
-            <button class="btn btn-xs btn-danger" @click="Delete(props.rowData)">Delete</button>
-          </div>
-        </template>
-      </vuetable>
-    </div>
+      <z-button-group>
+        <z-button tooltip="Add user" @click="Add" :image="require('Imgs/plus.png')" caption="Add" />
+      </z-button-group>
+    </template>
+    <spinner v-if="ShowSpinner"></spinner>
+    <vuetable :fields="Columns" :data="FilterUsers" :api-mode="false" class="table small table-striped">
+      <template slot="actions" slot-scope="props">
+        <z-button-group>
+          <z-button @click="Edit(props.rowData)" caption="Edit" />
+          <z-button variant="danger" @click="Delete(props.rowData)" caption="Delete" />
+        </z-button-group>
+      </template>
+    </vuetable>
     <user-edit v-if="ShowDialog" :user="User" @close="LoadUsers"></user-edit>
-  </div>
+  </z-panel>
 </template>
 
 <script>

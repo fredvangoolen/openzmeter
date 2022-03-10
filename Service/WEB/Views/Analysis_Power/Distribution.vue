@@ -8,7 +8,7 @@
     </div>
     <div class="panel-body">
       <spinner v-if="ShowSpinner"></spinner>
-      <div class="row">
+      <z-row>
         <!--div class="col-sm-12 col-md-8 col-lg-6 graphDiv" ref="graphContainer">
           <graph ref="graph" class="graph" :options="GraphOptions"></graph>
         </div-->
@@ -16,7 +16,7 @@
           <h4>Active power harmonics distribution</h4>
           <vuetable ref="table" :fields="Columns" :api-mode="false" class="table small table-striped"></vuetable>
         </div>
-      </div>
+      </z-row>
     </div>
   </div>
 </template>

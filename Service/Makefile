@@ -100,7 +100,7 @@ $(EXECUTABLE_TARGET): $(RESOURCES_TARGET) $(EXECUTABLE_OBJS)
 Tmp/$(TARGET)/%.cpp.o: %.cpp
 	@mkdir -p $(dir $@)
 	@echo "Building" $@
-	@$(CC) $(CFLAGS) -MMD -std=c++17 -c $< -o $@
+	@$(CC) $(CFLAGS) -MMD -std=c++20 -c $< -o $@
 
 Tmp/$(TARGET)/%.c.o: %.c
 	@mkdir -p $(dir $@)

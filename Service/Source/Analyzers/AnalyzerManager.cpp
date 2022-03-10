@@ -20,7 +20,7 @@
 #include "LogFile.h"
 //----------------------------------------------------------------------------------------------------------------------
 map<string, Analyzer*>  AnalyzerManager::pAnalyzers;
-pthread_rwlock_t        AnalyzerManager::pAnalyzersLock = PTHREAD_RWLOCK_INITIALIZER;
+RWLocks                 AnalyzerManager::pAnalyzersLock;
 //----------------------------------------------------------------------------------------------------------------------
 AnalyzerManager::AnalyzerManager() {
   HTTPServer::RegisterDoc("Analyzer", "API/Analyzer/Analyzer.json");
@@ -86,28 +86,28 @@ AnalyzerManager::~AnalyzerManager() {
   LogFile::Debug("AnalyzerManager stopped");
 }
 bool AnalyzerManager::AddAnalyzer(Analyzer *analyzer) {
-  pthread_rwlock_wrlock(&pAnalyzersLock);
+  pAnalyzersLock.WriteLock();
   auto Result = pAnalyzers.insert({analyzer->Serial(), analyzer});
-  pthread_rwlock_unlock(&pAnalyzersLock);
+  pAnalyzersLock.Unlock();
   return Result.second;
 }
 bool AnalyzerManager::DelAnalyzer(const string &serial) {
-  pthread_rwlock_wrlock(&pAnalyzersLock);
+  pAnalyzersLock.WriteLock();
   uint32_t Erased = pAnalyzers.erase(serial);
-  pthread_rwlock_unlock(&pAnalyzersLock);
+  pAnalyzersLock.Unlock();
   return (Erased == 1);
 }
 bool AnalyzerManager::HandleModbus(uint8_t *buff, const string &serial, const uint16_t start, const uint8_t len) {
-  pthread_rwlock_rdlock(&pAnalyzersLock);
+  pAnalyzersLock.ReadLock();
   auto Analyzer = pAnalyzers.find(serial);
   bool Ret = (Analyzer != pAnalyzers.end()) ? Analyzer->second->HandleModbus(buff, start, len) : false;
-  pthread_rwlock_unlock(&pAnalyzersLock);
+  pAnalyzersLock.Unlock();
   return Ret;
 }
 void AnalyzerManager::CallAnalyzerFunction(HTTPRequest &req, void (Analyzer::*method)(HTTPRequest &req)) {
   if(!req.CheckParamString("Analyzer")) return;
   string Serial = req.Param("Analyzer");
-  pthread_rwlock_rdlock(&pAnalyzersLock);
+  pAnalyzersLock.ReadLock();
   auto Analyzer = pAnalyzers.find(Serial);
   if(Analyzer != pAnalyzers.end()) {
     (Analyzer->second->*method)(req);
@@ -116,7 +116,7 @@ void AnalyzerManager::CallAnalyzerFunction(HTTPRequest &req, void (Analyzer::*me
     LogFile::Warning("User '%s' request access to not defined analyzer '%s'", UserName.c_str(), Serial.c_str());
     req.Error("Analyzer not found", HTTP_BAD_REQUEST);
   }
-  pthread_rwlock_unlock(&pAnalyzersLock);
+  pAnalyzersLock.Unlock();
 }
 void AnalyzerManager::GetAnalyzersCallback(HTTPRequest &req) {
   string UserName = req.UserName();
@@ -129,21 +129,21 @@ void AnalyzerManager::GetAnalyzersCallback(HTTPRequest &req) {
       Database DB;
       DB.ExecSentenceAsyncResult("SELECT serial, read, write, config FROM permissions WHERE username = " + DB.Bind(UserName) + " AND (read = true OR write = true OR config = true)");
       while(DB.FecthRow()) {
-        pthread_rwlock_rdlock(&pAnalyzersLock);
+        pAnalyzersLock.ReadLock();
         auto Tmp = pAnalyzers.find(DB.ResultString("serial"));
         if((Tmp == pAnalyzers.end()) || (Tmp->second->State() == Analyzer::UNCONFIGURED)) continue;
         json Analyzer = { Tmp->second->Serial(), Tmp->second->Owner(), Tmp->second->Name(), StateToString(Tmp->second->State()), DB.ResultBool("read"), DB.ResultBool("write"), DB.ResultBool("config") };
-        pthread_rwlock_unlock(&pAnalyzersLock);
+        pAnalyzersLock.Unlock();
         if(Write(Analyzer) == false) break;
       }
     } else {
-      pthread_rwlock_rdlock(&pAnalyzersLock);
+      pAnalyzersLock.ReadLock();
       for(auto &Tmp : pAnalyzers) {
         if(Tmp.second->State() == Analyzer::UNCONFIGURED) continue;
         json Analyzer = { Tmp.second->Serial(), Tmp.second->Owner(), Tmp.second->Name(), StateToString(Tmp.second->State()), true, true, true };
         if(Write(Analyzer) == false) break;
       }
-      pthread_rwlock_unlock(&pAnalyzersLock);
+      pAnalyzersLock.Unlock();
     }
   };
   req.SuccessStreamArray(Func);

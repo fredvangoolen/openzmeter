@@ -2,7 +2,7 @@
   <div class="body">
     <div class="container">
       <div class="card">
-        <div class="row">
+        <z-row>
           <div class="col-sm-12">
             <img src="Logo.png" class="logo">
           </div>
@@ -17,7 +17,7 @@
               <button type="submit" class="btn btn-default btn-xs" @click="Login">Sign in</button>
             </div>
           </form>
-        </div>
+        </z-row>
         <div class="row trademark">
           <div class="col-xs-6">
             Visit us at<br><a href="http://www.openzmeter.com" style="color: black">www.openzmeter.com</a>

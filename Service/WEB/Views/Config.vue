@@ -9,7 +9,7 @@
         <div class="modal-body">
           <spinner v-if="ShowSpinner"></spinner>
           <div v-if="View=='Intro'">
-            <div class="row">
+            <z-row>
               <div class="col-xs-12">
                 <p>
                   Welcome to your <strong>openzmeter</strong> startup wizard.
@@ -18,42 +18,42 @@
                   Follow the next steps to configure the network connection. At the end, your device will be connected and you will be able to access all the functions available from any browser.
                 </p>
               </div>
-            </div>
+            </z-row>
             <hr style="margin: 5px 0px 5px 0px"/>
-            <div class="row">
+            <z-row>
               <div class="col-xs-4"><button type="button" @click="FullSite" class="btn btn-default btn-xs btn-block">Go to full site</button></div>
               <div class="col-xs-4"></div>
               <div class="col-xs-4"><button type="button" @click="Scan" class="btn btn-success btn-xs btn-block">Next</button></div>
-            </div>
+            </z-row>
           </div>
           <div v-if="View=='Scan'">
-            <div class="row">
+            <z-row>
               <div class="col-xs-12">
                 Select one of the detected networks from the list below, if you cannot see your network make sure it is in range. If you want to modify a previous configuration or your network does not appear in the list, you can skip this step.</div>
-            </div>
-            <div class="row">
+            </z-row>
+            <z-row>
               <div class="col-xs-12">
                 <vuetable ref="table" :fields="WifiColumns" :api-mode="false" :data="WifiList" class="table small table-striped">
                   <template slot="actions" slot-scope="props">
-                    <div class="btn-group">
+                    <z-button-group>
                       <button type="button" class="btn btn-success btn-xs" @click="Settings(props.rowData.ESSID)">Select</button>
-                    </div>
+                    </z-button-group>
                   </template>
                   <template slot="signal" slot-scope="props">
                     <progress-bar :value="props.rowData.Quality"></progress-bar>
                   </template>
                 </vuetable>
               </div>
-            </div>
+            </z-row>
             <hr style="margin: 5px 0px 5px 0px"/>
-            <div class="row">
+            <z-row>
               <div class="col-xs-4"><button type="button" @click="FullSite" class="btn btn-default btn-xs btn-block">Go to full site</button></div>
               <div class="col-xs-4"><button type="button" @click="Intro" class="btn btn-default btn-xs btn-block">Previous</button></div>
               <div class="col-xs-4"><button type="button" @click="Settings(null)" class="btn btn-success btn-xs btn-block">Next</button></div>
-            </div>
+            </z-row>
           </div>
           <div v-if="View=='Settings'">
-            <div class="row">
+            <z-row>
               <div class="col-xs-12">
                 <label class="control-label">NTP server</label>
                 <input-text v-model="NTPConfig.Server"></input-text>
@@ -94,16 +94,16 @@
                 <label class="control-label">Secondary DNS address</label>
                 <input-text v-model="WifiConfig.DNS[1]"></input-text>
               </div>
-            </div>
+            </z-row>
             <hr style="margin: 5px 0px 5px 0px"/>
-            <div class="row">
+            <z-row>
               <div class="col-xs-4"><button type="button" @click="FullSite" class="btn btn-default btn-xs btn-block">Go to full site</button></div>
               <div class="col-xs-4"><button type="button" @click="Scan" class="btn btn-default btn-xs btn-block">Previous</button></div>
               <div class="col-xs-4"><button type="button" @click="Save" class="btn btn-success btn-xs btn-block">Next</button></div>
-            </div>
+            </z-row>
           </div>
           <div v-if="View=='Save'">
-            <div class="row">
+            <z-row>
               <div class="col-xs-12">
                 <p>
                   Your settings have been saved and the changes are being applied.
@@ -112,17 +112,17 @@
                   If the device has connected successfully, you can close this wizard and access the device with the indicated network address.
                 </p>
               </div>
-            </div>
-            <div class="row">
+            </z-row>
+            <z-row>
               <div class="col-xs-12">
                 <textarea rows="10" class="form-control" disabled :value="Details"></textarea>
               </div>
-            </div>
+            </z-row>
             <hr style="margin: 5px 0px 5px 0px"/>
-            <div class="row">
+            <z-row>
               <div class="col-xs-4"><button type="button" @click="FullSite" class="btn btn-default btn-xs btn-block">Go to full site</button></div>
               <div class="col-xs-4"><button type="button" @click="Settings(null)" class="btn btn-default btn-xs btn-block">Previous</button></div>
-            </div>
+            </z-row>
           </div>
         </div>
       </div>

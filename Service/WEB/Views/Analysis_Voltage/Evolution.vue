@@ -5,10 +5,10 @@
       <div class="header-buttons">
         <toolbar-phases storage="DetailsPhases" :analyzer="analyzer" :multi="false" :current="false" v-model="Phase"></toolbar-phases>
         <toolbar-options storage="DetailsOptions" :options="['Log']" v-model="Options"></toolbar-options>
-        <div class="btn-group">
-          <button type="button" class="btn btn-default btn-xs" v-if="Names.length==20" title="Show full 50 harmonics view" @click="ShowAll"><img :src="require('Imgs/table_rows_insert_below_word.png')"></button>
+        <z-button-group>
+          <z-button v-if="Names.length==20" tooltip="Show full 50 harmonics view" @click="ShowAll" :image="require('Imgs/table_rows_insert_below_word.png')" />
           <button-export file="Evolution" :rows="Export"></button-export>
-        </div>
+        </z-button-group>
       </div>
     </div>
     <div class="panel-body" @mouseenter="MouseOver=true" @mouseleave="MouseOver=false">

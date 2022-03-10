@@ -17,6 +17,7 @@
 #include <map>
 #include <pthread.h>
 #include "Tools.h"
+#include "RWLocks.h"
 #include "cctz/time_zone.h"
 #include "AnalyzerSoftAlarm.h"
 #include "AnalyzerSoftAggreg200MS.h"
@@ -29,7 +30,7 @@ class AnalyzerSoftAlarms final : public AnalyzerAlarms {
   private :
     float                                     pNominalVoltage;
     float                                     pNominalFrequency;
-    pthread_rwlock_t                          pLock;
+    RWLocks                                   pLock;
     map<string, vector<AnalyzerSoftAlarm*> >  pAlarms;
     bool                                      pEnabled;
     TaskPool::Task                            pTask;

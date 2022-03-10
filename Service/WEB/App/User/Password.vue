@@ -8,7 +8,7 @@
       </div>
     </template>
     <form autocomplete="off">
-      <div class="row">
+      <z-row>
         <div class="col-xs-12" v-if="ShowPrevious">
           <label class="control-label">Previous password</label>
           <password v-model="User.Previous" name="pass"></password>
@@ -21,7 +21,7 @@
           <label class="control-label">Confirm password</label>
           <password v-model="User.Password2" name="new_pass2"></password>
         </div>
-      </div>
+      </z-row>
     </form>
   </dlg>
 </template>

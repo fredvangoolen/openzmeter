@@ -3,11 +3,11 @@
     <template v-slot:header>
       <div class="pull-left"><h4 class="modal-title">Analyzers &raquo; Configuration</h4></div>
       <div class="pull-right btn-group">
-        <button type="button" class="btn btn-default btn-xs" :class="{ disabled: ShowSpinner }" @click="Save"><img :src="require('Imgs/diskette.png')" alt="Save"></button>
-        <button type="button" class="btn btn-default btn-xs" @click="$emit('close', null)"><img :src="require('Imgs/arrow_undo.png')" alt="Discard"></button>
+        <z-button :disabled="ShowSpinner" @click="Save" :image="require('Imgs/diskette.png')" tooltip="Save" />
+        <z-button @click="$emit('close', null)" :image="require('Imgs/arrow_undo.png')" tooltip="Discard" />
       </div>
     </template>
-    <div class="row">
+    <z-row>
       <div class="col-xs-9">
         <label class="control-label">Serial number</label>
         <input-text :disabled="true" :value="Analyzer.Analyzer"></input-text>
@@ -42,7 +42,7 @@
         <input-spin prepend="A" :decimals="1" :min="0.1" :max="500" :increment="1" v-model="Analyzer.MaxCurrent"></input-spin>
       </div>
       <div class="col-xs-12"><hr style="margin-top: 10px; margin-bottom: 5px;"/></div>
-      <div class="row">
+      <z-row>
         <div class="col-xs-12">
           <label class="control-label" style="line-height: 22px">Phase names</label>
         </div>
@@ -58,7 +58,7 @@
         <div class="col-xs-3">
           <input-text prepend="N" :disabled="Analyzer.NeutralName==null" v-model="Analyzer.NeutralName"></input-text>
         </div>
-      </div>
+      </z-row>
       <div class="col-xs-12"><hr style="margin-top: 10px; margin-bottom: 5px;"/></div>
       <div class="col-xs-12">
         <label class="control-label" style="line-height: 22px">Enable 200ms</label>
@@ -89,7 +89,7 @@
           </tr>
         </table>
       </div>
-    </div>
+    </z-row>
   </dlg>
 </template>
 

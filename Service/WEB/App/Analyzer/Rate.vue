@@ -4,24 +4,24 @@
     <template v-slot:header>
       <div class="pull-left"><h4 class="modal-title">Analyzers &raquo; Rates &raquo; Edit</h4></div>
       <div class="pull-right btn-group" v-if="Rate.Periods==null">
-        <button type="button" class="btn btn-default btn-xs" @click="$emit('update', Rate)"><img :src="require('Imgs/arrow_undo.png')" alt="Back"></button>
+        <z-button @click="$emit('update', Rate)" :image="require('Imgs/arrow_undo.png')" tooltip="Back" />
       </div>
       <toolbar-pager v-if="Rate.Periods==null" class="pull-right" :pageSize="10" :input="Tariffs" :output.sync="FilterTariffs" :filtercols="['Name', 'StartDate', 'EndDate']"></toolbar-pager>
       <div class="pull-right btn-group" v-if="Rate.Periods!=null">
-        <button type="button" class="btn btn-default btn-xs" :class="{ active: View=='Main' }" @click="View='Main'">Main</button>
-        <button type="button" class="btn btn-default btn-xs" :class="{ active: View=='Periods' }" @click="View='Periods'">Periods</button>
-        <button type="button" class="btn btn-default btn-xs" :class="{ active: View=='Concepts' }" @click="View='Concepts'">Concepts</button>
-        <button type="button" class="btn btn-default btn-xs" :class="{ active: View=='Cycles' }" @click="View='Cycles'">Cycles</button>
-        <button type="button" class="btn btn-default btn-xs" @click="$emit('update', Rate)"><img :src="require('Imgs/arrow_undo.png')" alt="Back"></button>
+        <z-button :active="View=='Main'" @click="View='Main'" caption="Main" />
+        <z-button :active="View=='Periods'" @click="View='Periods'" caption="Periods" />
+        <z-button :active="View=='Concepts'" @click="View='Concepts'" caption="Concepts" />
+        <z-button :active="View=='Cycles'" @click="View='Cycles'" caption="Cycles" />
+        <z-button @click="$emit('update', Rate)" :image="require('Imgs/arrow_undo.png')" tooltip="Back" />
       </div>
     </template>
     <div class="row" v-if="Rate.Periods==null">
       <spinner v-if="ShowSpinner"></spinner>
       <vuetable :fields="ColumnsTariffs" :api-mode="false" :data="FilterTariffs" class="tariffs table small table-striped">
         <template slot="actions" slot-scope="props">
-          <div class="btn-group" >
-            <button class="btn btn-xs btn-default" @click="LoadTariff(props.rowData)">Load</button>
-          </div>
+          <z-button-group>
+            <z-button @click="LoadTariff(props.rowData)" caption="Load" />
+          </z-button-group>
         </template>
       </vuetable>
     </div>
@@ -65,7 +65,7 @@
             <div class="panel-heading">
               Contracted Power
               <div class="pull-right btn-group">
-                <button type="button" class="btn btn-default btn-xs" :class="{ active: !Array.isArray(Rate.ContractedPower) }" @click="Rate.ContractedPower=Array.isArray(Rate.ContractedPower) ? Rate.ContractedPower[0] : Array(Rate.Periods.length).fill(Rate.ContractedPower)" title="Link all periods value"><img :src="require('Imgs/link.png')"></button>
+                <z-button :active="!Array.isArray(Rate.ContractedPower)" @click="Rate.ContractedPower=Array.isArray(Rate.ContractedPower) ? Rate.ContractedPower[0] : Array(Rate.Periods.length).fill(Rate.ContractedPower)" tooltip="Link all periods value" :image="require('Imgs/link.png')" />
               </div>
               <div class="clearfix"></div>
             </div>
@@ -100,9 +100,9 @@
                     <input-spin :max="100000" :min="0" :prepend="Rate.Currency + '/' + Rate.PowerUnits + '/day'" :decimals="6" :increment="0.1" v-model="Rate.PowerCost[idx]"></input-spin>
                   </td>
                   <td style="width:30px">
-                    <div class="btn-group">
+                    <z-button-group>
                       <button type="button" class="btn btn-default btn-xs" @click="$set(Rate.PowerCost, idx, Rate.Periods[idx].DefaultPowerCost)" title="Set tariff default costs"><img :src="require('Imgs/wand.png')"></button>
-                    </div>
+                    </z-button-group>
                   </td>
                 </tr>
               </table>
@@ -133,9 +133,9 @@
                     <input-spin :max="100000" :min="0" :prepend="Rate.Currency + '/' + Rate.EnergyUnits" :decimals="6" :increment="0.1" v-model="Rate.EnergyCost[idx]"></input-spin>
                   </td>
                   <td style="width:30px">
-                    <div class="btn-group">
+                    <z-button-group>
                       <button type="button" class="btn btn-default btn-xs" @click="Rate.EnergyCost[idx]=Rate.Periods[idx].DefaultEnergyCost" title="Set tariff default costs"><img :src="require('Imgs/wand.png')"></button>
-                    </div>
+                    </z-button-group>
                   </td>
                 </tr>
               </table>
@@ -200,15 +200,15 @@
               <div class="clearfix"></div>
             </div>
             <div class="panel-body">
-              <div class="row">
+              <z-row>
                 <vuetable :fields="ColumnsCycles" :api-mode="false" :data="FilterCycles" class="bills table small table-striped">
                   <template slot="actions" slot-scope="props">
-                    <div class="btn-group" v-if="!props.rowData.IsLast">
+                    <z-button-group v-if="!props.rowData.IsLast">
                       <button class="btn btn-xs btn-danger" @click="DelBill(props.rowData)">Delete</button>
-                    </div>
+                    </z-button-group>
                   </template>
                 </vuetable>
-              </div>
+              </z-row>
             </div>
           </div>
         </div>
@@ -222,12 +222,12 @@
           <button type="button" class="btn btn-default btn-xs" @click="View='Periods'"><img :src="require('Imgs/arrow_undo.png')" alt="Go back"></button>
         </div>
       </template>
-      <div class="row">
+      <z-row>
         <div class="col-xs-12">
           <label class="control-label">Expresion</label>
           <input-math v-model="Rate.PowerCost" :vars="Vars"></input-math>
         </div>
-      </div>
+      </z-row>
     </dlg>
     <dlg v-if="View=='EnergyCostExpression'">
       <template v-slot:header>
@@ -236,12 +236,12 @@
           <button type="button" class="btn btn-default btn-xs" @click="View='Periods'"><img :src="require('Imgs/arrow_undo.png')" alt="Go back"></button>
         </div>
       </template>
-      <div class="row">
+      <z-row>
         <div class="col-xs-12">
           <label class="control-label">Expresion</label>
           <input-math v-model="Rate.EnergyCost" :vars="Vars"></input-math>
         </div>
-      </div>
+      </z-row>
     </dlg>
   </div>
 </template>

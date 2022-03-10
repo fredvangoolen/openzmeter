@@ -5,9 +5,9 @@
       <div class="float-right">
         <span v-if="data!=null">From {{ analyzer.FormatAggregation(data.Aggreg) }} aggregation {{ Paused ? '(Paused)' : '' }}</span>
         <toolbar-phases storage="DetailsPhases" :analyzer="analyzer" v-model="Phase"></toolbar-phases>
-        <div class="btn-group">
+        <z-button-group>
           <button-export file="Main_Variables" :rows="Export"></button-export>
-        </div>
+        </z-button-group>
       </div>
     </div>
     <div class="panel-body" @mouseenter="Paused=true" @mouseleave="Paused=false">

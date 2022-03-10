@@ -4,12 +4,12 @@
       <div class="pull-left"><h4 class="modal-title">ESIOS price fetch</h4></div>
       <div class="pull-right btn-group">
         <div class="pull-right btn-group">
-          <button type="button" class="btn btn-default btn-xs" title="Save" @click="Save"><img :src="require('Imgs/diskette.png')"></button>
-          <button type="button" class="btn btn-default btn-xs" title="Back" @click="$emit('close')"><img :src="require('Imgs/arrow_undo.png')"></button>
+          <z-button tooltip="Save" @click="Save" :image="require('Imgs/diskette.png')" />
+          <z-button tooltip="Back" @click="$emit('close')" :image="require('Imgs/arrow_undo.png')" />
         </div>
       </div>
     </template>
-    <div class="row">
+    <z-row>
       <div class="col-xs-12">
         <label class="control-label" style="line-height: 22px">Enable</label>
         <toggle class="float-right" onText="Yes" offText="No" v-model="Config.Enabled"></toggle>
@@ -23,7 +23,7 @@
         <label class="control-label">Last data requested</label>
         <date-picker :options="{ format: 'DD/MM/YYYY - HH:MM:ss', viewMode: 'months', timeZone: 'Europe/Madrid' }" :disabled="true" v-model="Config.LastDate"></date-picker>
       </div>
-    </div>
+    </z-row>
   </dlg>
 </template>
 

@@ -1,32 +1,27 @@
 <template>
   <div v-if="analyzer != null">
-    <div class="row">
+    <z-row>
       <div class="col-lg-12">
-        <div class="panel panel-voltage">
-          <div class="panel-heading">
-            <div class="header-text">Voltage</div>
+        <z-panel title="Voltage" color="#d9534f">
+          <template v-slot:toolbar>
             <portal to="fs-toolbar" :disabled="!Expanded" class="header-buttons">
               <toolbar-aggregation storage="Aggregation" :options="['3S', '1M', '10M', '1H']" v-model="Aggreg"></toolbar-aggregation>
               <toolbar-period storage="Period" v-model="Range" :analyzer="analyzer"></toolbar-period>
               <toolbar-phases storage="ViewPhases" :analyzer="analyzer" :current="false" :multi="true" v-model="Phases"></toolbar-phases>
-              <div class="btn-group">
+              <z-button-group>
                 <button-export file="Voltage" :rows="Export"></button-export>
                 <button-expand v-model="Expanded"></button-expand>
-              </div>
+              </z-button-group>
+            </portal>
+          </template>
+          <counters class="col-md-6 col-lg-4 col-xl-3" :analyzer="analyzer" :data10M="Transfer10M.LastData" :dataGraph="TransferGraph.Data" :height.sync="Height"></counters>
+          <div class="col-md-6 col-lg-8 col-xl-9">
+            <portal to="fs-body" :disabled="!Expanded" class="panel-body">
+              <spinner v-if="TransferGraph.Data==null"></spinner>
+              <voltage :phases="Phases" :analyzer="analyzer" :data="TransferGraph.Data" :height="Expanded?DialogHeight:Height" @range="Range=$event"></voltage>
             </portal>
           </div>
-          <div class="panel-body">
-            <div class="row">
-              <counters class="col-md-6 col-lg-4 col-xl-3" :analyzer="analyzer" :data10M="Transfer10M.LastData" :dataGraph="TransferGraph.Data" :height.sync="Height"></counters>
-              <div class="col-md-6 col-lg-8 col-xl-9">
-                <portal to="fs-body" :disabled="!Expanded" class="panel-body">
-                  <spinner v-if="TransferGraph.Data==null"></spinner>
-                  <voltage :phases="Phases" :analyzer="analyzer" :data="TransferGraph.Data" :height="Expanded?DialogHeight:Height" @range="Range=$event"></voltage>
-                </portal>
-              </div>
-            </div>
-          </div>
-        </div>
+        </z-panel>
       </div>
       <div class="col-lg-12">
         <detail-tabs v-if="analyzer.NominalFrequency>0" :tabs="['Waveform', 'Harmonics', 'Evolution', 'Advanced', 'Phasors', 'Parameters', 'Events', 'Cyclic Histogram', 'Jolt']" storage="Voltage.Details.Tabs.AC" v-model="ActiveTab"></detail-tabs>
@@ -41,7 +36,7 @@
         <cyclic-histogram-chart v-if="ActiveTab=='Cyclic Histogram'" :analyzer="analyzer" mode="voltage"></cyclic-histogram-chart>
         <jolt-chart v-if="ActiveTab=='Jolt'" :analyzer="analyzer" :range="Range"></jolt-chart>
       </div>
-    </div>
+    </z-row>
     <dlg-fs v-if="Expanded" title="Voltage" :height.sync="DialogHeight"></dlg-fs>
   </div>
   <div v-else-if="analyzer == null">

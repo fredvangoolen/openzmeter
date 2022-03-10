@@ -1,6 +1,6 @@
 <template>
   <div v-if="analyzer != null">
-    <div class="row">
+    <z-row>
       <div class="col-lg-12">
         <div class="panel panel-other">
           <div class="panel-heading">
@@ -11,7 +11,7 @@
             </div>
           </div>
           <div class="panel-body">
-            <div class="row">
+            <z-row>
               <div class="col-lg-12">
                 <div class="alert alert-danger text-center" v-if="Series.length==0">
                   <p>No selected series to show</p>
@@ -20,11 +20,11 @@
               <div class="col-lg-12" v-for="(serie, idx) in Series" :key="serie">
                 <graphs-panel :analyzer="analyzer" :serie="serie" :ref="'graph' + idx" :range="Range" :paused.sync="Paused" @remove="RemoveSerie"></graphs-panel>
               </div>
-            </div>
+            </z-row>
           </div>
         </div>
       </div>
-    </div>
+    </z-row>
   </div>
   <div v-else-if="analyzer == null">
     <div class="alert alert-danger text-center">

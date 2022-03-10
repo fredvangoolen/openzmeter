@@ -1,6 +1,6 @@
 <template>
   <div v-if="analyzer != null">
-    <div class="row">
+    <z-row>
       <div class="col-lg-12">
         <div class="panel panel-active-energy">
           <div class="panel-heading">
@@ -8,9 +8,9 @@
             <div class="header-buttons clearfix">
               <color-bar :width="140" :height="10" :range="Range" units="Wh"></color-bar>
               <toolbar-years storage="StatsYear" v-model="Year" :analyzer="analyzer" aggreg="1H"></toolbar-years>
-              <div class="btn-group">
+              <z-button-group>
                 <button-export file="Distribution" :rows="Export"></button-export>
-              </div>
+              </z-button-group>
             </div>
           </div>
           <div class="panel-body">
@@ -25,7 +25,7 @@
       <div class="col-md-12 col-lg-6" v-if="!ShowSpinner">
         <week-day :data="Data" :analyzer="analyzer"></week-day>
       </div>
-    </div>
+    </z-row>
   </div>
   <div v-else-if="analyzer == null">
     <div class="alert alert-danger text-center">

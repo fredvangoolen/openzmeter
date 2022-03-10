@@ -1,5 +1,5 @@
 <template>
-  <div class="row">
+  <z-row>
     <div class="col-12">
       <detail-tabs :tabs="['Help', 'License', 'Changelog', 'API', /*'Updates', */'System']" storage="HelpTab" v-model="ActiveTab"></detail-tabs>
       <api v-if="ActiveTab=='API'"></api>
@@ -9,7 +9,7 @@
       <!--updates v-if="ActiveTab=='Updates'"></updates-->
       <system v-if="ActiveTab=='System'"></system>
     </div>
-  </div>
+  </z-row>
 </template>
 
 <script>

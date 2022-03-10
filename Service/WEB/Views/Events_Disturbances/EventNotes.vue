@@ -3,17 +3,17 @@
     <template v-slot:header>
       <div class="pull-left"><h4 class="modal-title">Events &raquo; Add notes</h4></div>
       <div class="pull-right btn-group">
-        <button type="button" class="btn btn-default btn-xs" :disabled="ShowSpinner" @click="Save"><img :src="require('Imgs/diskette.png')" alt="Save"></button>
-        <button type="button" class="btn btn-default btn-xs" @click="$emit('close', false)"><img :src="require('Imgs/arrow_undo.png')" alt="Discard"></button>
+        <z-button :disabled="ShowSpinner" @click="Save" :image="require('Imgs/diskette.png')" tooltip="Save" />
+        <z-button @click="$emit('close', false)" :image="require('Imgs/arrow_undo.png')" tooltip="Discard" />
       </div>
     </template>
     <div class="alert alert-danger text-center" style="margin-bottom: 5px; padding: 5px" v-if="Error!=null">{{ Error }}</div>
-    <div class="row">
+    <z-row>
       <div class="col-xs-12">
         <label class="control-label">Notes</label>
         <textarea type="text" class="form-control" v-model="Event.Notes"></textarea>
       </div>
-    </div>
+    </z-row>
   </dlg>
 </template>
 

@@ -22,7 +22,7 @@
 //----------------------------------------------------------------------------------------------------------------------
 vector<void (*)()> __attribute__((init_priority(200))) DeviceManager::pDrivers;
 map<string, Device*>                                   DeviceManager::pDevices;
-pthread_rwlock_t                                       DeviceManager::pDevicesLock = PTHREAD_RWLOCK_INITIALIZER;
+RWLocks                                                DeviceManager::pDevicesLock;
 //----------------------------------------------------------------------------------------------------------------------
 DeviceManager::DeviceManager() {
   LogFile::Debug("Starting DeviceManager...");
@@ -38,16 +38,16 @@ DeviceManager::~DeviceManager() {
   HTTPServer::UnregisterCallback("getDevice");
   HTTPServer::UnregisterCallback("setDevice");
   LogFile::Info("Stopping devices...");
-  if(pthread_rwlock_wrlock(&pDevicesLock) != 0) LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
+  pDevicesLock.WriteLock();
   for(auto &Device : pDevices) delete Device.second;
   pDevices.clear();
-  if(pthread_rwlock_unlock(&pDevicesLock) != 0) LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
+  pDevicesLock.Unlock();
   LogFile::Debug("DeviceManager stopped");
 }
 void DeviceManager::AddDevice(Device *dev) {
-  if(pthread_rwlock_wrlock(&pDevicesLock) != 0) LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
+  pDevicesLock.WriteLock();
   pDevices.insert({ dev->Serial(), dev });
-  if(pthread_rwlock_unlock(&pDevicesLock) != 0) LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
+  pDevicesLock.Unlock();
 }
 void DeviceManager::AddDriver(void (*func)()) {
   pDrivers.push_back(func);
@@ -55,22 +55,27 @@ void DeviceManager::AddDriver(void (*func)()) {
 void DeviceManager::CallDeviceFunction(HTTPRequest &req, void (Device::*method)(HTTPRequest &req)) {
   if(!req.CheckParamString("Serial")) return;
   string Serial = req.Param("Serial");
-  if(pthread_rwlock_rdlock(&pDevicesLock) != 0) LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
+  pDevicesLock.ReadLock();
   auto Device = pDevices.find(Serial);
   if(Device == pDevices.end()) {
     req.Error("Device not found", HTTP_BAD_REQUEST);
   } else {
     (Device->second->*method)(req);
   }
-  if(pthread_rwlock_unlock(&pDevicesLock) != 0) LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
+  pDevicesLock.Unlock();
 }
 void DeviceManager::GetDevicesCallback(HTTPRequest &req) {
   if(req.UserName() != "admin") return req.Error("", HTTP_FORBIDDEN);
-  json Response = json::array();
-  if(pthread_rwlock_rdlock(&pDevicesLock) != 0) LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
-  for(auto &Device : pDevices) Response.push_back(Device.second->GetJSONDescriptor());
-  if(pthread_rwlock_unlock(&pDevicesLock) != 0) LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
-  req.Success(Response);
+  auto Func = [](function<bool(const json&)> Write) {
+    Write({ "Driver", "Name", "Serial", "Enabled", "Analyzers" });
+    pDevicesLock.ReadLock();
+    for(auto &Tmp : pDevices) {
+      json Device = { Tmp.second->Driver(), Tmp.second->Name(), Tmp.second->Serial(), Tmp.second->Enabled(), Tmp.second->AnalyzersCount() };
+      if(Write(Device) == false) break;
+    }
+    pDevicesLock.Unlock();
+  };
+  req.SuccessStreamArray(Func);
 }
 void DeviceManager::GetDeviceCallback(HTTPRequest &req) {
   CallDeviceFunction(req, &Device::GetDevice);

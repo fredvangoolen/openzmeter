@@ -3,12 +3,12 @@
     <template v-slot:header>
       <div class="pull-left"><h4 class="modal-title">Device &raquo; {{ Settings.Serial }}</h4></div>
       <div class="pull-right btn-group">
-        <button type="button" class="btn btn-default btn-xs" @click="Save"><img :src="require('Imgs/diskette.png')"></button>
-        <button type="button" class="btn btn-default btn-xs" @click="$emit('close', false)"><img :src="require('Imgs/arrow_undo.png')"></button>
+        <z-button @click="Save" :image="require('Imgs/diskette.png')" />
+        <z-button @click="$emit('close', false)" :image="require('Imgs/arrow_undo.png')" />
       </div>
     </template>
     <div class="alert alert-danger text-center" style="margin-bottom: 5px; padding: 5px" v-if="Error!=null">{{Error }}</div>
-    <div class="row">
+    <z-row>
       <div class="col-xs-12">
         <label class="control-label" style="line-height: 22px">Enabled</label>
         <toggle class="float-right" onText="Yes" offText="No" v-model="Settings.Enabled"></toggle>
@@ -26,7 +26,7 @@
         <label class="control-label">Voltage channel offset</label>
         <div style="display: flex">
           <input-spin :min="-20" :max="20" v-model="Settings.VoltageOffset" :increment="0.01" :decimals="2" style="flex-grow: 100"></input-spin>
-          <button type="button" class="btn btn-default btn-xs" @click="SetVoltageOffset" :disabled="Settings.Wave_Average.Voltage == 0.0" :title="'Last second offset: ' + Round(Settings.Wave_Average.Voltage, 2, false)"><img :src="require('Imgs/wand.png')"></button>
+          <z-button @click="SetVoltageOffset" :disabled="Settings.Wave_Average.Voltage == 0.0" :tooltip="'Last second offset: ' + Round(Settings.Wave_Average.Voltage, 2, false)" :image="require('Imgs/wand.png')" />
         </div>
       </div>
       <div class="col-xs-12 col-sm-6">
@@ -44,10 +44,10 @@
         <label class="control-label">Current channel offset</label>
         <div style="display: flex">
           <input-spin :min="-1" :max="1" v-model="Settings.CurrentOffset" :increment="0.01" :decimals="2" style="flex-grow: 100"></input-spin>
-          <button type="button" class="btn btn-default btn-xs" @click="SetCurrentOffset" :disabled="Settings.Wave_Average.Current == 0.0" :title="'Last second offset: ' + Round(Settings.Wave_Average.Current, 2, false)"><img :src="require('Imgs/wand.png')"></button>
+          <z-button @click="SetCurrentOffset" :disabled="Settings.Wave_Average.Current == 0.0" :tooltip="'Last second offset: ' + Round(Settings.Wave_Average.Current, 2, false)" :image="require('Imgs/wand.png')" />
         </div>
       </div>
-    </div>
+    </z-row>
   </dlg>
 </template>
 

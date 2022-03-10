@@ -6,12 +6,12 @@
       <portal to="fs-toolbar" :disabled="!Expanded" class="header-buttons">
         <toolbar-phases storage="DetailsPhases" :analyzer="analyzer" :multi="true" :current="true" v-model="Phases"></toolbar-phases>
         <toolbar-options storage="DetailsOptions" :options="['Current']" v-model="Options"></toolbar-options>
-        <div class="btn-group">
-          <button type="button" class="btn btn-default btn-xs" @click="ShowStream=true" title="Stream waves in realtime"><img :src="require('Imgs/diskette.png')"></button>
+        <z-button-group>
+          <z-button @click="ShowStream=true" tooltip="Stream waves in realtime" :image="require('Imgs/diskette.png')" />
           <button-export file="Waveform" :rows="Export"></button-export>
           <button-expand v-model="Expanded"></button-expand>
           <button-pause :value="paused" @input="$emit('update:paused', $event)"></button-pause>
-        </div>
+        </z-button-group>
       </portal>
     </div>
     <portal to="fs-body" :disabled="!Expanded" class="panel-body">

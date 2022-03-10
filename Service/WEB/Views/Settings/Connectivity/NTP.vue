@@ -4,12 +4,12 @@
       <div class="pull-left"><h4 class="modal-title">NTP synchronization</h4></div>
       <div class="pull-right btn-group">
         <div class="pull-right btn-group">
-          <button type="button" class="btn btn-default btn-xs" title="Save" @click="Save"><img :src="require('Imgs/diskette.png')"></button>
-          <button type="button" class="btn btn-default btn-xs" title="Back" @click="$emit('close')"><img :src="require('Imgs/arrow_undo.png')"></button>
+          <z-button tooltip="Save" @click="Save" :image="require('Imgs/diskette.png')" />
+          <z-button tooltip="Back" @click="$emit('close')" :image="require('Imgs/arrow_undo.png')" />
         </div>
       </div>
     </template>
-    <div class="row">
+    <z-row>
       <div class="col-xs-12">
         <label class="control-label" style="line-height: 22px">Enable</label>
         <toggle class="float-right" onText="Yes" offText="No" v-model="Config.Enabled"></toggle>
@@ -24,7 +24,7 @@
         <label class="control-label">Details</label>
         <textarea rows="2" class="form-control" disabled :value="Details"></textarea>
       </div>
-    </div>
+    </z-row>
   </dlg>
 </template>
 

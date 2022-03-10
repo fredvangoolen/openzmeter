@@ -3,10 +3,10 @@
     <template v-slot:header>
       <div class="pull-left"><h4 class="modal-title">Device &raquo; {{ Settings.Serial }}</h4></div>
       <div class="pull-right btn-group">
-        <button type="button" class="btn btn-default btn-xs" @click="Save"><img :src="require('Imgs/diskette.png')"></button>
-        <button type="button" class="btn btn-default btn-xs" :class="{ active: View=='Inputs' }" @click="View='Inputs'">Main</button>
-        <button type="button" class="btn btn-default btn-xs" :class="{ active: View=='Outputs' }" @click="View='Outputs'">Outputs</button>
-        <button type="button" class="btn btn-default btn-xs" @click="$emit('close', false)"><img :src="require('Imgs/arrow_undo.png')"></button>
+        <z-button @click="Save" :image="require('Imgs/diskette.png')" />
+        <z-button :active="View=='Inputs'" @click="View='Inputs'" caption="Main" />
+        <z-button :active="View=='Outputs'" @click="View='Outputs'" caption="Outputs" />
+        <z-button @click="$emit('close', false)" :image="require('Imgs/arrow_undo.png')" />
       </div>
     </template>
     <template v-slot:footer>
@@ -45,7 +45,7 @@
               <input-spin :min="-200" :max="200" :disabled="Settings.BlockDC==true" v-model="Settings.VoltageOffset[index]" :increment="0.01" :decimals="2"></input-spin>
             </td>
             <td>
-              <button type="button" class="btn btn-default btn-xs" @click="SetVoltageOffset(index)" :disabled="Settings.BlockDC==true || Settings.Wave_Average.Voltage[index] == 0.0" :title="'Last second offset: ' + Round(-Settings.Wave_Average.Voltage[index], 2, false)"><img :src="require('Imgs/wand.png')"></button>
+              <z-button @click="SetVoltageOffset(index)" :disabled="Settings.BlockDC==true || Settings.Wave_Average.Voltage[index] == 0.0" :caption="'Last second offset: ' + Round(-Settings.Wave_Average.Voltage[index], 2, false)" :image="require('Imgs/wand.png')" />
             </td>
             <td>
               <input-spin :min="0.1" :max="1000" v-model="Settings.VoltageGain[index]" :increment="0.001" :decimals="3" prepend="V/V"></input-spin>
@@ -79,7 +79,7 @@
               <input-spin :disabled="Settings.BlockDC==true" :min="-200" :max="200" v-model="Settings.CurrentOffset[index]" :increment="0.01" :decimals="2"></input-spin>
             </td>
             <td>
-              <button type="button" class="btn btn-default btn-xs" @click="SetCurrentOffset(index)" :disabled="Settings.BlockDC==true || Settings.Wave_Average.Current[index] == 0.0" :title="'Last second offset: ' + Round(-Settings.Wave_Average.Current[index], 2, false)"><img :src="require('Imgs/wand.png')"></button>
+              <z-button @click="SetCurrentOffset(index)" :disabled="Settings.BlockDC==true || Settings.Wave_Average.Current[index] == 0.0" :tooltip="'Last second offset: ' + Round(-Settings.Wave_Average.Current[index], 2, false)" :image="require('Imgs/wand.png')" />
             </td>
             <td>
               <input-spin :min="0" :max="200" v-model="Settings.CurrentDelay[index]" :increment="1" :decimals="0"></input-spin>

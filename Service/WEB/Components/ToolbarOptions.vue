@@ -1,7 +1,7 @@
 <template>
-  <div class="btn-group" v-if="value!=null">
+  <z-button-group v-if="value!=null">
     <button type="button" class="btn btn-default btn-xs" :class="{ active: value[name] }" v-for="name in options" :key="name" @click="Toogle(name, $event)">{{ name }}</button>
-  </div>
+  </z-button-group>
 </template>
 
 <script>

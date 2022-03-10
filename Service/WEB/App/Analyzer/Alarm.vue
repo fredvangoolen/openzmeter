@@ -3,9 +3,9 @@
     <template v-slot:header>
       <div class="pull-left"><h4 class="modal-title">Analyzers » Alarms » Edit</h4></div>
       <div class="pull-right btn-group">
-        <button type="button" class="btn btn-default btn-xs" :class="{ active: View=='Main' }" @click="View='Main'" title="Main alarm properties">Main</button>
-        <button type="button" class="btn btn-default btn-xs" :class="{ active: View=='Expression' }" @click="View='Expression'" title="Alarm expression configuration">Expression</button>
-        <button type="button" class="btn btn-default btn-xs" @click="$emit('update', Alarm)" title="Go back"><img :src="require('Imgs/arrow_undo.png')"></button>
+        <z-button :active="View=='Main'" @click="View='Main'" tooltip="Main alarm properties" caption="Main" />
+        <z-button :active="View=='Expression'" @click="View='Expression'" tooltip="Alarm expression configuration" caption="Expression" />
+        <z-button @click="$emit('update', Alarm)" tooltip="Go back" :image="require('Imgs/arrow_undo.png')" />
       </div>
     </template>
     <div class="alert alert-danger text-center" style="margin-bottom: 5px; padding: 5px" v-if="Error!=null">{{ Error }}</div>

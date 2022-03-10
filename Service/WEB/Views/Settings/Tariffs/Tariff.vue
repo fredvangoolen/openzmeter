@@ -4,11 +4,11 @@
       <template v-slot:header>
         <div class="pull-left"><h4 class="modal-title">Tariffs template</h4></div>
         <div class="pull-right btn-group">
-          <button type="button" class="btn btn-default btn-xs" @click="Save"><img :src="require('Imgs/diskette.png')"></button>
-          <button type="button" class="btn btn-default btn-xs" :class="{ active: View=='Main' }" @click="View='Main'">Main</button>
-          <button type="button" class="btn btn-default btn-xs" :class="{ active: View=='Periods' }" @click="View='Periods'">Billing terms</button>
-          <button type="button" class="btn btn-default btn-xs" :class="{ active: View=='Calendar' }" @click="View='Calendar'">Calendar</button>
-          <button type="button" class="btn btn-default btn-xs" @click="$emit('close')"><img :src="require('Imgs/arrow_undo.png')" alt="Discard"></button>
+          <z-button @click="Save" :image="require('Imgs/diskette.png')" />
+          <z-button :active="View=='Main'" @click="View='Main'" caption="Main" />
+          <z-button :active="View=='Periods'" @click="View='Periods'" caption="Billing terms" />
+          <z-button :active="View=='Calendar'" @click="View='Calendar'" caption="Calendar" />
+          <z-button @click="$emit('close')" :image="require('Imgs/arrow_undo.png')" tooltip="Discard" />
         </div>
       </template>
       <div class="row" v-if="View=='Main'">
@@ -26,22 +26,22 @@
           <table style="width: 100%"><tr><td>
             <detail-tabs key="Period_Tabs" :tabs="['General'].concat(Array(Tariff.Template.Periods.length).fill(0).map((n, idx) => { return 'P' + (idx + 1)}))" v-model="ActivePeriod" :light="true"></detail-tabs>
           </td><td style="width: 64px; text-align: right;">
-            <div class="btn-group">
-              <button class="btn btn-default btn-xs" type="button" :disabled="Tariff.Template.Periods.length==1" @click="DeletePeriod" title="Delete last period"><img :src="require('Imgs/cross.png')"></button>
-              <button class="btn btn-default btn-xs" type="button"><img :src="require('Imgs/plus.png')" @click="AddPeriod" title="Add new period"></button>
-            </div>
+            <z-button-group>
+              <z-button :disabled="Tariff.Template.Periods.length==1" @click="DeletePeriod" tooltip="Delete last period" :image="require('Imgs/cross.png')" />
+              <z-button :image="require('Imgs/plus.png')" @click="AddPeriod" tooltip="Add new period" />
+            </z-button-group>
           </td></tr></table>
           <div class="panel-tab panel panel-dialog" style="margin-bottom: 0px" v-if="ActivePeriod=='General'">
             <div class="panel-heading">
               <div class="pull-right btn-group">
-                <button class="btn btn-default btn-xs" type="button" title="Edit tariff script" @click="View='Expresion'"><img :src="require('Imgs/math_functions.png')"></button>
-                <button class="btn btn-default btn-xs" type="button" title="Add new tariff concept" @click="Tariff.Template.Concepts.push({Description: 'Unnamed concept', Variable: '', Type: 'INFO'})"><img :src="require('Imgs/plus.png')"></button>
+                <z-button tooltip="Edit tariff script" @click="View='Expresion'" :image="require('Imgs/math_functions.png')" />
+                <z-button tooltip="Add new tariff concept" @click="Tariff.Template.Concepts.push({Description: 'Unnamed concept', Variable: '', Type: 'INFO'})" :image="require('Imgs/plus.png')" />
               </div>
               <toolbar-pager class="pull-right" :pageSize="10" :input="Tariff.Template.Concepts" :output.sync="FilterConcepts" :filtercols="['Description', 'Variable']"></toolbar-pager>
               <div class="clearfix"></div>
             </div>
             <div class="panel-body">
-              <div class="row">
+              <z-row>
                 <div class="col-xs-4">
                   <label class="small">Currency</label>
                   <div class="input-group input-group-xs" style="width: 100%">
@@ -64,7 +64,7 @@
                   <template slot="concept" slot-scope="props">
                     <div class="input-group input-group-xs">
                       <span class="input-group-btn">
-                        <button class="btn btn-default" type="button" @click="Tariff.Template.Concepts.splice(props.rowData.rowNum, 1)"><img :src="require('Imgs/cross.png')"></button>
+                        <z-button @click="Tariff.Template.Concepts.splice(props.rowData.rowNum, 1)" :image="require('Imgs/cross.png')" />
                       </span>
                       <input type="text" class="form-control" v-model="props.rowData.Description">
                     </div>
@@ -78,21 +78,21 @@
                     <option-picker v-model="props.rowData.Type" :options="[ {name: 'Info', value: 'INFO'}, {name: 'General cost', value: 'COST'}, {name: 'Energy cost', value: 'COST_ENERGY'}, {name: 'Power cost', value: 'COST_POWER'} ]" ></option-picker>
                   </template>
                 </vuetable>
-              </div>
+              </z-row>
             </div>
           </div>
           <div v-for="(period, idx) in Tariff.Template.Periods" :key="idx">
             <div class="panel panel-dialog panel-tab" v-if="ActivePeriod=='P'+(idx+1)" style="margin-bottom: 0px">
               <div class="panel-heading">
                 <div class="pull-right btn-group">
-                  <button class="btn btn-default btn-xs" type="button" title="Edit period script" @click="View='ExpresionPeriods'"><img :src="require('Imgs/math_functions.png')"></button>
-                  <button class="btn btn-default btn-xs" type="button" title="Add new period concept" @click="period.Concepts.push({Description: 'Unnamed concept', Variable: '', Type: 'INFO'})"><img :src="require('Imgs/plus.png')"></button>
+                  <z-button tooltip="Edit period script" @click="View='ExpresionPeriods'" :image="require('Imgs/math_functions.png')" />
+                  <z-button tooltip="Add new period concept" @click="period.Concepts.push({Description: 'Unnamed concept', Variable: '', Type: 'INFO'})" :image="require('Imgs/plus.png')" />
                 </div>
                 <toolbar-pager class="pull-right" :pageSize="10" :input="period.Concepts" :output.sync="FilterConcepts" :filtercols="['Description', 'Variable']"></toolbar-pager>
                 <div class="clearfix"></div>
               </div>
               <div class="panel-body">
-                <div class="row">
+                <z-row>
                   <div class=" col-xs-12" style="display:flex">
                     <div style="flex-grow:2">
                       <label class="small">Period name</label>
@@ -119,7 +119,7 @@
                     <template slot="concept" slot-scope="props">
                       <div class="input-group input-group-xs">
                         <span class="input-group-btn">
-                          <button class="btn btn-default" type="button" @click="period.Concepts.splice(props.rowData.rowNum, 1)"><img :src="require('Imgs/cross.png')"></button>
+                          <z-button @click="period.Concepts.splice(props.rowData.rowNum, 1)" :image="require('Imgs/cross.png')" />
                         </span>
                         <input type="text" class="form-control" v-model="props.rowData.Description">
                       </div>
@@ -133,7 +133,7 @@
                       <option-picker v-model="props.rowData.Type" :options="[ {name: 'Info', value: 'INFO'}, {name: 'General cost', value: 'COST'}, {name: 'Energy cost', value: 'COST_ENERGY'}, {name: 'Power cost', value: 'COST_POWER'} ]" ></option-picker>
                     </template>
                   </vuetable>
-                </div>
+                </z-row>
               </div>
             </div>
           </div>
@@ -144,10 +144,10 @@
           <table style="width: 100%;"><tr><td>
             <detail-tabs key="Day_Tabs" :tabs="new Array(Tariff.Template.Days.length).fill(0).map((n, idx) => { return 'D' + (idx + 1)})" v-model="ActiveDay" :light="true"></detail-tabs>
           </td><td style="width: 64px; text-align: right">
-            <div class="btn-group">
-              <button class="btn btn-default btn-xs" type="button" :disabled="Tariff.Template.Days.length==1" title="Delete last day" @click="DeleteDay"><img :src="require('Imgs/cross.png')"></button>
-              <button class="btn btn-default btn-xs" type="button" @click="AddDay"><img :src="require('Imgs/plus.png')" title="Add new day"></button>
-            </div>
+            <z-button-group>
+              <z-button :disabled="Tariff.Template.Days.length==1" tooltip="Delete last day" @click="DeleteDay" :image="require('Imgs/cross.png')" />
+              <z-button @click="AddDay" :image="require('Imgs/plus.png')" tooltip="Add new day" />
+            </z-button-group>
           </td></tr></table>
           <div v-for="(day, idx) in Tariff.Template.Days" :key="idx">
             <div class="panel panel-tab panel-dialog" v-if="ActiveDay=='D'+(idx+1)">
@@ -179,16 +179,16 @@
               <detail-tabs key="Year_Tabs" :tabs="Tariff.Template.Years.map((year) => { return String(year.Year); }).sort()" v-model="ActiveYear" :light="true"></detail-tabs>
             </td>
             <td style="width:130px; text-align: right;">
-              <div class="btn-group">
-                <button class="btn btn-default btn-xs" type="button" :disabled="Tariff.Template.Years.length==1" @click="DeleteYear" title="Delete this year"><img :src="require('Imgs/cross.png')"></button>
-              </div>
-              <div class="btn-group">
+              <z-button-group>
+                <z-button :disabled="Tariff.Template.Years.length==1" @click="DeleteYear" tooltip="Delete this year" :image="require('Imgs/cross.png')" />
+              </z-button-group>
+              <z-button-group>
                 <input-spin :max="2100" :min="2000" :decimals="0" :increment="1" v-model="NewYearSelect" style="width:90px">
                   <template v-slot:buttons>
-                    <button class="btn btn-default btn-xs" type="button" :disabled="Tariff.Template.Years.map((year) => { return year.Year; }).includes(NewYearSelect)" @click="AddYear" title="Add new year"><img :src="require('Imgs/plus.png')"></button>
+                    <z-button :disabled="Tariff.Template.Years.map((year) => { return year.Year; }).includes(NewYearSelect)" @click="AddYear" tooltip="Add new year" :image="require('Imgs/plus.png')" />
                   </template>
                 </input-spin>
-              </div>
+              </z-button-group>
             </td>
             </tr>
           </table>
@@ -209,29 +209,29 @@
       <template v-slot:header>
         <div class="pull-left"><h4 class="modal-title">Tariff script</h4></div>
         <div class="pull-right btn-group">
-          <button type="button" class="btn btn-default btn-xs" @click="View='Periods'"><img :src="require('Imgs/arrow_undo.png')" alt="Go back"></button>
+          <z-button @click="View='Periods'" :image="require('Imgs/arrow_undo.png')" tooltip="Go back" />
         </div>
       </template>
-      <div class="row">
+      <z-row>
         <div class="col-xs-12">
           <label class="control-label">Expresion</label>
           <input-math v-model="Tariff.Template.Script" :vars="VarsMain"></input-math>
         </div>
-      </div>
+      </z-row>
     </dlg>
     <dlg v-if="View=='ExpresionPeriods'">
       <template v-slot:header>
         <div class="pull-left"><h4 class="modal-title">Period {{ ActivePeriod }} script</h4></div>
         <div class="pull-right btn-group">
-          <button type="button" class="btn btn-default btn-xs" @click="View='Periods'"><img :src="require('Imgs/arrow_undo.png')" alt="Go back"></button>
+          <z-button @click="View='Periods'" :image="require('Imgs/arrow_undo.png')" tooltip="Go back" />
         </div>
       </template>
-      <div class="row">
+      <z-row>
         <div class="col-xs-12">
           <label class="control-label">Expresion</label>
           <input-math v-model="Tariff.Template.Periods[parseInt(ActivePeriod.substr(1)) - 1].Script" :vars="VarsPeriod"></input-math>
         </div>
-      </div>
+      </z-row>
     </dlg>
   </div>
 </template>

@@ -22,6 +22,7 @@
 #include "cpp-httplib/httplib.h"
 #include "Database.h"
 #include "Tools.h"
+#include "RWLocks.h"
 #include "HTTPRequest.h"
 //----------------------------------------------------------------------------------------------------------------------
 using json = nlohmann::json;
@@ -39,7 +40,7 @@ class HTTPServer final : private Server {
       string                        APIFile;
     } Callback_t;
   private :
-    static pthread_rwlock_t             pLock;            //Control access to pCallbacks vector
+    static RWLocks                      pLock;            //Control access to pCallbacks vector
     static map<string, string>          pComponents;      //Components openAPI descriptor
     static map<string, Callback_t>      pCallbacks;       //List of callbacks without reader
     static string                       pRelativePath;    //Relative path of server

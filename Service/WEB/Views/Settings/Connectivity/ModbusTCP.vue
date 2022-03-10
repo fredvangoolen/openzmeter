@@ -4,12 +4,12 @@
       <div class="pull-left"><h4 class="modal-title">ModbusTCP</h4></div>
       <div class="pull-right btn-group">
         <div class="pull-right btn-group">
-          <button type="button" class="btn btn-default btn-xs" title="Save and close" @click="Save"><img :src="require('Imgs/diskette.png')"></button>
-          <button type="button" class="btn btn-default btn-xs" title="Back" @click="$emit('close')"><img :src="require('Imgs/arrow_undo.png')"></button>
+          <z-button tooltip="Save and close" @click="Save" :image="require('Imgs/diskette.png')" />
+          <z-button tooltip="Back" @click="$emit('close')" :image="require('Imgs/arrow_undo.png')" />
         </div>
       </div>
     </template>
-    <div class="row">
+    <z-row>
       <div class="col-xs-6">
         <label class="control-label" style="line-height: 22px">Enable</label>
         <toggle class="float-right" onText="Yes" offText="No" v-model="Config.Enabled"></toggle>
@@ -23,7 +23,7 @@
         <div key="Analyzers" class="panel-tab panel panel-dialog" style="margin-bottom: 0px" v-if="ActiveTab=='Analyzers'">
           <div class="panel-heading">
             <div class="pull-right btn-group">
-              <button type="button" class="btn btn-default btn-xs" @click="Config.Analyzers.push('ANALYZER_SERIAL')" title="Add exported analyzer"><img :src="require('Imgs/plus.png')"></button>
+              <z-button @click="Config.Analyzers.push('ANALYZER_SERIAL')" tooltip="Add exported analyzer" :image="require('Imgs/plus.png')" />
             </div>
             <toolbar-pager class="pull-right" :pageSize="10" :input="Analyzers" :output.sync="FilterAnalyzers" :filtercols="['id', 'Serial']"></toolbar-pager>
             <div class="clearfix"></div>
@@ -33,7 +33,7 @@
               <template slot="value" slot-scope="props">
                 <div class="input-group input-group-xs">
                   <span class="input-group-btn">
-                    <button class="btn btn-default" type="button" @click="Config.Analyzers.splice(props.rowData.id, 1)"><img :src="require('Imgs/cross.png')"></button>
+                    <z-button @click="Config.Analyzers.splice(props.rowData.id, 1)" :image="require('Imgs/cross.png')" />
                   </span>
                   <input-text v-model="Config.Analyzers[props.rowData.id]"></input-text>
                 </div>
@@ -54,7 +54,7 @@
           </div>
         </div>
       </div>
-    </div>
+    </z-row>
   </dlg>
 </template>
 

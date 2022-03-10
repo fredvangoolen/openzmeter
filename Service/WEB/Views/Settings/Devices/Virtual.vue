@@ -3,12 +3,12 @@
     <template v-slot:header>
       <div class="pull-left"><h4 class="modal-title">Device &raquo; {{ Settings.Serial }}</h4></div>
       <div class="pull-right btn-group">
-        <button type="button" class="btn btn-default btn-xs" @click="Save"><img :src="require('Imgs/diskette.png')"></button>
-        <button type="button" class="btn btn-default btn-xs" @click="$emit('close', false)"><img :src="require('Imgs/arrow_undo.png')"></button>
+        <z-button @click="Save" :image="require('Imgs/diskette.png')" />
+        <z-button @click="$emit('close', false)" :image="require('Imgs/arrow_undo.png')" />
       </div>
     </template>
     <div class="alert alert-danger text-center" style="margin-bottom: 5px; padding: 5px" v-if="Error!=null">{{ Error }}</div>
-    <div class="row">
+    <z-row>
       <div class="col-xs-12">
         <label class="control-label" style="line-height: 22px">Enabled</label>
         <toggle class="float-right" onText="Yes" offText="No" v-model="Settings.Enabled"></toggle>
@@ -38,7 +38,7 @@
         <label class="control-label">Samplerate</label>
         <input-spin :min="10000" :max="1000000" v-model="Settings.SampleRate" :increment="100" :decimals="0" prepend="Hz"></input-spin>
       </div>
-    </div>
+    </z-row>
   </dlg>
 </template>
 

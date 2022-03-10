@@ -3,8 +3,8 @@
     <template v-slot:header>
       <div class="pull-left"><h4 class="modal-title">Wifi settings</h4></div>
       <div class="pull-right btn-group" v-if="Saving==null">
-        <button type="button" class="btn btn-default btn-xs" v-if="View=='Edit'" @click="Save"><img :src="require('Imgs/diskette.png')" alt="Save changes and close"></button>
-        <button type="button" class="btn btn-default btn-xs" @click="Back"><img :src="require('Imgs/arrow_undo.png')" alt="Discard"></button>
+        <z-button v-if="View=='Edit'" @click="Save" :image="require('Imgs/diskette.png')" tooltip="Save changes and close" />
+        <z-button @click="Back" :image="require('Imgs/arrow_undo.png')" tooltip="Discard" />
       </div>
     </template>
     <div class="row" v-if="View=='Edit' && Saving==null">
@@ -20,7 +20,7 @@
         <div class="input-group input-group-xs">
           <input type="text" class="form-control" v-model="Config.ESSID" autocomplete="off" autocapitalize="off" autocorrect="off">
           <span class="input-group-btn">
-            <button type="button" class="btn btn-default" @click="Scan"><img :src="require('Imgs/magnifier.png')" alt="Scan networks"></button>
+            <z-button @click="Scan" :image="require('Imgs/magnifier.png')" tooltip="Scan networks" />
           </span>
         </div>
       </div>
@@ -68,9 +68,9 @@
     <div v-if="View=='Scan'">
       <vuetable ref="table" :fields="Columns" :api-mode="false" :data="WifiList" class="table small table-striped">
         <template slot="actions" slot-scope="props">
-          <div class="btn-group">
-            <button type="button" class="btn btn-success btn-xs" @click="Select(props.rowData)">Select</button>
-          </div>
+          <z-button-group>
+            <z-button variant="success" @click="Select(props.rowData)" caption="Select" />
+          </z-button-group>
         </template>
         <template slot="signal" slot-scope="props">
           <progress-bar :value="props.rowData.Quality"></progress-bar>

@@ -18,13 +18,14 @@
 #include "Analyzer.h"
 #include "HTTPRequest.h"
 #include "Tools.h"
+#include "RWLocks.h"
 //----------------------------------------------------------------------------------------------------------------------
 using namespace std;
 //----------------------------------------------------------------------------------------------------------------------
 class AnalyzerManager final {
   private :
     static map<string, Analyzer*>  pAnalyzers;       //Initiated by analyzer
-    static pthread_rwlock_t        pAnalyzersLock;   //Control access to critical sections
+    static RWLocks                 pAnalyzersLock;   //Control access to critical sections
   private :
     static void CallAnalyzerFunction(HTTPRequest &req, void (Analyzer::*method)(HTTPRequest &req));
     static void GetAnalyzersCallback(HTTPRequest &req);

@@ -3,11 +3,11 @@
     <template v-slot:header>
       <div class="pull-left"><h4 class="modal-title">Ethernet settings</h4></div>
       <div class="pull-right btn-group">
-        <button type="button" class="btn btn-default btn-xs" @click="Save"><img :src="require('Imgs/diskette.png')" alt="Save changes"></button>
-        <button type="button" class="btn btn-default btn-xs" @click="Back"><img :src="require('Imgs/arrow_undo.png')" alt="Discard"></button>
+        <z-button @click="Save" :image="require('Imgs/diskette.png')" tooltip="Save changes" />
+        <z-button @click="Back" :image="require('Imgs/arrow_undo.png')" tooltip="Discard" />
       </div>
     </template>
-    <div class="row">
+    <z-row>
       <div class="col-xs-12">
         <label class="control-label" style="line-height: 22px">Enable</label>
         <toggle class="float-right" onText="Yes" offText="No" v-model="Config.Enabled"></toggle>
@@ -41,7 +41,7 @@
         <label class="control-label">Details</label>
         <textarea rows="4" class="form-control" disabled :value="Details"></textarea>
       </div>
-    </div>
+    </z-row>
   </dlg>
 </template>
 
