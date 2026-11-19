@@ -212,8 +212,8 @@ void DeviceS1::ProcessFrame(const Frame_t &frame) {
   pAnalyzer->BufferAppend(pHeldVoltage, pHeldCurrent, Frequency, Rate);
 }
 void *DeviceS1::Thread() {
-  uint8_t  Buff[4096];
-  uint16_t Len           = 0;
+  uint8_t  Raw[4096];
+  DeviceS1Parser Parser;
   int      FD            = -1;
   uint64_t LastOpenTry   = 0;
   uint64_t LastFrameTime = 0;
@@ -234,13 +234,13 @@ void *DeviceS1::Thread() {
       }
       LogFile::Info("DeviceS1: port '%s' opened", pPort.c_str());
       PortErrLogged = false;
-      Len           = 0;
+      Parser.Reset();
       LastFrameTime = Now;
       pthread_mutex_lock(&pLock);
       pConnected = true;
       pthread_mutex_unlock(&pLock);
     }
-    ssize_t Readed = read(FD, &Buff[Len], sizeof(Buff) - Len);
+    ssize_t Readed = read(FD, Raw, sizeof(Raw));
     if(Readed < 0) {
       if((errno == EINTR) || (errno == EAGAIN)) continue;
       LogFile::Error("DeviceS1: read error on '%s' -> %s", pPort.c_str(), strerror(errno));
@@ -252,41 +252,23 @@ void *DeviceS1::Thread() {
       pthread_mutex_unlock(&pLock);
       continue;
     }
-    Len += Readed;
-    uint16_t Pos     = 0;
-    uint32_t Discard = 0;
-    while((Len - Pos) >= DeviceS1Frame::FRAME_LEN) {
-      if((Buff[Pos] != DeviceS1Frame::FRAME_FLAG) || (Buff[Pos + 1] != DeviceS1Frame::FRAME_FORMAT1)) {
-        if(!((Buff[Pos] == DeviceS1Frame::FRAME_FLAG) && (Buff[Pos + 1] == DeviceS1Frame::FRAME_FLAG))) Discard++;   //Closing flag followed by next opening flag is not an error
-        Pos++;
-        continue;
-      }
-      Frame_t Frame;
-      if(DeviceS1Frame::Decode(&Buff[Pos], Frame) == false) {
-        pthread_mutex_lock(&pLock);
-        pCRCErrors++;
-        pthread_mutex_unlock(&pLock);
-        Pos++;
-        continue;
-      }
-      ProcessFrame(Frame);
+    uint64_t CRCBefore = Parser.CRCErrors();
+    uint64_t DiscBefore = Parser.Discarded();
+    Parser.Push(Raw, Readed, [&](const Frame_t &frame) {
+      ProcessFrame(frame);
       pthread_mutex_lock(&pLock);
-      pLastFrame = Frame;
+      pLastFrame = frame;
       pFramesOK++;
       if(pReceiving == false) LogFile::Info("DeviceS1: receiving frames");
       pReceiving = true;
       pthread_mutex_unlock(&pLock);
       LastFrameTime = Now;
-      Pos += DeviceS1Frame::FRAME_LEN - 1;                                    //Closing flag may also be the next opening flag
-    }
-    if(Discard > 0) {
+    });
+    if((Parser.CRCErrors() != CRCBefore) || (Parser.Discarded() != DiscBefore)) {
       pthread_mutex_lock(&pLock);
-      pResyncs += Discard;
+      pCRCErrors += Parser.CRCErrors() - CRCBefore;
+      pResyncs   += Parser.Discarded() - DiscBefore;
       pthread_mutex_unlock(&pLock);
-    }
-    if(Pos > 0) {
-      memmove(Buff, &Buff[Pos], Len - Pos);
-      Len -= Pos;
     }
     if((pReceiving == true) && ((Now - LastFrameTime) > 3000)) {
       LogFile::Warning("DeviceS1: no valid frames received for 3 seconds (is the S1 port activated by Fluvius?)");

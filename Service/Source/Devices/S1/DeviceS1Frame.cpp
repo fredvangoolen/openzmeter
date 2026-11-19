@@ -13,6 +13,7 @@
 // You should have received a copy of the GNU General Public License
 // along with openZmeter.  If not, see <https://www.gnu.org/licenses/>
 // ---------------------------------------------------------------------------------------------------------------------
+#include <string.h>
 #include "DeviceS1Frame.h"
 // ---------------------------------------------------------------------------------------------------------------------
 // CRC-16/X-25 (HDLC FCS, ISO/IEC 13239): reflected poly 0x1021, init 0xFFFF, final xor 0xFFFF
@@ -59,5 +60,57 @@ bool DeviceS1Frame::Decode(const uint8_t *buff, Frame_t &frame) {
   frame.Current[2] = Current(&Data[31]);
   frame.Current[3] = Current(&Data[34]);
   return true;
+}
+DeviceS1Parser::DeviceS1Parser() {
+  pLen       = 0;
+  pFrames    = 0;
+  pCRCErrors = 0;
+  pDiscarded = 0;
+}
+void DeviceS1Parser::Reset() {
+  pLen = 0;
+}
+uint32_t DeviceS1Parser::Push(const uint8_t *data, size_t len, const std::function<void(const DeviceS1Frame::Frame_t &frame)> &onFrame) {
+  uint32_t Found = 0;
+  while(len > 0) {
+    size_t Chunk = sizeof(pBuff) - pLen;
+    if(Chunk > len) Chunk = len;
+    memcpy(&pBuff[pLen], data, Chunk);
+    pLen += Chunk;
+    data += Chunk;
+    len  -= Chunk;
+    uint16_t Pos = 0;
+    while((pLen - Pos) >= DeviceS1Frame::FRAME_LEN) {
+      if((pBuff[Pos] != DeviceS1Frame::FRAME_FLAG) || (pBuff[Pos + 1] != DeviceS1Frame::FRAME_FORMAT1)) {
+        if(!((pBuff[Pos] == DeviceS1Frame::FRAME_FLAG) && (pBuff[Pos + 1] == DeviceS1Frame::FRAME_FLAG))) pDiscarded++;  //Closing flag followed by next opening flag is not an error
+        Pos++;
+        continue;
+      }
+      DeviceS1Frame::Frame_t Frame;
+      if(DeviceS1Frame::Decode(&pBuff[Pos], Frame) == false) {
+        pCRCErrors++;
+        Pos++;
+        continue;
+      }
+      pFrames++;
+      Found++;
+      onFrame(Frame);
+      Pos += DeviceS1Frame::FRAME_LEN - 1;             //Closing flag may also be the next opening flag
+    }
+    if(Pos > 0) {
+      memmove(pBuff, &pBuff[Pos], pLen - Pos);
+      pLen -= Pos;
+    }
+  }
+  return Found;
+}
+uint64_t DeviceS1Parser::Frames() const {
+  return pFrames;
+}
+uint64_t DeviceS1Parser::CRCErrors() const {
+  return pCRCErrors;
+}
+uint64_t DeviceS1Parser::Discarded() const {
+  return pDiscarded;
 }
 // ---------------------------------------------------------------------------------------------------------------------

@@ -17,6 +17,8 @@
 // ---------------------------------------------------------------------------------------------------------------------
 #pragma once
 #include <stdint.h>
+#include <stddef.h>
+#include <functional>
 // ---------------------------------------------------------------------------------------------------------------------
 class DeviceS1Frame final {
   public :
@@ -45,5 +47,24 @@ class DeviceS1Frame final {
     static uint16_t CRC16(const uint8_t *data, const uint16_t len);
     // Decode a FRAME_LEN bytes frame starting at the opening flag. Returns false if format or FCS are wrong.
     static bool     Decode(const uint8_t *buff, Frame_t &frame);
+};
+// ---------------------------------------------------------------------------------------------------------------------
+// Byte stream parser: finds frames in the raw serial stream (resynchronizing on garbage) and decodes them. Frames may
+// share the closing/opening flag or not. Since HDLC transparency is disabled, data bytes can contain 0x7E: the FCS
+// rejects false starts.
+class DeviceS1Parser final {
+  private :
+    uint8_t  pBuff[4096];                              //Pending bytes
+    uint16_t pLen;                                     //Pending bytes count
+    uint64_t pFrames;                                  //Valid frames
+    uint64_t pCRCErrors;                               //Candidate frames rejected by format/FCS
+    uint64_t pDiscarded;                               //Bytes skipped while searching a frame start
+  public :
+    DeviceS1Parser();
+    void     Reset();                                  //Drop pending bytes (ex: after reopening the port)
+    uint32_t Push(const uint8_t *data, size_t len, const std::function<void(const DeviceS1Frame::Frame_t &frame)> &onFrame);
+    uint64_t Frames() const;
+    uint64_t CRCErrors() const;
+    uint64_t Discarded() const;
 };
 // ---------------------------------------------------------------------------------------------------------------------
