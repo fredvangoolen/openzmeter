@@ -42,6 +42,9 @@ AnalyzerSoft::AnalyzerSoft(const string &id, const Analyzer::AnalyzerMode mode, 
   pCond           = PTHREAD_COND_INITIALIZER;
   pTerminate      = false;
   pWorkingBlock   = NULL;
+  pSourceFreqSum  = 0.0;
+  pSourceRateSum  = 0.0;
+  pSourceCount    = 0;
   pConsumers      = new ConsumerQueue(16);
   pAccess         = new AnalyzerAccess(id);
   pZeroCross      = new AnalyzerSoftZeroCrossing(mode, samplerate);
@@ -110,6 +113,24 @@ AnalyzerSoft::~AnalyzerSoft() {
 void AnalyzerSoft::BufferAppend(const float *voltageSamples, const float *currentSamples) {
   AnalyzerSoftBlock *Result = pZeroCross->PushSample(voltageSamples, currentSamples);
   if(Result == NULL) return;
+  pthread_mutex_lock(&pMutex);
+  pthread_cond_signal(&pCond);
+  pPendingBlocks.push_back(Result);
+  pthread_mutex_unlock(&pMutex);
+}
+// Used by sources that measure grid frequency themselves and/or sample at a rate that follows the grid frequency (ex:
+// fixed samples per period). Frequency and samplerate are averaged over each block and attached to it, so frequency
+// and energy calculations do not rely on the nominal samplerate. Must be called from a single thread (the device one).
+void AnalyzerSoft::BufferAppend(const float *voltageSamples, const float *currentSamples, const float frequency, const float samplerate) {
+  pSourceFreqSum += frequency;
+  pSourceRateSum += samplerate;
+  pSourceCount++;
+  AnalyzerSoftBlock *Result = pZeroCross->PushSample(voltageSamples, currentSamples);
+  if(Result == NULL) return;
+  Result->SourceInfo(pSourceFreqSum / pSourceCount, pSourceRateSum / pSourceCount);
+  pSourceFreqSum = 0.0;
+  pSourceRateSum = 0.0;
+  pSourceCount   = 0;
   pthread_mutex_lock(&pMutex);
   pthread_cond_signal(&pCond);
   pPendingBlocks.push_back(Result);
@@ -212,11 +233,14 @@ void AnalyzerSoft::Thread() {
 
     uint64_t Start     = Tools::GetTime64();
     uint16_t BlockSize = pWorkingBlock->Samples();
+    float    Samplerate = isnan(pWorkingBlock->SourceSamplerate()) ? pSamplerate : pWorkingBlock->SourceSamplerate();
     pAggreg200MS->Reset();
     pAggreg200MS->setTimestamp(pWorkingBlock->Timestamp());
     pFFTs->Run(pWorkingBlock, (pWorkingBlock->NominalFrequency() == 0.0) ? 0 : (pWorkingBlock->NominalFrequency() == 50.0) ? 10 : 12);
     pEvents->Run(pWorkingBlock);
-    pAggreg200MS->setFrequency(pFrequency->Frequency(pWorkingBlock));
+    float    Frequency = pFrequency->Frequency(pWorkingBlock);
+    if(!isnan(pWorkingBlock->SourceFrequency()) && (pWorkingBlock->NominalFrequency() != 0.0)) Frequency = pWorkingBlock->SourceFrequency();
+    pAggreg200MS->setFrequency(Frequency);
     for(uint8_t j = 0; j < pVoltageChannels; j++) {
       float Voltage     = 0.0;
       float Current     = 0.0;
@@ -230,9 +254,9 @@ void AnalyzerSoft::Thread() {
       pAggreg200MS->setCurrent(j, sqrt(Current / BlockSize));
       pAggreg200MS->setActivePower(j, ActivePower / BlockSize);
       pAggreg200MS->setApparentPower(j, pAggreg200MS->Voltage(j) * pAggreg200MS->Current(j));
-      pAggreg200MS->setActiveEnergy(j, (pAggreg200MS->ActivePower(j) * BlockSize) / (pSamplerate * 3600.0));
+      pAggreg200MS->setActiveEnergy(j, (pAggreg200MS->ActivePower(j) * BlockSize) / (Samplerate * 3600.0));
       pAggreg200MS->setPowerFactor(j, pAggreg200MS->ActivePower(j) / pAggreg200MS->ApparentPower(j));
-      pAggreg200MS->setReactiveEnergy(j, (pAggreg200MS->ReactivePower(j) * BlockSize) / (pSamplerate * 3600.0));
+      pAggreg200MS->setReactiveEnergy(j, (pAggreg200MS->ReactivePower(j) * BlockSize) / (Samplerate * 3600.0));
     }
     pFFTs->Wait();
     for(uint8_t j = 0; j < pVoltageChannels; j++) {

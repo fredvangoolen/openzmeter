@@ -14,6 +14,7 @@
 // along with openZmeter.  If not, see <https://www.gnu.org/licenses/>
 // ---------------------------------------------------------------------------------------------------------------------
 #include "AnalyzerSoftBlock.h"
+#include <math.h>
 #include "Tools.h"
 // ---------------------------------------------------------------------------------------------------------------------
 AnalyzerSoftBlock::AnalyzerSoftBlock(const uint8_t vChanels, const uint8_t cChannels, const uint64_t seq, const uint16_t maxLen, const float nominalVolt, const float nominalFreq) : pSequence(seq), pVoltageChannels(vChanels), pCurrentChannels(cChannels), pNominalFrequency(nominalFreq), pNominalVoltage(nominalVolt) {
@@ -22,6 +23,8 @@ AnalyzerSoftBlock::AnalyzerSoftBlock(const uint8_t vChanels, const uint8_t cChan
   pVoltageSamples   = (float*)malloc(sizeof(float) * pVoltageChannels * maxLen);
   pCurrentSamples   = (float*)malloc(sizeof(float) * pCurrentChannels * maxLen);
   pTimestamp        = Tools::GetTime64();
+  pSourceFrequency  = NAN;
+  pSourceSamplerate = NAN;
   memset(pBlockCycles, 0, sizeof(pBlockCycles));
 }
 AnalyzerSoftBlock::~AnalyzerSoftBlock() {
@@ -66,6 +69,16 @@ float AnalyzerSoftBlock::VoltageSample(const uint8_t ch, const uint16_t sample) 
 }
 float AnalyzerSoftBlock::CurrentSample(const uint8_t ch, const uint16_t sample) const {
   return pCurrentSamples[pCurrentChannels * sample + ch];
+}
+void AnalyzerSoftBlock::SourceInfo(const float frequency, const float samplerate) {
+  pSourceFrequency  = frequency;
+  pSourceSamplerate = samplerate;
+}
+float AnalyzerSoftBlock::SourceFrequency() const {
+  return pSourceFrequency;
+}
+float AnalyzerSoftBlock::SourceSamplerate() const {
+  return pSourceSamplerate;
 }
 uint64_t AnalyzerSoftBlock::Sequence() const {
   return pSequence;

@@ -107,22 +107,28 @@ uint16_t AnalyzerSoftFFTs::OutLen() const {
   return pOutLen;
 }
 AnalyzerSoftFFTs::Complex_t AnalyzerSoftFFTs::VoltageHarmonic(const uint8_t channel, const uint8_t index) const {
-  Complex_t Complex = pFFTVoltageData[channel].DataPtr[(index + 1) * pCycles];
+  uint32_t Bin = (index + 1) * pCycles;
+  if(Bin >= pOutLen) return { 0.0, 0.0 };           //Harmonic above Nyquist (low samplerate sources)
+  Complex_t Complex = pFFTVoltageData[channel].DataPtr[Bin];
   Complex.Re *= M_SQRT2;
   Complex.Im *= M_SQRT2;
   return Complex;
 }
 AnalyzerSoftFFTs::Complex_t AnalyzerSoftFFTs::CurrentHarmonic(const uint8_t channel, const uint8_t index) const {
-  Complex_t Complex = pFFTCurrentData[channel].DataPtr[(index + 1) * pCycles];
+  uint32_t Bin = (index + 1) * pCycles;
+  if(Bin >= pOutLen) return { 0.0, 0.0 };           //Harmonic above Nyquist (low samplerate sources)
+  Complex_t Complex = pFFTCurrentData[channel].DataPtr[Bin];
   Complex.Re *= M_SQRT2;
   Complex.Im *= M_SQRT2;
   return Complex;
 }
 float AnalyzerSoftFFTs::VoltageHarmonicPower(const uint8_t channel, const uint8_t index) const {
-  return VoltageBinPower(channel, (index + 1) * pCycles);
+  uint32_t Bin = (index + 1) * pCycles;
+  return (Bin >= pOutLen) ? 0.0 : VoltageBinPower(channel, Bin);
 }
 float AnalyzerSoftFFTs::CurrentHarmonicPower(const uint8_t channel, const uint8_t index) const {
-  return CurrentBinPower(channel, (index + 1) * pCycles);
+  uint32_t Bin = (index + 1) * pCycles;
+  return (Bin >= pOutLen) ? 0.0 : CurrentBinPower(channel, Bin);
 }
 float AnalyzerSoftFFTs::CalcAngle(const Complex_t &a, const Complex_t &b) {
   float Tmp;
@@ -143,10 +149,12 @@ float AnalyzerSoftFFTs::CalcAngle(const Complex_t &a, const Complex_t &b) {
   return Tmp;
 }
 float AnalyzerSoftFFTs::VoltageBinPower(const uint8_t channel, const uint16_t index) const {
+  if(index >= pOutLen) return 0.0;
   Complex_t Complex = pFFTVoltageData[channel].DataPtr[index];
   return sqrt(Complex.Re * Complex.Re + Complex.Im * Complex.Im) / M_SQRT2 * 2.0;
 }
 float AnalyzerSoftFFTs::CurrentBinPower(const uint8_t channel, const uint16_t index) const {
+  if(index >= pOutLen) return 0.0;
   Complex_t Complex = pFFTCurrentData[channel].DataPtr[index];
   return sqrt(Complex.Re * Complex.Re + Complex.Im * Complex.Im) / M_SQRT2 * 2.0;
 }

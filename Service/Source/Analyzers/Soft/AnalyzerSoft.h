@@ -80,6 +80,9 @@ class AnalyzerSoft : public Analyzer {
     float                      pNominalVoltage;          //Configured nominal voltage
     float                      pNominalFrequency;        //Configured nominal frequency
     bool                       pSave200MS;               //Save 10/12 cycles aggregation to database
+    double                     pSourceFreqSum;           //Accumulated source frequency for current block
+    double                     pSourceRateSum;           //Accumulated source samplerate for current block
+    uint32_t                   pSourceCount;             //Samples accumulated in pSourceFreqSum/pSourceRateSum
   private :
     void Thread();
     void Config(const json &options);
@@ -126,5 +129,6 @@ class AnalyzerSoft : public Analyzer {
     AnalyzerSoft(const string &id, const Analyzer::AnalyzerMode mode, const string &optionPath, const float samplerate);
     ~AnalyzerSoft();
     void BufferAppend(const float *voltageSamples, const float *currentSamples);
+    void BufferAppend(const float *voltageSamples, const float *currentSamples, const float frequency, const float samplerate);
 };
 //----------------------------------------------------------------------------------------------------------------------

@@ -30,6 +30,8 @@ class AnalyzerSoftBlock {
     uint16_t        pBlockCycles[24];             //Max block sizes
     float          *pVoltageSamples;              //Output voltage signal
     float          *pCurrentSamples;              //Output current signal
+    float           pSourceFrequency;             //Grid frequency reported by the source (NAN if not provided)
+    float           pSourceSamplerate;            //Effective samplerate reported by the source (NAN if not provided)
   public :
     AnalyzerSoftBlock(const uint8_t vChanels, const uint8_t cChannels, const uint64_t seq, const uint16_t maxLen, const float nominalVolt, const float nominalFreq);
     ~AnalyzerSoftBlock();
@@ -47,5 +49,8 @@ class AnalyzerSoftBlock {
     float     VoltageSample(const uint8_t ch, const uint16_t sample) const;
     float     CurrentSample(const uint8_t ch, const uint16_t sample) const;
     bool      GetSeriesJSON(const string &serie, json &result);
+    void      SourceInfo(const float frequency, const float samplerate);
+    float     SourceFrequency() const;
+    float     SourceSamplerate() const;
 };
 // ---------------------------------------------------------------------------------------------------------------------

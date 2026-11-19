@@ -11,6 +11,7 @@
     <device-v2 v-if="Driver=='DeviceV2'" :settings="Settings" @close="LoadTable"></device-v2>
     <device-v3 v-if="Driver=='DeviceV3'" :settings="Settings" @close="LoadTable"></device-v3>
     <device-v4 v-if="Driver=='DeviceV4'" ></device-v4>
+    <device-s1 v-if="Driver=='DeviceS1'" :settings="Settings" @close="LoadTable"></device-s1>
     <device-remote v-if="Driver=='DeviceRemote'" :settings="Settings" @close="LoadTable"></device-remote>
   </z-panel>
 </template>
@@ -22,6 +23,7 @@
   import DeviceV3 from './Devices/V3.vue';
   import DeviceV4 from './Devices/V4.vue';
   import DeviceRemote from './Devices/Remote.vue';
+  import DeviceS1 from './Devices/S1.vue';
   export default {
     data() {
       return { Devices: [], ShowSpinner: true, Driver: null, Settings: null, Enabled: false,
@@ -69,6 +71,7 @@
             if(id.Driver === 'V2') this.Driver = 'DeviceV2';
             if(id.Driver === 'V3') this.Driver = 'DeviceV3';
             if(id.Driver === 'Remote') this.Driver = 'DeviceRemote';
+            if(id.Driver === 'S1') this.Driver = 'DeviceS1';
             this.ShowSpinner = false;
           },
           (fail) => {
@@ -80,7 +83,7 @@
     mounted: function () {
       this.LoadTable();
     },
-    components: { DeviceVirtual, DeviceV1, DeviceV2, DeviceV3, DeviceV4, DeviceRemote }
+    components: { DeviceVirtual, DeviceV1, DeviceV2, DeviceV3, DeviceV4, DeviceRemote, DeviceS1 }
   }
 </script>
 
