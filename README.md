@@ -32,4 +32,5 @@ power and energy, frequency, harmonics, events, alarms, cyclic histograms, MQTT 
 * **Limitations**: because of the lower sample rate, harmonics above roughly the 25th to 40th order (depending on the
   meter) are reported as 0.
 
-Details are in the [S1 driver README](Service/Source/Devices/S1/README.md).
+Details are in the [S1 driver README](Service/Source/Devices/S1/README.md). Architecture, data flow and storage
+notes are in [`Docs/NOTES.md`](Docs/NOTES.md).
