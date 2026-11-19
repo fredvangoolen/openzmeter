@@ -13,6 +13,8 @@
 #   --skip-build       Do not build, install the already built binary (Service/Tmp/raspberrypi4/openZmeter)
 #   --jobs N           Parallel compile jobs (default 2, keeps memory use low on 2 GB boards)
 #   --s1-port PATH     Serial port of the S1 RS-422 adapter written to a new config (default: auto detect)
+#   --http-port N      Port of the web interface (default 80, or the port of an existing config). Use another port
+#                      (e.g. 8080) when port 80 is already used, for example by Pi-hole.
 # ----------------------------------------------------------------------------------------------------------------------
 set -euo pipefail
 
@@ -32,6 +34,7 @@ SKIP_DEPS=0
 SKIP_BUILD=0
 JOBS=2
 S1_PORT=""
+HTTP_PORT=""
 
 info()  { printf '\033[1;32m==>\033[0m %s\n' "$*"; }
 warn()  { printf '\033[1;33mWARNING:\033[0m %s\n' "$*" >&2; }
@@ -43,7 +46,8 @@ while [ $# -gt 0 ]; do
     --skip-build) SKIP_BUILD=1 ;;
     --jobs)       shift; JOBS="${1:?--jobs needs a value}" ;;
     --s1-port)    shift; S1_PORT="${1:?--s1-port needs a value}" ;;
-    -h|--help)    sed -n '2,17p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
+    --http-port)  shift; HTTP_PORT="${1:?--http-port needs a value}" ;;
+    -h|--help)    sed -n '2,19p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
     *)            die "Unknown option '$1' (use --help)" ;;
   esac
   shift
@@ -58,6 +62,18 @@ case "$(uname -m)" in
 esac
 if ! grep -qi "raspberry pi 4\|raspberry pi compute module 4" /proc/device-tree/model 2>/dev/null; then
   warn "This does not look like a Raspberry Pi 4 ($(tr -d '\0' < /proc/device-tree/model 2>/dev/null || echo unknown)). Continuing anyway."
+fi
+if [ -n "${HTTP_PORT}" ] && ! { [[ "${HTTP_PORT}" =~ ^[0-9]+$ ]] && [ "${HTTP_PORT}" -ge 1 ] && [ "${HTTP_PORT}" -le 65535 ]; }; then
+  die "--http-port must be a number between 1 and 65535"
+fi
+# Effective web port: option, else existing config, else 80. Fail early if another program already listens on it.
+if [ -z "${HTTP_PORT}" ] && [ -f "${CONF_FILE}" ]; then
+  HTTP_PORT=$(python3 -I -c 'import json,sys; print(json.load(open(sys.argv[1])).get("HTTPServer",{}).get("Port",""))' "${CONF_FILE}" 2>/dev/null || true)
+fi
+HTTP_PORT="${HTTP_PORT:-80}"
+PORT_USERS=$(ss -Hltnp "sport = :${HTTP_PORT}" 2>/dev/null | grep -o 'users:(("[^"]*"' | cut -d'"' -f2 | sort -u | grep -v '^openZmeter$' | paste -sd, - || true)
+if [ -n "${PORT_USERS}" ]; then
+  die "Port ${HTTP_PORT} is already used by: ${PORT_USERS}. Choose another web port, e.g. --http-port 8080"
 fi
 [ "${BUILD_USER}" = "root" ] && warn "Building as root. Prefer running this script with sudo from your normal user."
 
@@ -135,21 +151,30 @@ if [ ! -f "${CONF_FILE}" ]; then
     fi
   fi
   info "Writing ${CONF_FILE}"
-  python3 -I - "${CONF_FILE}" "${DB_NAME}" "${DB_USER}" "${DB_PASS}" "${S1_PORT}" <<'EOF'
+  python3 -I - "${CONF_FILE}" "${DB_NAME}" "${DB_USER}" "${DB_PASS}" "${S1_PORT}" "${HTTP_PORT}" <<'EOF'
 import json, sys
-path, db, user, password, port = sys.argv[1:]
+path, db, user, password, port, http_port = sys.argv[1:]
 config = {
   "Database":   { "Hostname": "localhost", "Port": 5432, "Database": db, "Username": user, "Password": password },
   "PidFile":    "/run/openzmeter/openZmeter.pid",
   "Log":        { "File": "", "Level": "INFO" },          # log to journald only (saves SD card writes)
-  "HTTPServer": { "Port": 80 },
+  "HTTPServer": { "Port": int(http_port) },
   "Devices":    { "S1": { "Port": port, "Mode": "AUTO", "Enabled": False, "Analyzer": {} } }
 }
 with open(path, "w") as f:
   json.dump(config, f, indent=2)
 EOF
 else
-  info "Keeping existing ${CONF_FILE}"
+  info "Keeping existing ${CONF_FILE} (web port ${HTTP_PORT})"
+  python3 -I - "${CONF_FILE}" "${HTTP_PORT}" <<'EOF'
+import json, sys
+path, http_port = sys.argv[1], int(sys.argv[2])
+config = json.load(open(path))
+if config.setdefault("HTTPServer", {}).get("Port") != http_port:
+  config["HTTPServer"]["Port"] = http_port
+  with open(path, "w") as f:
+    json.dump(config, f, indent=2)
+EOF
 fi
 chown "${SVC_USER}:${SVC_USER}" "${CONF_FILE}"
 chmod 0600 "${CONF_FILE}"
@@ -163,7 +188,9 @@ systemctl restart openzmeter.service
 sleep 5
 if systemctl is-active --quiet openzmeter.service; then
   IP=$(hostname -I 2>/dev/null | awk '{print $1}')
-  info "openZmeter is running: http://${IP:-<pi-address>}/"
+  URL_PORT=""
+  [ "${HTTP_PORT}" != "80" ] && URL_PORT=":${HTTP_PORT}"
+  info "openZmeter is running: http://${IP:-<pi-address>}${URL_PORT}/"
   cat <<EOF
 
 Next steps:
