@@ -1,8 +1,9 @@
 # S1 port driver (Fluvius digital meter)
 
 Reads raw voltage/current samples from the S1 high speed port of Flemish (Fluvius) digital electricity meters
-(e-MUCS H ed. 1.3, section 4) and feeds them to a standard `AnalyzerSoft`. The specification, as published on the
-Fluvius website, is in [`Docs/e-mucs_h_ed_1_3.pdf`](../../../../Docs/e-mucs_h_ed_1_3.pdf).
+(e-MUCS H ed. 1.3, section 4) and feeds them to a standard `AnalyzerSoft`. The specification is published by
+[Fluvius](https://www.fluvius.be/sites/fluvius/files/2019-12/e-mucs_h_ed_1_3.pdf) (copy in
+[`Docs/e-mucs_h_ed_1_3.pdf`](../../../../Docs/e-mucs_h_ed_1_3.pdf)).
 
 ## Hardware
 
