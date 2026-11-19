@@ -17,6 +17,20 @@ Reads raw voltage/current samples from the S1 high speed port of Flemish (Fluviu
   USB-RS422-WE cable) or CP2102N + RS-422 receiver. The on-board UARTs of the NanoPi Air (H3) and Omega2 (MT7688) can
   not generate 2 Mbaud.
 
+## Checking the connection
+
+Before installing openZmeter, check the link with the standalone monitor in `Service/Utils/S1Monitor`. It has no
+dependencies beyond `g++`, and uses the same frame decoder as the driver:
+
+```
+cd Service/Utils/S1Monitor && make
+./s1monitor /dev/serial/by-id/usb-FTDI_...   # Ctrl-C to stop, -t 60 to stop after 60 s, -x for a raw hex dump
+```
+
+Every second it prints frames/s (this should match the meter sampling rate), frequency, CRC errors, lost frames,
+RMS voltage and current, and active power per phase. If no valid frames arrive, it says whether nothing is received
+at all (port not activated, cable) or garbage is received (BUS+/BUS- swapped, termination, adapter not at 2 Mbaud).
+
 ## Configuration
 
 Device `S1` in *Settings » Devices*:
@@ -44,3 +58,8 @@ the meter ID, sampling mode, frequency and frame counters (OK / CRC errors / los
 PostgreSQL database and a systemd service (`openzmeter.service`), with the S1 device preconfigured but disabled. Run
 it from a clone of the repository: `sudo Service/Packaging/raspberrypi/install.sh`. A 2 GB board is enough. If the
 build runs out of memory, enlarge the swap or use `--jobs 1`.
+
+The Pi can be shared with other services. If something else already uses port 80 (Pi-hole's web interface, for
+example), use `--http-port 8080`; the installer refuses to continue when the chosen port is taken. The build is the
+heaviest part (several hundred MB of RAM for some minutes): on a Pi that serves DNS for the network, run it at a
+quiet moment with `--jobs 1`.

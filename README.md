@@ -22,9 +22,13 @@ power and energy, frequency, harmonics, events, alarms, cyclic histograms, MQTT 
 * **Hardware**: a USB to RS-422 adapter that can receive at exactly 2 Mbaud (e.g. FTDI FT232R/FT232H based) connected
   to the RJ12 S1 socket of the meter: pin 3 = GND, pin 4 = BUS- and pin 5 = BUS+. Fit a 120 Ω termination on the
   adapter side.
+* **Check the connection first**: [`Service/Utils/S1Monitor`](Service/Utils/S1Monitor) is a small standalone tool
+  (only needs `g++`). It shows frame rate, errors, meter info, frequency, RMS values and power every second, and
+  explains what is wrong when nothing valid arrives. Build it with `make` and run `./s1monitor /dev/ttyUSB0`.
 * **Single board computer**: a Raspberry Pi 4 (2 GB is enough) works well. Run
   `sudo Service/Packaging/raspberrypi/install.sh` to build and install openZmeter with a local PostgreSQL database
-  and a systemd service. Then enable the device under *Settings » Devices » S1*.
+  and a systemd service. Then enable the device under *Settings » Devices » S1*. If port 80 is already taken (for
+  example by Pi-hole), add `--http-port 8080`.
 * **Limitations**: because of the lower sample rate, harmonics above roughly the 25th to 40th order (depending on the
   meter) are reported as 0.
 
