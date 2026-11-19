@@ -35,3 +35,10 @@ the meter ID, sampling mode, frequency and frame counters (OK / CRC errors / los
   always read nominal.
 * Lost frames (sequence gaps up to 16) are filled with the last sample to keep timing; samples flagged invalid by
   the meter are replaced by the last valid sample.
+
+## Raspberry Pi 4
+
+`Packaging/raspberrypi/install.sh` builds openZmeter on the Pi (`Configs/raspberrypi4`) and installs it with a local
+PostgreSQL database and a systemd service (`openzmeter.service`), with the S1 device preconfigured but disabled. Run
+it from a clone of the repository: `sudo Service/Packaging/raspberrypi/install.sh`. A 2 GB board is enough. If the
+build runs out of memory, enlarge the swap or use `--jobs 1`.

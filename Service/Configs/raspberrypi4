@@ -1,0 +1,13 @@
+#Native build on a Raspberry Pi 4 running Raspberry Pi OS / Debian (64 bit recommended, 32 bit armhf also works) ---------
+#Usage (on the Pi): make CONFIG=Configs/raspberrypi4 -j2
+#See Packaging/raspberrypi/install.sh for a complete install (dependencies, database, systemd service)
+
+#Target OS (set to DEBIAN or OPENWRT) ----------------------------------------------------------------------------------
+OS_TARGET = DEBIAN
+
+# Build options --------------------------------------------------------------------------------------------------------
+DEBUG      = false
+CC         = gcc
+LD         = ld
+CFLAGS    += -I /usr/include/postgresql -mcpu=cortex-a72
+BUILD_ARCH = rpi4_$(shell dpkg --print-architecture 2>/dev/null || uname -m)
