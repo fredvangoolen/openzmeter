@@ -127,10 +127,10 @@ json Rate::CheckConfig(const json &config) {
   }
   chrono::system_clock::time_point TimePoint;
   if((config.contains("StartDate") == false) || (config["StartDate"].is_string() == false) || (parse("%d/%m/%Y", config["StartDate"], utc_time_zone(), &TimePoint) == false)) throw string("'StartDate' param is required");
-  ConfigOUT["StartDate"] = format("%d/%m/%Y", TimePoint, utc_time_zone());
+  ConfigOUT["StartDate"] = cctz::format("%d/%m/%Y", TimePoint, utc_time_zone());
   civil_day StartDate = civil_day(convert(TimePoint, utc_time_zone()));
   if((config.contains("EndDate") == false) || (config["EndDate"].is_string() == false) || (parse("%d/%m/%Y", config["EndDate"], utc_time_zone(), &TimePoint) == false)) throw string("'EndDate' param is required");
-  ConfigOUT["EndDate"] = format("%d/%m/%Y", TimePoint, utc_time_zone());
+  ConfigOUT["EndDate"] = cctz::format("%d/%m/%Y", TimePoint, utc_time_zone());
   civil_day EndDate = civil_day(convert(TimePoint, utc_time_zone()));
   for(uint16_t Y = StartDate.year(); Y <= EndDate.year(); Y++) {
     if(find_if(ConfigOUT["Years"].begin(), ConfigOUT["Years"].end(), [&](const json &a) -> bool { return (a["Year"] == Y); }) == ConfigOUT["Years"].end()) throw string("Missing year(s) in defined range");
@@ -142,7 +142,7 @@ json Rate::CheckConfig(const json &config) {
     if((config["Billing"][B].is_string() == false) || (parse("%d/%m/%Y", config["Billing"][B], utc_time_zone(), &TimePoint) == false)) throw string("'Billing' param is required");
     civil_day BillDate = civil_day(convert(TimePoint, utc_time_zone()));
     if((BillDate <= StartDate) || (BillDate >= EndDate) || (find_if(Billing.begin(), Billing.end(), [&](const civil_day &day) -> bool { return day == BillDate; }) != Billing.end())) throw string("'Billing' param is invalid or repeated");
-    ConfigOUT["Billing"].push_back(format("%d/%m/%Y", TimePoint, utc_time_zone()));
+    ConfigOUT["Billing"].push_back(cctz::format("%d/%m/%Y", TimePoint, utc_time_zone()));
   }
   return ConfigOUT;
 }
