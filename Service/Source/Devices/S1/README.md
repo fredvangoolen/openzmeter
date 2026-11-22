@@ -11,8 +11,9 @@ Reads raw voltage/current samples from the S1 high speed port of Flemish (Fluviu
   sends nothing.
 * RJ12 connector on the meter: pin 3 = GND, pin 4 = BUS_M (RS-422 -), pin 5 = BUS_P (RS-422 +). Use a twisted pair
   for pins 4/5 and also connect GND.
-* RS-422 at a fixed **2 Mbaud** 8N1, receive only. The receiving side must terminate the line (120 Ω between + and -;
-  some adapters have a jumper/switch for it, the FTDI USB-RS422-WE cable needs an external resistor).
+* RS-422 at a fixed **2 Mbaud** 8N1, receive only. The receiving side must terminate the line (120 Ω between + and -).
+  Check whether your adapter already has it: the FTDI USB-RS422-WE cable has it built in, others use a jumper or need
+  an external resistor. Do not add a second one: two in parallel (~55 Ω) make the meter drive twice the load.
 * Use a USB to RS-422 adapter that can run at exactly 2 Mbaud: FTDI FT232R/FT232H/FT2232H based (ex: FTDI
   USB-RS422-WE cable) or CP2102N + RS-422 receiver. The on-board UARTs of the NanoPi Air (H3) and Omega2 (MT7688) can
   not generate 2 Mbaud.
@@ -20,14 +21,16 @@ Reads raw voltage/current samples from the S1 high speed port of Flemish (Fluviu
 ### Wiring an FTDI USB-RS422-WE cable
 
 Wire colours from FTDI's datasheet (DS_USB_RS422_CABLES, FT_000116 version 1.3, table 5.1). The cable is
-wire-ended, supports up to 3 Mbaud and has **no built-in termination** (receiver input 12-15 kΩ).
+wire-ended and supports up to 3 Mbaud. It **has a built-in 120 Ω termination** across RXD+/RXD- (R1 in the
+schematic, figure 7.1), so no external resistor is needed. Measured between Yellow and White this shows as about
+120 Ω, but only with the cable plugged into USB: the RS-422 transceivers (ZT490E) are powered through a switch that
+turns on when the cable is active, so readings on an unpowered cable are unreliable.
 
 | Meter RJ12 pin | S1 signal | Cable wire | Cable signal |
 |---|---|---|---|
 | 3 | GND | **Black** | GND |
 | 4 | BUS_M (RS-422 -) | **White** | RXD- (A), input |
 | 5 | BUS_P (RS-422 +) | **Yellow** | RXD+ (B), input |
-| — | termination | **120 Ω resistor between Yellow and White**, at the cable end | |
 
 Leave all other wires unconnected, each insulated separately:
 
@@ -58,9 +61,10 @@ the received byte rate and the serial port's line counters (framing errors, brea
 
 * **No signal** (no or only a few stray bytes): the meter is not sending (S1 port not activated) or the wiring does not
   reach the receive pair. A multimeter between RXD+ and RXD- tells which: ~0 V means the meter does not drive the line.
-* **Bytes but no valid frames**: most often a missing 120 Ω termination. An unterminated line picks up interference
-  that looks like data; if the bytes stop once the resistor is fitted, the meter is not sending. Then wrong pins,
-  RXD+/RXD- swapped, or an adapter not at exactly 2 Mbaud.
+* **Bytes but no valid frames**: a distorted or weak signal, wrong pins, RXD+/RXD- swapped, an adapter not at exactly
+  2 Mbaud, or (with adapters without built-in termination) a missing 120 Ω termination: an unterminated line can pick
+  up interference that looks like data. If the bytes disappear when the line is terminated, the meter's signal is too
+  weak to drive a normal load: check it with an oscilloscope (it should stay above 2 V differential with 120 Ω).
 * **Framing errors or breaks only**: RXD+/RXD- swapped, missing termination or wrong speed.
 * **Changes on CTS only**: the meter is wired to the cable's CTS pair instead of RXD.
 

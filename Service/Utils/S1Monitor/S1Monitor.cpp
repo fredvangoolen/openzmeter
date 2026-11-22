@@ -48,15 +48,16 @@ static const double MIN_STREAM_RATE = 1000.0;  //Below this, received bytes are 
 static void Diagnose(double bytesPerSec, bool haveCounters, const serial_icounter_struct &d) {
   if(bytesPerSec >= MIN_STREAM_RATE) {
     printf("Receiving %.0f bytes/s but no valid frames. Likely causes, most likely first:\n"
-           "  1. No 120 ohm termination between RXD+ and RXD-: an unterminated line picks up interference that\n"
-           "     looks like data. Fit the resistor first; if the data then stops, the meter is not sending.\n"
-           "  2. Wrong pins: check RJ12 pins 3/4/5 with a continuity tester (flat RJ12 cords are mirrored).\n"
-           "  3. RXD+ and RXD- swapped (RS-422 A/B naming differs between vendors).\n"
-           "  4. The adapter is not running at exactly 2 Mbaud.\n"
+           "  1. Wrong pins: check RJ12 pins 3/4/5 with a continuity tester (flat RJ12 cords are mirrored).\n"
+           "  2. RXD+ and RXD- swapped (RS-422 A/B naming differs between vendors).\n"
+           "  3. Weak or distorted signal: the meter must drive >2 V differential into 120 ohm (check with a scope).\n"
+           "  4. Adapter without termination: an unterminated line picks up interference that looks like data\n"
+           "     (the FTDI USB-RS422-WE cable has 120 ohm built in; do not add a second resistor).\n"
+           "  5. The adapter is not running at exactly 2 Mbaud.\n"
            "  Use -x to see the raw bytes.\n", bytesPerSec);
   } else if(haveCounters && ((d.frame + d.brk + d.parity) > 100)) {
     printf("Line activity, but the bytes are rejected (%d framing errors, %d breaks in 3 s): RXD+ and RXD- are\n"
-           "probably swapped, or the line is not terminated (120 ohm), or the speed is wrong.\n", d.frame, d.brk);
+           "probably swapped, the signal is too weak or distorted, or the speed is wrong.\n", d.frame, d.brk);
   } else if(haveCounters && (d.cts > 100)) {
     printf("No data on RXD, but %d changes on the CTS input in 3 s: the meter wires are probably on the cable's\n"
            "CTS+/CTS- pair (FTDI USB-RS422-WE: brown/grey) instead of RXD+/RXD- (yellow/white).\n", d.cts);
