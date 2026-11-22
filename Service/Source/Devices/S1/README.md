@@ -11,11 +11,36 @@ Reads raw voltage/current samples from the S1 high speed port of Flemish (Fluviu
   sends nothing.
 * RJ12 connector on the meter: pin 3 = GND, pin 4 = BUS_M (RS-422 -), pin 5 = BUS_P (RS-422 +). Use a twisted pair
   for pins 4/5 and also connect GND.
-* RS-422 at a fixed **2 Mbaud** 8N1, receive only. The receiving side must terminate the line (120 Ω between + and -,
-  many adapters have a jumper/switch for it).
+* RS-422 at a fixed **2 Mbaud** 8N1, receive only. The receiving side must terminate the line (120 Ω between + and -;
+  some adapters have a jumper/switch for it, the FTDI USB-RS422-WE cable needs an external resistor).
 * Use a USB to RS-422 adapter that can run at exactly 2 Mbaud: FTDI FT232R/FT232H/FT2232H based (ex: FTDI
   USB-RS422-WE cable) or CP2102N + RS-422 receiver. The on-board UARTs of the NanoPi Air (H3) and Omega2 (MT7688) can
   not generate 2 Mbaud.
+
+### Wiring an FTDI USB-RS422-WE cable
+
+Wire colours from FTDI's datasheet (DS_USB_RS422_CABLES, FT_000116 version 1.3, table 5.1). The cable is
+wire-ended, supports up to 3 Mbaud and has **no built-in termination** (receiver input 12-15 kΩ).
+
+| Meter RJ12 pin | S1 signal | Cable wire | Cable signal |
+|---|---|---|---|
+| 3 | GND | **Black** | GND |
+| 4 | BUS_M (RS-422 -) | **White** | RXD- (A), input |
+| 5 | BUS_P (RS-422 +) | **Yellow** | RXD+ (B), input |
+| — | termination | **120 Ω resistor between Yellow and White**, at the cable end | |
+
+Leave all other wires unconnected, each insulated separately:
+
+| Cable wire | Cable signal | Why not connect it |
+|---|---|---|
+| Red, Orange | TXD-, TXD+ | **Outputs**: the cable drives them. Connected to the meter they would drive against the meter's own output. |
+| Green, Blue | RTS+, RTS- | **Outputs**, same reason. |
+| Brown, Grey | CTS+, CTS- | Inputs for flow control, not data. A meter connected here shows no data at all (the line activity is only visible as CTS changes). |
+
+* Use a twisted pair for pins 4/5 between the meter and the cable.
+* Check the RJ12 pin numbers with a continuity tester: cables and plugs can be mirrored.
+* If `s1monitor` receives bytes but no valid frames, swap Yellow and White (RS-422 A/B naming is not consistent
+  between vendors).
 
 ## Checking the connection
 

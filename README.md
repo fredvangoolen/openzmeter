@@ -21,7 +21,8 @@ power and energy, frequency, harmonics, events, alarms, cyclic histograms, MQTT 
 * **Activation**: the S1 port is off by default. Ask Fluvius to activate it for your meter.
 * **Hardware**: a USB to RS-422 adapter that can receive at exactly 2 Mbaud (e.g. FTDI FT232R/FT232H based) connected
   to the RJ12 S1 socket of the meter: pin 3 = GND, pin 4 = BUS- and pin 5 = BUS+. Fit a 120 Ω termination on the
-  adapter side.
+  adapter side. Wire colours for the FTDI USB-RS422-WE cable are in the
+  [S1 driver README](Service/Source/Devices/S1/README.md#wiring-an-ftdi-usb-rs422-we-cable).
 * **Check the connection first**: [`Service/Utils/S1Monitor`](Service/Utils/S1Monitor) is a small standalone tool
   (only needs `g++`). It shows frame rate, errors, meter info, frequency, RMS values and power every second, and
   explains what is wrong when nothing valid arrives. Build it with `make` and run `./s1monitor /dev/ttyUSB0`.
