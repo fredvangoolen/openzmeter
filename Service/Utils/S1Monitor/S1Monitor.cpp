@@ -25,6 +25,8 @@
 #include <signal.h>
 #include <unistd.h>
 #include <time.h>
+#include <sys/ioctl.h>
+#include <linux/serial.h>
 #include "DeviceS1Frame.h"
 #include "DeviceS1Serial.h"
 // ---------------------------------------------------------------------------------------------------------------------
@@ -34,6 +36,38 @@ static double Now() {
   timespec TS;
   clock_gettime(CLOCK_MONOTONIC, &TS);
   return TS.tv_sec + TS.tv_nsec / 1e9;
+}
+// Kernel line counters of the serial port (not available on every device, e.g. pseudo terminals)
+static bool LineCounters(int fd, serial_icounter_struct &cnt) {
+  memset(&cnt, 0, sizeof(cnt));
+  return ioctl(fd, TIOCGICOUNT, &cnt) == 0;
+}
+// An active S1 port sends one 45 byte frame per sample, at least ~2 kHz: ~90000 bytes/s or more
+static const double MIN_STREAM_RATE = 1000.0;  //Below this, received bytes are treated as stray (noise, plugging)
+// Explain why no valid frame was received, from the received byte rate and the line counter changes
+static void Diagnose(double bytesPerSec, bool haveCounters, const serial_icounter_struct &d) {
+  if(bytesPerSec >= MIN_STREAM_RATE) {
+    printf("Receiving %.0f bytes/s but no valid frames. Likely causes, most likely first:\n"
+           "  1. No 120 ohm termination between RXD+ and RXD-: an unterminated line picks up interference that\n"
+           "     looks like data. Fit the resistor first; if the data then stops, the meter is not sending.\n"
+           "  2. Wrong pins: check RJ12 pins 3/4/5 with a continuity tester (flat RJ12 cords are mirrored).\n"
+           "  3. RXD+ and RXD- swapped (RS-422 A/B naming differs between vendors).\n"
+           "  4. The adapter is not running at exactly 2 Mbaud.\n"
+           "  Use -x to see the raw bytes.\n", bytesPerSec);
+  } else if(haveCounters && ((d.frame + d.brk + d.parity) > 100)) {
+    printf("Line activity, but the bytes are rejected (%d framing errors, %d breaks in 3 s): RXD+ and RXD- are\n"
+           "probably swapped, or the line is not terminated (120 ohm), or the speed is wrong.\n", d.frame, d.brk);
+  } else if(haveCounters && (d.cts > 100)) {
+    printf("No data on RXD, but %d changes on the CTS input in 3 s: the meter wires are probably on the cable's\n"
+           "CTS+/CTS- pair (FTDI USB-RS422-WE: brown/grey) instead of RXD+/RXD- (yellow/white).\n", d.cts);
+  } else {
+    printf("No signal%s. The meter is not sending, or the wiring does not reach the receive pair:\n"
+           "  - Check that Fluvius has activated the S1 port (P1 working does not mean S1 is on).\n"
+           "  - Check RJ12 pins 3 (GND), 4 (BUS-), 5 (BUS+) with a continuity tester.\n"
+           "  - With the cable plugged in, measure DC volts between RXD+ and RXD- (FTDI: yellow and white):\n"
+           "    ~0 V means the meter does not drive the line, +2 V or more means it does.\n",
+           (bytesPerSec > 0) ? " (only a few stray bytes)" : "");
+  }
 }
 static void Usage(const char *name) {
   printf("Usage: %s [options] [port]\n\n"
@@ -80,6 +114,8 @@ int main(int argc, char **argv) {
   DeviceS1Frame::Frame_t Last, Info;
   memset(&Last, 0, sizeof(Last));
   memset(&Info, 0, sizeof(Info));
+  serial_icounter_struct LineStart, LineNow;
+  bool     HaveCounters = LineCounters(FD, LineStart);
   int      Dumped = 0;
   double   Start = Now(), Tick = Start, LastData = Start;
   bool     HintShown = false;
@@ -149,10 +185,16 @@ int main(int argc, char **argv) {
                  (unsigned long long)CRC, (unsigned long long)Lost, V[0], I[0], P[0], Invalid ? "  (invalid samples)" : "");
       } else if(!HintShown && ((T - Start) >= 3.0)) {
         HintShown = true;
-        if(TotBytes + Bytes == 0)
-          printf("No data at all after 3 s: is the S1 port activated by Fluvius? Check the cable (RJ12 pins 3/4/5) and the adapter.\n");
-        else
-          printf("Receiving bytes (%.0f/s) but no valid frames: swap BUS+ and BUS- (RJ12 pins 4/5), check the termination, or the adapter may not run at exactly 2 Mbaud. Try -x to see raw bytes.\n", Bytes / Elapsed);
+        serial_icounter_struct Delta;
+        memset(&Delta, 0, sizeof(Delta));
+        bool Counters = HaveCounters && LineCounters(FD, LineNow);
+        if(Counters) {
+          Delta.frame  = LineNow.frame  - LineStart.frame;
+          Delta.brk    = LineNow.brk    - LineStart.brk;
+          Delta.parity = LineNow.parity - LineStart.parity;
+          Delta.cts    = LineNow.cts    - LineStart.cts;
+        }
+        Diagnose((TotBytes + Bytes) / (T - Start), Counters, Delta);
       }
       TotBytes += Bytes; TotLost += Lost; TotInvalid += Invalid;
       Bytes = Frames = Lost = Invalid = 0;
@@ -162,11 +204,15 @@ int main(int argc, char **argv) {
     }
     if((Duration > 0) && ((T - Start) >= Duration)) break;
   }
+  bool HaveFinal = HaveCounters && LineCounters(FD, LineNow);    //Read before closing the port
   close(FD);
   TotBytes += Bytes; TotLost += Lost; TotInvalid += Invalid;
   printf("\nSummary: %.0f s, %llu bytes, %llu valid frames, %llu CRC errors, %llu discarded bytes, %llu lost frames, %llu invalid samples\n",
          Now() - Start, (unsigned long long)TotBytes, (unsigned long long)Parser.Frames(), (unsigned long long)Parser.CRCErrors(),
          (unsigned long long)Parser.Discarded(), (unsigned long long)TotLost, (unsigned long long)TotInvalid);
+  if(HaveFinal)
+    printf("Line counters: %d framing errors, %d breaks, %d overruns, %d CTS changes\n", LineNow.frame - LineStart.frame,
+           LineNow.brk - LineStart.brk, (LineNow.overrun - LineStart.overrun) + (LineNow.buf_overrun - LineStart.buf_overrun), LineNow.cts - LineStart.cts);
   return (Parser.Frames() > 0) ? 0 : 1;
 }
 // ---------------------------------------------------------------------------------------------------------------------

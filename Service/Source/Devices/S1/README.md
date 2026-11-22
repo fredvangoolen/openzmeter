@@ -53,8 +53,16 @@ cd Service/Utils/S1Monitor && make
 ```
 
 Every second it prints frames/s (this should match the meter sampling rate), frequency, CRC errors, lost frames,
-RMS voltage and current, and active power per phase. If no valid frames arrive, it says whether nothing is received
-at all (port not activated, cable) or garbage is received (BUS+/BUS- swapped, termination, adapter not at 2 Mbaud).
+RMS voltage and current, and active power per phase. If no valid frames arrive after 3 s, it diagnoses the line from
+the received byte rate and the serial port's line counters (framing errors, breaks, CTS changes):
+
+* **No signal** (no or only a few stray bytes): the meter is not sending (S1 port not activated) or the wiring does not
+  reach the receive pair. A multimeter between RXD+ and RXD- tells which: ~0 V means the meter does not drive the line.
+* **Bytes but no valid frames**: most often a missing 120 Ω termination. An unterminated line picks up interference
+  that looks like data; if the bytes stop once the resistor is fitted, the meter is not sending. Then wrong pins,
+  RXD+/RXD- swapped, or an adapter not at exactly 2 Mbaud.
+* **Framing errors or breaks only**: RXD+/RXD- swapped, missing termination or wrong speed.
+* **Changes on CTS only**: the meter is wired to the cable's CTS pair instead of RXD.
 
 ## Configuration
 
