@@ -48,7 +48,8 @@ static const double MIN_STREAM_RATE = 1000.0;  //Below this, received bytes are 
 static void Diagnose(double bytesPerSec, bool haveCounters, const serial_icounter_struct &d) {
   if(bytesPerSec >= MIN_STREAM_RATE) {
     printf("Receiving %.0f bytes/s but no valid frames. Likely causes, most likely first:\n"
-           "  1. Wrong pins: check RJ12 pins 3/4/5 with a continuity tester (flat RJ12 cords are mirrored).\n"
+           "  1. Wrong pins: check RJ12 pins 3/4/5 with a continuity tester. Meter sockets may be numbered from the\n"
+           "     right (pin 1 = rightmost contact), and flat RJ12 cords are mirrored end to end.\n"
            "  2. RXD+ and RXD- swapped (RS-422 A/B naming differs between vendors).\n"
            "  3. Weak or distorted signal: the meter must drive >2 V differential into 120 ohm (check with a scope).\n"
            "  4. Adapter without termination: an unterminated line picks up interference that looks like data\n"
@@ -64,7 +65,8 @@ static void Diagnose(double bytesPerSec, bool haveCounters, const serial_icounte
   } else {
     printf("No signal%s. The meter is not sending, or the wiring does not reach the receive pair:\n"
            "  - Check that Fluvius has activated the S1 port (P1 working does not mean S1 is on).\n"
-           "  - Check RJ12 pins 3 (GND), 4 (BUS-), 5 (BUS+) with a continuity tester.\n"
+           "  - Check RJ12 pins 3 (GND), 4 (BUS-), 5 (BUS+) with a continuity tester. Meter sockets may be\n"
+           "    numbered from the right (pin 1 = rightmost contact).\n"
            "  - With the cable plugged in, measure DC volts between RXD+ and RXD- (FTDI: yellow and white):\n"
            "    ~0 V means the meter does not drive the line, +2 V or more means it does.\n",
            (bytesPerSec > 0) ? " (only a few stray bytes)" : "");

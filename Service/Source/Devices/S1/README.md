@@ -41,7 +41,11 @@ Leave all other wires unconnected, each insulated separately:
 | Brown, Grey | CTS+, CTS- | Inputs for flow control, not data. A meter connected here shows no data at all (the line activity is only visible as CTS changes). |
 
 * Use a twisted pair for pins 4/5 between the meter and the cable.
-* Check the RJ12 pin numbers with a continuity tester: cables and plugs can be mirrored.
+* **Check the pin numbering on the meter itself.** On the Sagemcom meter tested here, the S1 socket is numbered
+  from the right: facing the socket, pin 1 is the rightmost contact. Counting from the wrong side puts GND on BUS-
+  and the data pins on GND and an unused pin. Typical symptoms: no data at all, activity only on CTS, or bytes that
+  never form a valid frame. Flat RJ12 cords are also mirrored end to end, so check with a continuity tester from the
+  plug that goes into the meter.
 * If `s1monitor` receives bytes but no valid frames, swap Yellow and White (RS-422 A/B naming is not consistent
   between vendors).
 

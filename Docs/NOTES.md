@@ -151,11 +151,27 @@ On an x86 machine, with simulated S1 frames through a pseudo-terminal and a temp
 - Three phases + neutral (230 V, 6 / 7.8 / 9.6 A): exact per-phase values, neutral 3.118 A.
 - Full optimized build with GCC 13 and GCC 14. Frame decoding unit-tested against the example frame in the spec.
 
-Not yet verified: a real meter, the web UI build (including the S1 settings dialog), the install script on a Pi.
+On a real meter (Raspberry Pi 4, FTDI USB-RS422-WE cable with its built-in 120 Ω termination, `s1monitor`):
+- Sagemcom meter, poly phase 4 wires, no neutral current, **fixed 3900 Hz per-second sampling**, data format 0.
+- 3905 valid frames/s, plausible values (about 230 V per phase, currents and power consistent with the household).
+- The **frequency field is always 0** on this meter. The driver then uses the analyzer's own zero-crossing frequency
+  measurement, which is correct here because sampling is fixed per second.
+- **One corrupted frame per second** (CRC error + one lost frame, at a steady 1/s rate), most likely caused by the
+  meter itself. About 0.03 % of the samples; the driver fills the gap with the previous sample.
+- Harmonics up to about the 39th order are measurable at 3900 Hz.
+
+Lesson from getting there: the meter's S1 socket is numbered from the right (pin 1 is the rightmost contact when
+facing it). Counting from the left put GND on BUS- and the data wires on GND and an unused pin, which produced
+CTS activity, garbled bytes or silence depending on the wiring. With the correct numbering it worked at once, without
+an extra termination resistor.
+
+Not yet verified: openZmeter itself on the real meter, the web UI build (including the S1 settings dialog), the
+install script on a Pi.
 
 ## 5. Open items
 
-- Test with a real meter (`s1monitor` first, then openZmeter).
+- Run openZmeter on the real meter (the link is verified with `s1monitor`).
+- Look into the one corrupted frame per second (raw capture around the bad frame).
 - Optional installer `--data-dir` to put PostgreSQL's data on an SSD while booting from SD.
 - Existing behavior, not changed: openZmeter retries the database forever at startup, and stopping it during that
   loop crashes it; a "Virtual" test device is always created; the 3-second table has no automatic cleanup.
