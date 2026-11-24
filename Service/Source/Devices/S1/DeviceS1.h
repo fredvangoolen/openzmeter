@@ -24,6 +24,7 @@
 #include "Device.h"
 #include "AnalyzerSoft.h"
 #include "DeviceS1Frame.h"
+#include "DeviceS1Rate.h"
 //----------------------------------------------------------------------------------------------------------------------
 using namespace std;
 //----------------------------------------------------------------------------------------------------------------------
@@ -58,6 +59,9 @@ class DeviceS1 final : public Device {
     bool                            pHaveHeld;         //pHeldVoltage/pHeldCurrent are initialized
     uint8_t                         pLastSequence;     //Last frame sequence number
     bool                            pHaveSequence;     //pLastSequence is initialized
+    DeviceS1Rate                    pRate;             //Real sample rate of the stream (capture thread only)
+    uint32_t                        pNewSamples;       //Samples received since last pRate update (capture thread only)
+    float                           pMeasuredRate;     //Last measured rate, 0 if not known yet (status)
   private :
     static bool  Register();
     static void  GetInstances();

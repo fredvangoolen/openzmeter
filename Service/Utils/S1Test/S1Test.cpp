@@ -19,7 +19,9 @@
 #include <string.h>
 #include <math.h>
 #include <vector>
+#include <random>
 #include "DeviceS1Frame.h"
+#include "DeviceS1Rate.h"
 // ---------------------------------------------------------------------------------------------------------------------
 using namespace std;
 typedef vector<uint8_t> Bytes;
@@ -145,7 +147,61 @@ static void TestParserErrors() {
   R.Reset();
   CHECK(Parse(R, F, 45) == vector<int>(1, 7));
 }
+// Feeds 'seconds' of a stream of 'rate' samples/s, arriving in 3 ms pieces with up to 'jitter' seconds delay
+static double Feed(DeviceS1Rate &r, double start, double rate, double seconds, double jitter) {
+  static mt19937 Gen(1);
+  uniform_real_distribution<double> Delay(0.0, 1.0);
+  uint64_t Sent = 0;
+  double   Last = 0.0;
+  for(double T = 0.003; T < seconds; T += 0.003) {
+    uint64_t Total = T * rate;
+    double   Time  = start + T + Delay(Gen) * jitter;
+    if(Time < Last) Time = Last;
+    Last = Time;
+    r.Push(Time, Total - Sent);
+    Sent = Total;
+  }
+  return start + seconds;
+}
+static void TestRate() {
+  DeviceS1Rate R;
+  R.Config(3900.0, 100.0, 600);
+  CHECK(!R.Valid() && (R.Rate() == 3900.0));           //Announced rate until measured
+  double T = Feed(R, 1000.0, 3906.25, 10.0, 0.005);
+  CHECK(!R.Valid());
+  T = Feed(R, T, 3906.25, 10.0, 0.005);
+  CHECK(R.Valid());
+  NEAR(R.Rate(), 3906.25, 2.0);                        //25 mHz at 50 Hz after 20 s
+  T = Feed(R, T, 3906.25, 60.0, 0.005);
+  NEAR(R.Rate(), 3906.25, 0.3);                        //4 mHz
+  T = Feed(R, T, 3906.25, 900.0, 0.005);
+  NEAR(R.Rate(), 3906.25, 0.02);                       //0.3 mHz
+  // A pause (port closed, samples lost) must not affect the result
+  double Before = R.Rate();
+  T = Feed(R, T + 30.0, 3906.25, 5.0, 0.005);
+  CHECK(R.Rate() == Before);
+  T = Feed(R, T, 3906.25, 60.0, 0.005);
+  NEAR(R.Rate(), 3906.25, 0.3);
+  // Buffered data arriving at once after a pause
+  T += 1.0;
+  R.Push(T, 1500);
+  T = Feed(R, T, 3906.25, 60.0, 0.005);
+  NEAR(R.Rate(), 3906.25, 0.3);
+  // Results that do not fit the announced rate are rejected
+  DeviceS1Rate S;
+  S.Config(3900.0, 100.0, 600);
+  Feed(S, 0.0, 2000.0, 60.0, 0.0);
+  CHECK(!S.Valid() && (S.Rate() == 3900.0));
+  // Per period sampling: short window follows the grid frequency
+  DeviceS1Rate P;
+  P.Config(2600.0, 390.0, DeviceS1Rate::MIN_POINTS);
+  T = Feed(P, 0.0, 52 * 50.05, 120.0, 0.001);
+  NEAR(P.Rate(), 52 * 50.05, 0.5);
+  Feed(P, T, 52 * 49.95, 30.0, 0.001);
+  NEAR(P.Rate(), 52 * 49.95, 0.5);
+}
 int main() {
+  TestRate();
   TestSpecExample();
   TestPolyPhase();
   TestRejected();

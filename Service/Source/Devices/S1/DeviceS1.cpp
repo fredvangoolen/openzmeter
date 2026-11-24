@@ -16,6 +16,7 @@
 #include <math.h>
 #include <errno.h>
 #include <string.h>
+#include <time.h>
 #include <unistd.h>
 #include "DeviceS1.h"
 #include "DeviceS1Serial.h"
@@ -49,6 +50,8 @@ DeviceS1::DeviceS1() : Device("S1", "S1", "Fluvius digital meter S1 port (e-MUCS
   pHaveHeld   = false;
   pHaveSequence = false;
   pLastSequence = 0;
+  pNewSamples   = 0;
+  pMeasuredRate = 0.0;
   memset(&pLastFrame, 0, sizeof(pLastFrame));
   memset(pHeldVoltage, 0, sizeof(pHeldVoltage));
   memset(pHeldCurrent, 0, sizeof(pHeldCurrent));
@@ -105,6 +108,7 @@ void DeviceS1::Config(const json &config) {
   pEnabled     = config["Enabled"];
   pConnected   = false;
   pReceiving   = false;
+  pMeasuredRate = 0.0;
   pFramesOK = pCRCErrors = pLostFrames = pInvalidSamples = pResyncs = 0;
   pthread_mutex_unlock(&pLock);
   if(pEnabled == true) {
@@ -139,6 +143,7 @@ void DeviceS1::GetDevice(HTTPRequest &req) {
     Status["Frequency"]    = pLastFrame.Frequency;
     Status["FormatVersion"] = pLastFrame.Version;
   }
+  if(pMeasuredRate > 0.0) Status["SampleRate"] = pMeasuredRate;
   if(pAnalyzer != NULL) {
     Status["Analyzer"]     = pAnalyzer->Serial();
     Status["AnalyzerMode"] = Analyzer::ModeToString(pMode);
@@ -178,16 +183,22 @@ bool DeviceS1::EnsureAnalyzer(const Frame_t &frame) {
   pPerPeriod    = frame.PerPeriod;
   pHaveHeld     = false;
   pHaveSequence = false;
+  pMeasuredRate = 0.0;
   pthread_mutex_unlock(&pLock);
+  // Per second sampling: quartz controlled, long window, announced with 100 Hz resolution. Per period sampling: the rate
+  // follows the grid frequency, short window, +-15% as in EN 50160 (only used if the meter does not send the frequency).
+  pRate.Config(Rate, (frame.PerPeriod == true) ? Rate * 0.15 : 100.0, (frame.PerPeriod == true) ? DeviceS1Rate::MIN_POINTS : 600);
+  pNewSamples = 0;
   AnalyzerManager::AddAnalyzer(New);
   return true;
 }
 void DeviceS1::ProcessFrame(const Frame_t &frame) {
   if(EnsureAnalyzer(frame) == false) return;
   float Frequency = (frame.Frequency > 0.0) ? frame.Frequency : NAN;
-  float Rate      = (frame.PerPeriod == true) ? frame.Sampling * (isnan(Frequency) ? 50.0 : Frequency) : frame.Sampling * 100.0;
+  float Rate      = ((frame.PerPeriod == true) && !isnan(Frequency)) ? frame.Sampling * Frequency : pRate.Rate();
   if(pHaveSequence == true) {
     uint8_t Gap = frame.Sequence - pLastSequence - 1;
+    pNewSamples  += Gap;
     if(Gap != 0) {
       pthread_mutex_lock(&pLock);
       pLostFrames += Gap;
@@ -199,6 +210,7 @@ void DeviceS1::ProcessFrame(const Frame_t &frame) {
   }
   pLastSequence = frame.Sequence;
   pHaveSequence = true;
+  pNewSamples++;
   if((frame.Valid == true) || (pHaveHeld == false)) {
     memcpy(pHeldVoltage, frame.Voltage, sizeof(pHeldVoltage));
     memcpy(pHeldCurrent, frame.Current, sizeof(pHeldCurrent));
@@ -235,6 +247,9 @@ void *DeviceS1::Thread() {
       LogFile::Info("DeviceS1: port '%s' opened", pPort.c_str());
       PortErrLogged = false;
       Parser.Reset();
+      pRate.Restart();
+      pNewSamples   = 0;
+      pHaveSequence = false;
       LastFrameTime = Now;
       pthread_mutex_lock(&pLock);
       pConnected = true;
@@ -252,6 +267,8 @@ void *DeviceS1::Thread() {
       pthread_mutex_unlock(&pLock);
       continue;
     }
+    struct timespec ReadTime;
+    clock_gettime(CLOCK_MONOTONIC, &ReadTime);
     uint64_t CRCBefore = Parser.CRCErrors();
     uint64_t DiscBefore = Parser.Discarded();
     Parser.Push(Raw, Readed, [&](const Frame_t &frame) {
@@ -264,6 +281,17 @@ void *DeviceS1::Thread() {
       pthread_mutex_unlock(&pLock);
       LastFrameTime = Now;
     });
+    if(pNewSamples > 0) {
+      bool Known = pRate.Valid();
+      pRate.Push(ReadTime.tv_sec + ReadTime.tv_nsec / (double)1e9, pNewSamples);
+      pNewSamples = 0;
+      if(pRate.Valid() == true) {
+        if(Known == false) LogFile::Info("DeviceS1: announced sample rate %.0f Hz, measured %.2f Hz", pNominalRate, pRate.Rate());
+        pthread_mutex_lock(&pLock);
+        pMeasuredRate = pRate.Rate();
+        pthread_mutex_unlock(&pLock);
+      }
+    }
     if((Parser.CRCErrors() != CRCBefore) || (Parser.Discarded() != DiscBefore)) {
       pthread_mutex_lock(&pLock);
       pCRCErrors += Parser.CRCErrors() - CRCBefore;

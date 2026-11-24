@@ -238,7 +238,7 @@ void AnalyzerSoft::Thread() {
     pAggreg200MS->setTimestamp(pWorkingBlock->Timestamp());
     pFFTs->Run(pWorkingBlock, (pWorkingBlock->NominalFrequency() == 0.0) ? 0 : (pWorkingBlock->NominalFrequency() == 50.0) ? 10 : 12);
     pEvents->Run(pWorkingBlock);
-    float    Frequency = pFrequency->Frequency(pWorkingBlock);
+    float    Frequency = pFrequency->Frequency(pWorkingBlock) * (Samplerate / pSamplerate);   //Calculated with nominal samplerate
     if(!isnan(pWorkingBlock->SourceFrequency()) && (pWorkingBlock->NominalFrequency() != 0.0)) Frequency = pWorkingBlock->SourceFrequency();
     pAggreg200MS->setFrequency(Frequency);
     for(uint8_t j = 0; j < pVoltageChannels; j++) {
@@ -256,7 +256,6 @@ void AnalyzerSoft::Thread() {
       pAggreg200MS->setApparentPower(j, pAggreg200MS->Voltage(j) * pAggreg200MS->Current(j));
       pAggreg200MS->setActiveEnergy(j, (pAggreg200MS->ActivePower(j) * BlockSize) / (Samplerate * 3600.0));
       pAggreg200MS->setPowerFactor(j, pAggreg200MS->ActivePower(j) / pAggreg200MS->ApparentPower(j));
-      pAggreg200MS->setReactiveEnergy(j, (pAggreg200MS->ReactivePower(j) * BlockSize) / (Samplerate * 3600.0));
     }
     pFFTs->Wait();
     for(uint8_t j = 0; j < pVoltageChannels; j++) {
@@ -264,15 +263,16 @@ void AnalyzerSoft::Thread() {
       float THDi        = 0.0;
       for(uint8_t i = 0; i < 50; i++) {
         pAggreg200MS->setVoltageHarmonic(j, i, pFFTs->VoltageHarmonic(j, i));
-        if(i > 0) THDv += pFFTs->VoltageHarmonicPower(j, i);
+        if(i > 0) THDv += pow(pFFTs->VoltageHarmonicPower(j, i), 2);
         pAggreg200MS->setCurrentHarmonic(j, i, pFFTs->CurrentHarmonic(j, i));
-        if(i > 0) THDi += pFFTs->CurrentHarmonicPower(j, i);
+        if(i > 0) THDi += pow(pFFTs->CurrentHarmonicPower(j, i), 2);
         pAggreg200MS->setPowerHarmonic(j, i, pFFTs->VoltageHarmonicPower(j, i) * pFFTs->CurrentHarmonicPower(j, i) * cos(AnalyzerSoftFFTs::CalcAngle(pFFTs->CurrentHarmonic(j, i), pFFTs->VoltageHarmonic(j, i))));
       }
-      pAggreg200MS->setVoltageTHD(j, (THDv / pAggreg200MS->VoltageHarmonic(j, 0)) * 100.0);
-      pAggreg200MS->setCurrentTHD(j, (THDi / pAggreg200MS->CurrentHarmonic(j, 0)) * 100.0);
+      pAggreg200MS->setVoltageTHD(j, (sqrt(THDv) / pFFTs->VoltageHarmonicPower(j, 0)) * 100.0);
+      pAggreg200MS->setCurrentTHD(j, (sqrt(THDi) / pFFTs->CurrentHarmonicPower(j, 0)) * 100.0);
       pAggreg200MS->setVoltagePhase(j, (j == 0) ? 0.0 : AnalyzerSoftFFTs::CalcAngle(pFFTs->VoltageHarmonic(j, 0), pFFTs->VoltageHarmonic(0, 0)) * 180.0 / M_PI);
       pAggreg200MS->setReactivePower(j, pFFTs->VoltageHarmonicPower(j, 0) * pFFTs->CurrentHarmonicPower(j, 0) * sin(-AnalyzerSoftFFTs::CalcAngle(pFFTs->CurrentHarmonic(j, 0), pFFTs->VoltageHarmonic(j, 0))));
+      pAggreg200MS->setReactiveEnergy(j, (pAggreg200MS->ReactivePower(j) * BlockSize) / (Samplerate * 3600.0));
       pAggreg200MS->setPhi(j, AnalyzerSoftFFTs::CalcAngle(pFFTs->CurrentHarmonic(j, 0), pFFTs->VoltageHarmonic(j, 0)) * 180.0 / M_PI);
     }
     if((pMode == PHASE3N) || (pMode == PHASE3)) {
@@ -289,9 +289,9 @@ void AnalyzerSoft::Thread() {
       pAggreg200MS->setCurrent(pCurrentChannels - 1, sqrt(Current / BlockSize));
       for(uint8_t i = 0; i < 50; i++) {
         pAggreg200MS->setCurrentHarmonic(pCurrentChannels - 1, i, pFFTs->CurrentHarmonic(pCurrentChannels - 1, i));
-        if(i > 0) THD += pFFTs->CurrentHarmonicPower(pCurrentChannels - 1, i);
+        if(i > 0) THD += pow(pFFTs->CurrentHarmonicPower(pCurrentChannels - 1, i), 2);
       }
-      pAggreg200MS->setCurrentTHD(pCurrentChannels - 1, (THD / pAggreg200MS->CurrentHarmonic(pCurrentChannels - 1, 0)) * 100.0);
+      pAggreg200MS->setCurrentTHD(pCurrentChannels - 1, (sqrt(THD) / pFFTs->CurrentHarmonicPower(pCurrentChannels - 1, 0)) * 100.0);
     }
     pAggreg200MS->setFlag(pEvents->Wait());
     pConsumers->Write();

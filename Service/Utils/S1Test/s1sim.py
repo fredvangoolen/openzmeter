@@ -10,7 +10,7 @@ import argparse, math, os, pty, time, tty
 MODES = {
     "1p":     "single phase, 52 samples/period (like the example of the specification)",
     "3pn":    "three phases + neutral, unbalanced currents, 52 samples/period",
-    "3p3900": "three phases without neutral, fixed 3900 Hz, frequency field 0 (as seen on a Sagemcom meter)",
+    "3p3900": "three phases without neutral, announces 3900 Hz but sends 3906.25 Hz, frequency field 0 (as a Sagemcom meter)",
     "noise":  "bytes that never form a valid frame",
     "stray":  "only two bytes, after 1.5 s",
     "silent": "nothing at all",
@@ -27,13 +27,18 @@ def x25(data):
 def volts(x): return (round(x / 0.025) & 0xFFFF).to_bytes(2, "big")
 def amps(x):  return (round(x / 0.001) & 0xFFFFFF).to_bytes(3, "big")
 
+HARMONICS = []   # (order, fraction of the fundamental), added to voltages and currents
+
+def wave(x):
+    return math.sin(x) + sum(k * math.sin(h * x) for h, k in HARMONICS)
+
 def samples(mode, ph):
     """Info byte and measurement bytes for grid angle ph (radians)."""
     r2 = math.sqrt(2)
     if mode in ("1p", "noise"):
-        return 0x0A, volts(231 * r2 * math.sin(ph)) + amps(5 * r2 * math.sin(ph - 0.2)) + bytes(13)
-    currents = [6 * (1 + 0.3 * k) * r2 * math.sin(ph - 0.1 - k * 2 * math.pi / 3) for k in range(3)]
-    data = b"".join(volts(230 * r2 * math.sin(ph - k * 2 * math.pi / 3)) + amps(currents[k]) for k in range(3))
+        return 0x0A, volts(231 * r2 * wave(ph)) + amps(5 * r2 * wave(ph - 0.2)) + bytes(13)
+    currents = [6 * (1 + 0.3 * k) * r2 * wave(ph - 0.1 - k * 2 * math.pi / 3) for k in range(3)]
+    data = b"".join(volts(230 * r2 * wave(ph - k * 2 * math.pi / 3)) + amps(currents[k]) for k in range(3))
     if mode == "3pn":
         return 0x1F, data + amps(-sum(currents))
     return 0x0D, data + bytes(3)
@@ -44,10 +49,14 @@ def main():
     ap.add_argument("mode", nargs="?", default="1p", choices=MODES, metavar="mode", help="see below (default 1p)")
     ap.add_argument("-t", type=float, default=0, metavar="SECONDS", help="stop after SECONDS")
     ap.add_argument("-f", type=float, default=50.02, metavar="HZ", help="grid frequency (default 50.02)")
+    ap.add_argument("--harmonics", default="", metavar="H:PCT,...", help="add harmonics, e.g. 3:3,5:4,7:2")
     ap.add_argument("--drop", type=int, default=0, metavar="N", help="leave out one frame every N")
     ap.add_argument("--corrupt", type=int, default=0, metavar="N", help="damage one frame every N")
     ap.add_argument("--link", metavar="PATH", help="also create a symbolic link to the pseudo terminal")
     args = ap.parse_args()
+    for item in filter(None, args.harmonics.split(",")):
+        order, pct = item.split(":")
+        HARMONICS.append((int(order), float(pct) / 100))
 
     master, slave = pty.openpty()
     tty.setraw(slave)
@@ -59,7 +68,7 @@ def main():
         os.symlink(name, args.link)
 
     per_second = args.mode == "3p3900"
-    rate = 3900.0 if per_second else 52 * args.f
+    rate = 3906.25 if per_second else 52 * args.f
     sampling = 39 if per_second else 52
     freq_field = 0 if per_second else round(args.f * 1000)
     step = 2 * math.pi * args.f / rate
