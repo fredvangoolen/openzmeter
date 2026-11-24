@@ -22,9 +22,8 @@ Reads raw voltage/current samples from the S1 high speed port of Flemish (Fluviu
 
 Wire colours from FTDI's datasheet (DS_USB_RS422_CABLES, FT_000116 version 1.3, table 5.1). The cable is
 wire-ended and supports up to 3 Mbaud. It **has a built-in 120 Ω termination** across RXD+/RXD- (R1 in the
-schematic, figure 7.1), so no external resistor is needed. Measured between Yellow and White this shows as about
-120 Ω, but only with the cable plugged into USB: the RS-422 transceivers (ZT490E) are powered through a switch that
-turns on when the cable is active, so readings on an unpowered cable are unreliable.
+schematic, figure 7.1), so no external resistor is needed. To check it, unplug the cable from the meter and measure
+between Yellow and White: about 120 Ω, whether or not the cable is plugged into USB.
 
 | Meter RJ12 pin | S1 signal | Cable wire | Cable signal |
 |---|---|---|---|
