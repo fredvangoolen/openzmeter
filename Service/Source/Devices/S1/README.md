@@ -75,10 +75,10 @@ the received byte rate and the serial port's line counters (framing errors, brea
 
 `Service/Utils/S1Test` works without a meter, database or openZmeter build:
 
-* `make test` runs the unit tests of the frame decoder and stream parser (specification example, sign and range of the
+* `make test` runs the unit tests of the sample rate measurement, frame decoder and stream parser (specification example, sign and range of the
   values, every possible single bit error, split and shared-flag streams, corrupted and truncated frames).
 * `./s1sim.py` simulates a meter on a pseudo terminal and prints its path, to use as serial port for `s1monitor` or the
-  S1 device (the openZmeter service user needs access to it). `./s1sim.py 3p3900 --corrupt 3900` resembles the tested
+  S1 device (the openZmeter service user needs access to it). `./s1sim.py 3p3900 --corrupt 3906` resembles the tested
   Sagemcom meter; `--help` lists all modes. Baud rate, wiring and line errors can not be simulated this way.
 
 ## Configuration
@@ -96,6 +96,10 @@ the meter ID, sampling mode, frequency and frame counters (OK / CRC errors / los
 
 * Sample rate is 2-4 kHz, much lower than openZmeter capture boards: harmonics above the Nyquist limit (roughly the
   25th-40th harmonic, depending on the meter) are reported as 0.
+* Sample rate: the meter announces it in steps of 100 Hz (e-MUCS H 4.2.3), too coarse to measure frequency and energy.
+  As it sends exactly one telegram per sample (4.2.4), the driver measures the real rate by counting telegrams against
+  the system clock (`DeviceS1Rate`). The clock must be synchronized (NTP). The announced rate is used for the first
+  20 seconds, until the measured one is known.
 * Meters sampling at a fixed number of samples per period: grid frequency is taken from the frequency field in each
   frame, and energy uses the effective samplerate (samples per period × frequency). Without this, frequency would
   always read nominal.

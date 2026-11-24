@@ -79,7 +79,7 @@ flowchart LR
 | **DeviceS1::ProcessFrame** | `DeviceS1.cpp` | Creates the analyzer when the first valid frame arrives (`S1_1P`, `S1_3P` or `S1_3PN`, auto-detected or forced). Fills up to 16 lost frames and replaces samples flagged invalid with the last valid sample. Passes the meter's frequency and actual sample rate along with every sample. |
 | **Other devices** | `Devices/V1`, `V2`, `V3`, `Virtual`, `Remote` | openZmeter's own USB capture boards (6–24 kHz), a test signal generator, and analyzers received from another openZmeter. |
 | **ZeroCrossing** | `Analyzers/Soft/AnalyzerSoftZeroCrossing.cpp` | Cuts the sample stream into blocks of 10 cycles (12 at 60 Hz), about 200 ms, as IEC 61000-4-30 requires. Detects cycles on a band-pass filtered copy of voltage L1. |
-| **Analyzer thread** | `AnalyzerSoft.cpp` | Per block: RMS, active/reactive/apparent power, power factor, energy, frequency, FFT harmonics (zero above the Nyquist limit), THD, unbalance. For S1, frequency and energy use the values from the meter. |
+| **Analyzer thread** | `AnalyzerSoft.cpp` | Per block: RMS, active/reactive/apparent power, power factor, energy, frequency, FFT harmonics (zero above the Nyquist limit), THD, unbalance. For S1, frequency and energy use the measured sample rate, or the frequency sent by the meter if it samples per period. |
 | **Events** | `AnalyzerSoftEvents.cpp` | Detects dips, swells, interruptions and rapid voltage changes; stores RMS and raw waveform snippets around each event. |
 | **Aggregations** | `AnalyzerSoftAggreg*.cpp` | Average the 200 ms results into 3 s, 1 min, 10 min, 15 min and 1 h values and store them. |
 | **Alarms** | `AnalyzerSoftAlarms.cpp` | User-defined conditions on aggregates. Notify via MQTT and Telegram. |
@@ -152,25 +152,37 @@ On an x86 machine, with simulated S1 frames through a pseudo-terminal and a temp
 - Full optimized build with GCC 13 and GCC 14. Frame decoding unit-tested against the example frame in the spec.
 
 On a real meter (Raspberry Pi 4, FTDI USB-RS422-WE cable with its built-in 120 Ω termination, `s1monitor`):
-- Sagemcom meter, poly phase 4 wires, no neutral current, **fixed 3900 Hz per-second sampling**, data format 0.
+- Sagemcom meter, poly phase 4 wires, no neutral current, **fixed per-second sampling**, announced as 3900 Hz, data format 0.
 - 3905 valid frames/s, plausible values (about 230 V per phase, currents and power consistent with the household).
-- The **frequency field is always 0** on this meter. The driver then uses the analyzer's own zero-crossing frequency
-  measurement, which is correct here because sampling is fixed per second.
+- The **frequency field is always 0** on this meter (e-MUCS H 4.2.3 defines it as the currently measured network
+  frequency, without special meaning for 0). The analyzer then measures it from the zero crossings.
+- The **real sample rate is 3906.25 Hz**, steady over 21 hours against an NTP synchronized clock. This agrees with the
+  specification: the field has a resolution of 100 Hz (4.2.3) and one telegram is sent per sample (4.2.4). Earlier
+  versions used the announced 3900 Hz, so frequency read 0.16 % low (49.913 Hz on average instead of 49.993 Hz) and
+  live/MQTT active energy 0.16 % high. Voltage, current and power were not affected. Fixed by measuring the rate.
 - **One corrupted frame per second** (CRC error + one lost frame, at a steady 1/s rate), most likely caused by the
   meter itself. About 0.03 % of the samples; the driver fills the gap with the previous sample.
-- Harmonics up to about the 39th order are measurable at 3900 Hz.
+- Harmonics up to about the 39th order are measurable at 3906 Hz.
 
 Lesson from getting there: the meter's S1 socket is numbered from the right (pin 1 is the rightmost contact when
 facing it). Counting from the left put GND on BUS- and the data wires on GND and an unused pin, which produced
 CTS activity, garbled bytes or silence depending on the wiring. With the correct numbering it worked at once, without
 an extra termination resistor.
 
-Not yet verified: openZmeter itself on the real meter, the web UI build (including the S1 settings dialog), the
-install script on a Pi.
+openZmeter itself runs on the real meter since 2026-11-23, installed with the install script on a Pi 4 (about 34
+minutes, up to 1.65 GB of memory used during the web build; about 4 % of one core and 25 MB when running).
+
+Errors found by checking its results, not covered by the specification (S1 only delivers samples) and also present in
+the original openZmeter for all devices:
+- **THD** added the harmonics up linearly and divided by the peak value of the fundamental. It is now the root of the
+  sum of squares, as in EN 50160 / IEC 61000-4-7. On this meter: 3.7 % stored, 2.1 % real (voltage L1). THD stored before
+  the fix is not comparable with THD stored after it.
+- **Reactive energy** (live values and MQTT) was always 0: calculated before reactive power was known. Fixed.
 
 ## 5. Open items
 
-- Run openZmeter on the real meter (the link is verified with `s1monitor`).
+- Stored voltage and current harmonics are peak values, not RMS (324 V for a fundamental of 229 V). The EN 50160
+  harmonics check in `AnalyzerSoftAggreg1H.cpp` compares them in a way that looks wrong as well. Not changed yet.
 - Look into the one corrupted frame per second (raw capture around the bad frame).
 - Optional installer `--data-dir` to put PostgreSQL's data on an SSD while booting from SD.
 - Existing behavior, not changed: openZmeter retries the database forever at startup, and stopping it during that
