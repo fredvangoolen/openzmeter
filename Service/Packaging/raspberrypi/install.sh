@@ -71,7 +71,9 @@ if [ -z "${HTTP_PORT}" ] && [ -f "${CONF_FILE}" ]; then
   HTTP_PORT=$(python3 -I -c 'import json,sys; print(json.load(open(sys.argv[1])).get("HTTPServer",{}).get("Port",""))' "${CONF_FILE}" 2>/dev/null || true)
 fi
 HTTP_PORT="${HTTP_PORT:-80}"
-PORT_USERS=$(ss -Hltnp "sport = :${HTTP_PORT}" 2>/dev/null | grep -o 'users:(("[^"]*"' | cut -d'"' -f2 | sort -u | grep -v '^openZmeter$' | paste -sd, - || true)
+# The running service is recognized by PID: its process name is the one of its main thread ("Main")
+OWN_PID=$(systemctl show -p MainPID --value openzmeter.service 2>/dev/null || true)
+PORT_USERS=$(ss -Hltnp "sport = :${HTTP_PORT}" 2>/dev/null | grep -oE '"[^"]+",pid=[0-9]+' | grep -v ",pid=${OWN_PID:-0}$" | cut -d'"' -f2 | sort -u | paste -sd, - || true)
 if [ -n "${PORT_USERS}" ]; then
   die "Port ${HTTP_PORT} is already used by: ${PORT_USERS}. Choose another web port, e.g. --http-port 8080"
 fi
