@@ -91,7 +91,7 @@ if [ "${SKIP_DEPS}" -eq 0 ]; then
   info "Installing packages"
   apt-get update
   DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
-    build-essential git python3 \
+    build-essential git python3 curl \
     libpq-dev libfftw3-dev libusb-1.0-0-dev uuid-dev libssl-dev zlib1g-dev libdbus-1-dev \
     nodejs npm \
     postgresql
@@ -184,9 +184,13 @@ chmod 0600 "${CONF_FILE}"
 # --- Service ----------------------------------------------------------------------------------------------------------
 info "Installing systemd service"
 install -m 0644 "${SCRIPT_DIR}/openzmeter.service" "${UNIT_DST}"
+install -m 0755 "${SCRIPT_DIR}/openzmeter-watchdog.sh" /usr/local/sbin/openzmeter-watchdog
+install -m 0644 "${SCRIPT_DIR}/openzmeter-watchdog.service" /etc/systemd/system/openzmeter-watchdog.service
 systemctl daemon-reload
 systemctl enable openzmeter.service
 systemctl restart openzmeter.service
+systemctl enable openzmeter-watchdog.service
+systemctl restart openzmeter-watchdog.service
 sleep 5
 if systemctl is-active --quiet openzmeter.service; then
   IP=$(hostname -I 2>/dev/null | awk '{print $1}')

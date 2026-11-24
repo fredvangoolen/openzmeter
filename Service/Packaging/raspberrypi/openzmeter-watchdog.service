@@ -1,0 +1,17 @@
+[Unit]
+Description=Restart openZmeter when it stops answering
+After=openzmeter.service
+
+[Service]
+Type=simple
+ExecStart=/usr/local/sbin/openzmeter-watchdog
+Restart=always
+RestartSec=30
+Nice=10
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+NoNewPrivileges=true
+
+[Install]
+WantedBy=multi-user.target

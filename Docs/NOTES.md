@@ -190,7 +190,9 @@ the original openZmeter for all devices:
   harmonics check in `AnalyzerSoftAggreg1H.cpp` compares them in a way that looks wrong as well. Not changed yet.
 - Seen once on x86 (not reproduced in about 340 further starts, cause unknown): openZmeter hung during startup, the main
   thread and the S1 thread both waiting for a lock. systemd does not notice this: the service stays active but the web
-  interface does not answer. `systemctl restart openzmeter` solves it.
+  interface does not answer. `systemctl restart openzmeter` solves it; `openzmeter-watchdog.service` (installed by the
+  Raspberry Pi installer) does this after three failed checks, one per minute. It only notices that the web interface
+  does not answer, not that measurements stop.
 - Look into the one corrupted frame per second (raw capture around the bad frame).
 - Optional installer `--data-dir` to put PostgreSQL's data on an SSD while booting from SD.
 - Existing behavior, not changed: openZmeter retries the database forever at startup, and stopping it during that

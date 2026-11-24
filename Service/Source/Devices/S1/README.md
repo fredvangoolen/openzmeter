@@ -122,6 +122,10 @@ PostgreSQL database and a systemd service (`openzmeter.service`), with the S1 de
 it from a clone of the repository: `sudo Service/Packaging/raspberrypi/install.sh`. A 2 GB board is enough. If the
 build runs out of memory, enlarge the swap or use `--jobs 1`.
 
+A watchdog service (`openzmeter-watchdog.service`) restarts openZmeter when its web interface does not answer for three
+minutes. Messages: `journalctl -u openzmeter-watchdog`. To turn it off: `sudo systemctl disable --now
+openzmeter-watchdog`.
+
 The Pi can be shared with other services. If something else already uses port 80 (Pi-hole's web interface, for
 example), use `--http-port 8080`; the installer refuses to continue when the chosen port is taken. The build is the
 heaviest part (several hundred MB of RAM for some minutes): on a Pi that serves DNS for the network, run it at a
