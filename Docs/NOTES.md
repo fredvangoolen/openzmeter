@@ -172,10 +172,12 @@ an extra termination resistor.
 openZmeter itself runs on the real meter since 2026-11-23, installed with the install script on a Pi 4 (about 34
 minutes, up to 1.65 GB of memory used during the web build; about 4 % of one core and 25 MB when running).
 
-Compared with the P1 port of the same meter (`p1monitor.py`, 2026-11-24, 160 periods of 3 s, total load about 510 W):
-voltage +0.02 % on all phases, power L1 and L3 within 0.04 %, total power +0.13 %, current L1 and L3 within 0.4 % (P1 has
-steps of 0.01 A). On the almost unloaded L2 openZmeter reads 0.015 A and 0.8 W more than P1 (0.19 A, 15 W); not explained.
-Energy registers not compared yet.
+Compared with the P1 port of the same meter (`p1monitor.py`, one hour on 2026-11-24, 1200 periods of 3 s, 3600 valid
+telegrams, total load about 530 W): voltage +0.02 % on all phases, power L1 and L3 within 0.1 %, total power +0.15 %,
+energy -0.19 % against the registers (528 Wh). Voltage and current differences on most phases are about half a step of
+the P1 display (0.1 V, 0.01 A), as if P1 cuts off digits. On the lightly loaded L2 openZmeter reads 0.016 A and 0.7 W
+more than P1 (0.24 A, 29 W). About 0.07 A RMS of components that P1 leaves out would explain the current (it disappears
+at higher loads), but not the power. Not confirmed.
 
 Errors found by checking its results, not covered by the specification (S1 only delivers samples) and also present in
 the original openZmeter for all devices:
