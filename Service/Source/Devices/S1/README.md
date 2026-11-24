@@ -20,7 +20,8 @@ Reads raw voltage/current samples from the S1 high speed port of Flemish (Fluviu
 
 ### Wiring an FTDI USB-RS422-WE cable
 
-Wire colours from FTDI's datasheet (DS_USB_RS422_CABLES, FT_000116 version 1.3, table 5.1). The cable is
+Wire colours from FTDI's datasheet ([DS_USB_RS422_CABLES](../../../../Docs/DS_USB_RS422_CABLES.pdf), FT_000116 version
+1.3, table 5.1). The cable is
 wire-ended and supports up to 3 Mbaud. It **has a built-in 120 Ω termination** across RXD+/RXD- (R1 in the
 schematic, figure 7.1), so no external resistor is needed. To check it, unplug the cable from the meter and measure
 between Yellow and White: about 120 Ω, whether or not the cable is plugged into USB.
