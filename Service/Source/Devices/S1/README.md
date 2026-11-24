@@ -81,6 +81,14 @@ the received byte rate and the serial port's line counters (framing errors, brea
   S1 device (the openZmeter service user needs access to it). `./s1sim.py 3p3900 --corrupt 3906` resembles the tested
   Sagemcom meter; `--help` lists all modes. Baud rate, wiring and line errors can not be simulated this way.
 
+## Comparing with the P1 port
+
+`Service/Utils/P1Monitor/p1monitor.py` reads the P1 port of the meter (115200 baud, needs a P1 cable; only Python, no
+packages). Without options it shows voltage, current and power per phase every second. `--compare -t 3600` records one
+hour and compares it with the openZmeter database of the same period, including the energy registers. `--selftest`
+tests the program itself. P1 has no frequency, reactive power or harmonics. Both ports belong to the same measuring
+circuit: agreement shows that openZmeter calculates correctly, not that the meter is accurate.
+
 ## Configuration
 
 Device `S1` in *Settings » Devices*:

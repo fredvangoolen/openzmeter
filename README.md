@@ -26,6 +26,8 @@ power and energy, frequency, harmonics, events, alarms, cyclic histograms, MQTT 
 * **Check the connection first**: [`Service/Utils/S1Monitor`](Service/Utils/S1Monitor) is a small standalone tool
   (only needs `g++`). It shows frame rate, errors, meter info, frequency, RMS values and power every second, and
   explains what is wrong when nothing valid arrives. Build it with `make` and run `./s1monitor /dev/ttyUSB0`.
+* **Check the results**: [`Service/Utils/P1Monitor`](Service/Utils/P1Monitor) reads the P1 port of the same meter and
+  compares its voltage, current, power and energy registers with what openZmeter measured on S1.
 * **Single board computer**: a Raspberry Pi 4 (2 GB is enough) works well. Run
   `sudo Service/Packaging/raspberrypi/install.sh` to build and install openZmeter with a local PostgreSQL database
   and a systemd service. Then enable the device under *Settings » Devices » S1*. If port 80 is already taken (for

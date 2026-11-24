@@ -172,6 +172,11 @@ an extra termination resistor.
 openZmeter itself runs on the real meter since 2026-11-23, installed with the install script on a Pi 4 (about 34
 minutes, up to 1.65 GB of memory used during the web build; about 4 % of one core and 25 MB when running).
 
+Compared with the P1 port of the same meter (`p1monitor.py`, 2026-11-24, 160 periods of 3 s, total load about 510 W):
+voltage +0.02 % on all phases, power L1 and L3 within 0.04 %, total power +0.13 %, current L1 and L3 within 0.4 % (P1 has
+steps of 0.01 A). On the almost unloaded L2 openZmeter reads 0.015 A and 0.8 W more than P1 (0.19 A, 15 W); not explained.
+Energy registers not compared yet.
+
 Errors found by checking its results, not covered by the specification (S1 only delivers samples) and also present in
 the original openZmeter for all devices:
 - **THD** added the harmonics up linearly and divided by the peak value of the fundamental. It is now the root of the
