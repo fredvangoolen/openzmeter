@@ -98,8 +98,10 @@ void DeviceVirtual::Config(const json &config) {
   pCurrentPhase     = config["CurrentPhase"];
   pMode             = Analyzer::StringToMode(config["Mode"]);
   pEnabled          = config["Enabled"];
-  pAnalyzer         = new AnalyzerSoft(pSerial + ModeString, pMode, "/Devices/" + pSerial + "/Analyzer", pSampleRate);
-  AnalyzerManager::AddAnalyzer(pAnalyzer);
+  if(pEnabled == true) {                                //Disabled device has no data, do not offer an empty analyzer
+    pAnalyzer       = new AnalyzerSoft(pSerial + ModeString, pMode, "/Devices/" + pSerial + "/Analyzer", pSampleRate);
+    AnalyzerManager::AddAnalyzer(pAnalyzer);
+  }
   pthread_mutex_unlock(&pLock);
   if(pEnabled == true) {
     pTerminate = false;

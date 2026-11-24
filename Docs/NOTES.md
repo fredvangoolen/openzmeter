@@ -186,4 +186,6 @@ the original openZmeter for all devices:
 - Look into the one corrupted frame per second (raw capture around the bad frame).
 - Optional installer `--data-dir` to put PostgreSQL's data on an SSD while booting from SD.
 - Existing behavior, not changed: openZmeter retries the database forever at startup, and stopping it during that
-  loop crashes it; a "Virtual" test device is always created; the 3-second table has no automatic cleanup.
+  loop crashes it; the 3-second table has no automatic cleanup.
+- Changed: the disabled "Virtual" test device no longer creates an (empty) analyzer. Selecting it in the web interface
+  instead of the meter showed empty pages.

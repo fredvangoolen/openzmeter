@@ -175,6 +175,12 @@ bool DeviceS1::EnsureAnalyzer(const Frame_t &frame) {
   string ModeString = (Mode == Analyzer::PHASE1) ? "_1P" : (Mode == Analyzer::PHASE3) ? "_3P" : "_3PN";
   LogFile::Info("DeviceS1: meter '%s', %s, %s sampling (%d), creating analyzer in mode %s at %.0f Hz", frame.MeterID, (frame.PolyPhase ? "poly phase" : "single phase"), (frame.PerPeriod ? "per period" : "per second"), frame.Sampling, Analyzer::ModeToString(Mode).c_str(), Rate);
   if(frame.Version != 0) LogFile::Warning("DeviceS1: unknown data format version %u, decoding as version 0", frame.Version);
+  json AnalyzerConfig = ConfigFile::ReadConfig("/Devices/" + pSerial + "/Analyzer");
+  if(AnalyzerConfig.is_object() == false) AnalyzerConfig = json::object();
+  if((AnalyzerConfig.contains("Name") == false) || (AnalyzerConfig["Name"] == "Unnamed analyzer")) {   //Never named by the user
+    AnalyzerConfig["Name"] = "Fluvius S1 meter";
+    ConfigFile::WriteConfig("/Devices/" + pSerial + "/Analyzer", AnalyzerConfig);
+  }
   AnalyzerSoft *New = new AnalyzerSoft(pSerial + ModeString, Mode, "/Devices/" + pSerial + "/Analyzer", Rate);
   pthread_mutex_lock(&pLock);
   pAnalyzer     = New;

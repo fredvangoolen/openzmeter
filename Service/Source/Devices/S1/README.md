@@ -89,7 +89,8 @@ Device `S1` in *Settings » Devices*:
 * **Mode**: `AUTO` picks the mode from the frame flags: single phase gives `1PHASE`, poly phase with neutral current
   gives `3PHASE+N`, and poly phase without it gives `3PHASE`. You can also force a mode.
 
-The analyzer (`S1_1P`, `S1_3P` or `S1_3PN`) is created when the first valid frame arrives. The device dialog shows
+The analyzer (`S1_1P`, `S1_3P` or `S1_3PN`) is created when the first valid frame arrives. It is called
+"Fluvius S1 meter" until you rename it; select it with the magnifying glass in the sidebar of the web interface. The device dialog shows
 the meter ID, sampling mode, frequency and frame counters (OK / CRC errors / lost / invalid).
 
 ## Notes / limitations
