@@ -177,10 +177,12 @@ bool DeviceS1::EnsureAnalyzer(const Frame_t &frame) {
   if(frame.Version != 0) LogFile::Warning("DeviceS1: unknown data format version %u, decoding as version 0", frame.Version);
   json AnalyzerConfig = ConfigFile::ReadConfig("/Devices/" + pSerial + "/Analyzer");
   if(AnalyzerConfig.is_object() == false) AnalyzerConfig = json::object();
-  if((AnalyzerConfig.contains("Name") == false) || (AnalyzerConfig["Name"] == "Unnamed analyzer")) {   //Never named by the user
-    AnalyzerConfig["Name"] = "Fluvius S1 meter";
-    ConfigFile::WriteConfig("/Devices/" + pSerial + "/Analyzer", AnalyzerConfig);
-  }
+  // Defaults for analyzers never configured by the user: S1 ports only exist in Belgium. A configured value is not changed.
+  bool Unnamed = (AnalyzerConfig.contains("Name") == false) || (AnalyzerConfig["Name"] == "Unnamed analyzer");
+  bool NoZone  = (AnalyzerConfig.contains("TimeZone") == false) || ((Unnamed == true) && (AnalyzerConfig["TimeZone"] == "UTC"));
+  if(Unnamed == true) AnalyzerConfig["Name"]     = "Fluvius S1 meter";
+  if(NoZone == true)  AnalyzerConfig["TimeZone"] = "Europe/Brussels";
+  if((Unnamed == true) || (NoZone == true)) ConfigFile::WriteConfig("/Devices/" + pSerial + "/Analyzer", AnalyzerConfig);
   AnalyzerSoft *New = new AnalyzerSoft(pSerial + ModeString, Mode, "/Devices/" + pSerial + "/Analyzer", Rate);
   pthread_mutex_lock(&pLock);
   pAnalyzer     = New;
