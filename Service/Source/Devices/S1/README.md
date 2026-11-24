@@ -72,6 +72,16 @@ the received byte rate and the serial port's line counters (framing errors, brea
 * **Framing errors or breaks only**: RXD+/RXD- swapped, missing termination or wrong speed.
 * **Changes on CTS only**: the meter is wired to the cable's CTS pair instead of RXD.
 
+## Tests and simulated meter
+
+`Service/Utils/S1Test` works without a meter, database or openZmeter build:
+
+* `make test` runs the unit tests of the frame decoder and stream parser (specification example, sign and range of the
+  values, every possible single bit error, split and shared-flag streams, corrupted and truncated frames).
+* `./s1sim.py` simulates a meter on a pseudo terminal and prints its path, to use as serial port for `s1monitor` or the
+  S1 device (the openZmeter service user needs access to it). `./s1sim.py 3p3900 --corrupt 3900` resembles the tested
+  Sagemcom meter; `--help` lists all modes. Baud rate, wiring and line errors can not be simulated this way.
+
 ## Configuration
 
 Device `S1` in *Settings » Devices*:
