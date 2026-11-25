@@ -7,71 +7,89 @@ the software. User-facing instructions are in the [main README](../README.md) an
 ## 1. Software architecture and data flow
 
 ```mermaid
-flowchart LR
-  subgraph HW["Hardware"]
-    METER["Fluvius digital meter<br/>S1 port, RJ12"]
-    ADAPTER["USB to RS-422 adapter<br/>2 Mbaud"]
-    BOARDS["openZmeter capture boards<br/>V1 / V2 / V3, USB"]
+flowchart TB
+  subgraph ROW1[" "]
+    direction LR
+    subgraph HW["Hardware"]
+      METER["Fluvius digital meter<br/>S1 port, RJ12"]
+      ADAPTER["USB to RS-422 adapter<br/>2 Mbaud"]
+      BOARDS["openZmeter capture boards<br/>V1 / V2 / V3, USB"]
+    end
+
+    subgraph DEV["Device drivers"]
+      S1SER["DeviceS1Serial<br/>raw 8N1 at 2 Mbaud"]
+      S1PARSE["DeviceS1Parser<br/>frame sync,<br/>X.25 CRC, decode"]
+      S1PROC["DeviceS1::ProcessFrame<br/>mode detection, gap fill,<br/>invalid sample hold"]
+      S1RATE["DeviceS1Rate<br/>real sample rate from<br/>telegram count and clock"]
+      OTHERDEV["DeviceV1 / V2 / V3<br/>DeviceVirtual (test signal)"]
+      SAMPLES(["Samples"])
+    end
+
+    METER -- "45 byte frame per sample,<br/>2-4 kHz, ~90-180 kB/s" --> ADAPTER --> S1SER --> S1PARSE --> S1PROC
+    S1PROC -- "telegram count" --> S1RATE -- "sample rate" --> S1PROC
+    BOARDS --> OTHERDEV
+    S1PROC -- "V, I per sample +<br/>meter frequency +<br/>sample rate" --> SAMPLES
+    OTHERDEV -- "V, I per sample" --> SAMPLES
   end
 
-  subgraph DEV["Device drivers (one thread each)"]
-    S1SER["DeviceS1Serial<br/>raw 8N1 at 2 Mbaud"]
-    S1PARSE["DeviceS1Parser<br/>frame sync, X.25 CRC, decode"]
-    S1PROC["DeviceS1::ProcessFrame<br/>mode detection, gap fill,<br/>invalid sample hold"]
-    S1RATE["DeviceS1Rate<br/>real sample rate from<br/>telegram count and clock"]
-    OTHERDEV["DeviceV1 / V2 / V3<br/>DeviceVirtual (test signal)"]
+  subgraph ROW2[" "]
+    direction LR
+    subgraph AN["AnalyzerSoft"]
+      INPUT(["Samples"])
+      ZC["ZeroCrossing<br/>band-pass filter,<br/>10 cycle blocks<br/>(~200 ms)"]
+      QUEUE[("block queue")]
+      CALC["Analyzer thread<br/>RMS, P, Q, energy,<br/>frequency, FFT:<br/>harmonics up to Nyquist"]
+      A200["200 ms result"]
+      EVT["Events<br/>dips, swells, RVC,<br/>interruptions,<br/>raw waveform snippets"]
+      AGG["Aggregations<br/>3 s, 1 min, 10 min,<br/>15 min, 1 h"]
+      ALARM["Alarms"]
+      CH["Cyclic histogram, Jolt"]
+      LIVE["Live consumers<br/>now values, wave stream"]
+    end
+
+    subgraph OUT["Storage and outputs"]
+      DB[("PostgreSQL<br/>one schema per analyzer")]
+      HTTP["HTTP server<br/>JSON / CBOR API"]
+      WEB["Web UI (Vue)"]
+      MQTT["MQTT broker"]
+      TG["Telegram"]
+      MODBUS["Modbus TCP"]
+      SYNC["Sync to a remote<br/>openZmeter"]
+      TARIFF["Tariffs and costs<br/>(15 min energy)"]
+      WATCHDOG["openzmeter-watchdog<br/>(separate service)"]
+    end
+
+    INPUT --> ZC --> QUEUE --> CALC --> A200
+    A200 --> EVT
+    A200 --> AGG
+    A200 --> CH
+    A200 --> LIVE
+    AGG --> ALARM
+    EVT --> DB
+    AGG --> DB
+    CH --> DB
+    ALARM --> DB
+    ALARM --> MQTT
+    ALARM --> TG
+    AGG --> MQTT
+    DB --> SYNC
+    DB --> TARIFF
+    DB --> HTTP
+    LIVE --> HTTP
+    TARIFF --> HTTP
+    HTTP --> WEB
+    WATCHDOG -. "checks every minute,<br/>restarts openZmeter" .-> HTTP
+    CALC -. "latest values" .-> MODBUS
   end
 
-  subgraph AN["AnalyzerSoft (one per measured installation)"]
-    ZC["ZeroCrossing<br/>band-pass filter,<br/>10 cycle blocks (~200 ms)"]
-    QUEUE[("block queue")]
-    CALC["Analyzer thread<br/>RMS, P, Q, energy, frequency<br/>FFT: harmonics up to Nyquist"]
-    A200["200 ms result"]
-    EVT["Events<br/>dips, swells, interruptions,<br/>RVC + raw waveform snippets"]
-    AGG["Aggregations<br/>3 s, 1 min, 10 min, 15 min, 1 h"]
-    ALARM["Alarms"]
-    CH["Cyclic histogram, Jolt"]
-    LIVE["Live consumers<br/>now values, wave stream"]
-  end
+  ROW1 == "samples to the analyzer<br/>of each device" ==> ROW2
 
-  subgraph OUT["Storage and outputs"]
-    DB[("PostgreSQL<br/>one schema per analyzer")]
-    HTTP["HTTP server<br/>JSON / CBOR API"]
-    WEB["Web UI (Vue)"]
-    MQTT["MQTT broker"]
-    TG["Telegram"]
-    MODBUS["Modbus TCP"]
-    SYNC["Sync to a remote<br/>openZmeter"]
-    TARIFF["Tariffs and costs<br/>(15 min energy)"]
-  end
-
-  METER -- "45 byte frame per sample,<br/>2-4 kHz, ~90-180 kB/s" --> ADAPTER --> S1SER --> S1PARSE --> S1PROC
-  S1PROC -- "telegram count" --> S1RATE -- "sample rate" --> S1PROC
-  BOARDS --> OTHERDEV
-  S1PROC -- "V, I per sample +<br/>meter frequency + sample rate" --> ZC
-  OTHERDEV -- "V, I per sample" --> ZC
-  ZC --> QUEUE --> CALC --> A200
-  A200 --> EVT
-  A200 --> AGG
-  A200 --> CH
-  A200 --> LIVE
-  AGG --> ALARM
-  EVT --> DB
-  AGG --> DB
-  CH --> DB
-  ALARM --> DB
-  ALARM --> MQTT
-  ALARM --> TG
-  AGG --> MQTT
-  DB --> SYNC
-  DB --> TARIFF
-  DB --> HTTP
-  LIVE --> HTTP
-  TARIFF --> HTTP
-  HTTP --> WEB
-  WATCHDOG["openzmeter-watchdog<br/>(separate service)"] -. "checks every minute,<br/>restarts openZmeter" .-> HTTP
-  CALC -. "latest values" .-> MODBUS
+  style ROW1 fill:none,stroke:none
+  style ROW2 fill:none,stroke:none
 ```
+
+Capture is drawn above, analysis and outputs below; the two "Samples" are the same stream. There is one AnalyzerSoft per
+measured installation.
 
 ### Blocks
 
@@ -198,8 +216,8 @@ telegrams, total load about 530 W): voltage +0.02 % on all phases, power L1 and 
 energy -0.19 % against the registers (528 Wh, resolution ±0.19 % over one hour). Voltage and current differences on most
 phases are about half a step of the P1 display (0.1 V, 0.01 A), as if P1 cuts off digits. On the lightly loaded L2
 openZmeter reads 0.016 A and 0.7 W more than P1 (0.24 A, 29 W). About 0.07 A RMS of components that P1 leaves out would
-explain the current (it disappears at higher loads), but not the power. Not confirmed. An earlier run (160 periods) gave the same L2
-difference (0.015 A, 0.8 W). P1 has no frequency, reactive power or harmonics, so these could not be compared.
+explain the current (it disappears at higher loads), but not the power. Not confirmed. An earlier run (160 periods) gave the
+same L2 difference (0.015 A, 0.8 W). P1 has no frequency, reactive power or harmonics, so these could not be compared.
 
 The watchdog was tested on the Pi by freezing openZmeter (with a shorter interval): three failed checks, then a restart.
 It did not intervene during the one hour comparison or the following night.
