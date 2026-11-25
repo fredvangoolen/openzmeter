@@ -15,6 +15,8 @@ streams instantaneous voltage and current samples of all phases (and the neutral
 2 to 4 kHz. openZmeter analyzes these samples like those from its own hardware, giving RMS values, active/reactive
 power and energy, frequency, harmonics, events, alarms, cyclic histograms, MQTT and tariffs.
 
+![Connection of the S1 port through an FTDI USB-RS422-WE cable to a Raspberry Pi running openZmeter](Docs/S1_connection.svg)
+
 * **Specification**: e-MUCS H ed. 1.3, section 4
   ([Fluvius](https://www.fluvius.be/sites/fluvius/files/2019-12/e-mucs_h_ed_1_3.pdf), copy in
   [`Docs/e-mucs_h_ed_1_3.pdf`](Docs/e-mucs_h_ed_1_3.pdf)).

@@ -1,0 +1,143 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1240 776" width="1240" height="776" font-family="Helvetica, Arial, sans-serif" role="img" aria-labelledby="t d">
+<title id="t">Connecting the S1 port to a Raspberry Pi running openZmeter</title>
+<desc id="d">The S1 socket (left) of the Fluvius digital meter is connected with an FTDI USB-RS422-WE cable to a USB port of a Raspberry Pi 4. Socket seen from the front, latch notch at the top, pin 1 at the right. Pin 3 GND to black, pin 4 BUS minus to white, pin 5 BUS plus to yellow. Other wires are not connected.</desc>
+<rect x="1" y="1" width="1238" height="774" rx="14" fill="#ffffff" stroke="#cbd2d9" stroke-width="2" />
+<text x="40" y="44" font-size="19" font-weight="700" fill="#1f2933" text-anchor="start">Overview</text>
+<rect x="40" y="66" width="310" height="262" rx="14" fill="#eef1f4" stroke="#1f2933" stroke-width="2" />
+<text x="195" y="94" font-size="16" font-weight="700" fill="#1f2933" text-anchor="middle">Fluvius digital meter</text>
+<rect x="152" y="112" width="170" height="48" rx="4" fill="#c3ccc4" stroke="#1f2933" stroke-width="1.5" />
+<text x="237" y="143" font-size="20" font-weight="400" fill="#1f2933" text-anchor="middle">230.5 V</text>
+<circle cx="180" cy="186" r="6" fill="#52606d"/><circle cx="206" cy="186" r="6" fill="#52606d"/>
+<path d="M60 112 H136 V212 H60 Z" fill="#c8d820" stroke="#1f2933" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+<text x="98" y="158" font-size="13" font-weight="400" fill="#1f2933" text-anchor="middle">cover</text>
+<text x="98" y="174" font-size="13" font-weight="400" fill="#1f2933" text-anchor="middle">(open)</text>
+<rect x="52" y="216" width="170" height="94" rx="6" fill="#d9dee3" stroke="#1f2933" stroke-width="1.5" />
+<rect x="64" y="240" width="67.2" height="58.800000000000004" rx="3.1500000000000004" fill="#3b4148" stroke="#1f2933" stroke-width="1.5" />
+<polygon points="74.5,290.4 74.5,263.1 81.85,263.1 81.85,255.75 89.2,255.75 89.2,248.4 106,248.4 106,255.75 113.35,255.75 113.35,263.1 120.7,263.1 120.7,290.4" fill="#101418" stroke="none"/>
+<rect x="78.28" y="273.6" width="2.73" height="16.8" fill="#e0b040"/>
+<rect x="85" y="273.6" width="2.73" height="16.8" fill="#e0b040"/>
+<rect x="91.72" y="273.6" width="2.73" height="16.8" fill="#e0b040"/>
+<rect x="98.44" y="273.6" width="2.73" height="16.8" fill="#e0b040"/>
+<rect x="105.16" y="273.6" width="2.73" height="16.8" fill="#e0b040"/>
+<rect x="111.88" y="273.6" width="2.73" height="16.8" fill="#e0b040"/>
+<rect x="142" y="240" width="67.2" height="58.800000000000004" rx="3.1500000000000004" fill="#3b4148" stroke="#1f2933" stroke-width="1.5" />
+<polygon points="152.5,290.4 152.5,263.1 159.85,263.1 159.85,255.75 167.2,255.75 167.2,248.4 184,248.4 184,255.75 191.35,255.75 191.35,263.1 198.7,263.1 198.7,290.4" fill="#101418" stroke="none"/>
+<rect x="156.28" y="273.6" width="2.73" height="16.8" fill="#e0b040"/>
+<rect x="163" y="273.6" width="2.73" height="16.8" fill="#e0b040"/>
+<rect x="169.72" y="273.6" width="2.73" height="16.8" fill="#e0b040"/>
+<rect x="176.44" y="273.6" width="2.73" height="16.8" fill="#e0b040"/>
+<rect x="183.16" y="273.6" width="2.73" height="16.8" fill="#e0b040"/>
+<rect x="189.88" y="273.6" width="2.73" height="16.8" fill="#e0b040"/>
+<text x="97" y="234" font-size="14" font-weight="700" fill="#1f2933" text-anchor="middle">S1</text>
+<text x="175" y="234" font-size="14" font-weight="700" fill="#52606d" text-anchor="middle">P1</text>
+<rect x="58" y="220" width="78" height="84" rx="6" fill="none" stroke="#0b7285" stroke-width="3" />
+<path d="M98 290 V352 H572 Q602 352 602 322 V246 Q602 220 620 220 H632" fill="none" stroke="#1f2933" stroke-width="9" stroke-linecap="round" stroke-linejoin="round" />
+<rect x="84" y="282" width="28" height="32" rx="3" fill="#f5f7fa" stroke="#1f2933" stroke-width="1.5" />
+<text x="122" y="344" font-size="13" font-weight="400" fill="#52606d" text-anchor="start">RJ12 plug</text>
+<text x="372" y="232" font-size="15" font-weight="700" fill="#1f2933" text-anchor="start">FTDI USB-RS422-WE cable</text>
+<text x="372" y="252" font-size="14" font-weight="400" fill="#52606d" text-anchor="start">RS-422, 2 Mbaud, receive only</text>
+<text x="372" y="272" font-size="14" font-weight="400" fill="#52606d" text-anchor="start">120 Ω termination built in</text>
+<rect x="628" y="203" width="62" height="34" rx="5" fill="#1f2933" stroke="#1f2933" stroke-width="1.5" />
+<text x="659" y="225" font-size="13" font-weight="700" fill="#fff" text-anchor="middle">FTDI</text>
+<rect x="690" y="208" width="34" height="24" rx="2" fill="#cbd2d9" stroke="#1f2933" stroke-width="1.5" />
+<rect x="716" y="90" width="276" height="206" rx="12" fill="#2f8f4e" stroke="#1f2933" stroke-width="2" />
+<circle cx="732" cy="106" r="6" fill="#fff" stroke="#1f2933"/>
+<circle cx="976" cy="106" r="6" fill="#fff" stroke="#1f2933"/>
+<circle cx="732" cy="280" r="6" fill="#fff" stroke="#1f2933"/>
+<circle cx="976" cy="280" r="6" fill="#fff" stroke="#1f2933"/>
+<rect x="706" y="130" width="58" height="44" rx="3" fill="#b8c1ca" stroke="#1f2933" stroke-width="1.5" />
+<rect x="706" y="198" width="58" height="44" rx="3" fill="#b8c1ca" stroke="#1f2933" stroke-width="1.5" />
+<rect x="716" y="206" width="42" height="28" rx="2" fill="#1f2933" stroke="#1f2933" stroke-width="1" />
+<rect x="716" y="138" width="42" height="28" rx="2" fill="#1f2933" stroke="#1f2933" stroke-width="1" />
+<rect x="690" y="208" width="40" height="24" rx="2" fill="#cbd2d9" stroke="#1f2933" stroke-width="1.5" />
+<text x="735" y="189" font-size="13" font-weight="700" fill="#fff" text-anchor="middle">USB</text>
+<rect x="776" y="140" width="204" height="104" rx="8" fill="#ffffff" stroke="#1f2933" stroke-width="1.5" />
+<text x="878" y="170" font-size="20" font-weight="700" fill="#1f2933" text-anchor="middle">openZmeter</text>
+<text x="878" y="194" font-size="14" font-weight="400" fill="#52606d" text-anchor="middle">S1 driver and analyzer</text>
+<text x="878" y="214" font-size="14" font-weight="400" fill="#52606d" text-anchor="middle">PostgreSQL database</text>
+<text x="878" y="234" font-size="14" font-weight="400" fill="#52606d" text-anchor="middle">web interface</text>
+<text x="854" y="122" font-size="15" font-weight="700" fill="#fff" text-anchor="middle">Raspberry Pi 4 (2 GB or more)</text>
+<path d="M992 193 H1066" fill="none" stroke="#1f2933" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="7 6"/>
+<text x="1030" y="180" font-size="13" font-weight="400" fill="#52606d" text-anchor="middle">home</text>
+<text x="1030" y="212" font-size="13" font-weight="400" fill="#52606d" text-anchor="middle">network</text>
+<rect x="1068" y="132" width="142" height="100" rx="8" fill="#ffffff" stroke="#1f2933" stroke-width="2" />
+<rect x="1068" y="132" width="142" height="22" rx="8" fill="#e4e7eb" stroke="#1f2933" stroke-width="2" />
+<circle cx="1082" cy="143" r="4" fill="#9aa5b1"/>
+<circle cx="1095" cy="143" r="4" fill="#9aa5b1"/>
+<circle cx="1108" cy="143" r="4" fill="#9aa5b1"/>
+<path d="M1082 198 L1082 198.0 L1085 189.6 L1088 182.0 L1091 176.2 L1094 172.8 L1097 172.1 L1100 174.2 L1103 178.9 L1106 185.6 L1109 193.7 L1112 202.3 L1115 210.4 L1118 217.1 L1121 221.8 L1124 223.9 L1127 223.2 L1130 219.8 L1133 214.0 L1136 206.4 L1139 198.0 L1142 189.6 L1145 182.0 L1148 176.2 L1151 172.8 L1154 172.1 L1157 174.2 L1160 178.9 L1163 185.6 L1166 193.7 L1169 202.3 L1172 210.4 L1175 217.1 L1178 221.8 L1181 223.9 L1184 223.2 L1187 219.8 L1190 214.0 L1193 206.4 L1196 198.0" fill="none" stroke="#0b7285" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" />
+<text x="1139" y="256" font-size="15" font-weight="700" fill="#1f2933" text-anchor="middle">Web browser</text>
+<text x="1139" y="275" font-size="13" font-weight="400" fill="#52606d" text-anchor="middle">http://&lt;pi address&gt;/</text>
+<line x1="40" y1="384" x2="1200" y2="384" stroke="#cbd2d9" stroke-width="2"/>
+<text x="40" y="418" font-size="19" font-weight="700" fill="#1f2933" text-anchor="start">Wiring: meter S1 socket to cable</text>
+<rect x="44" y="440" width="230.4" height="201.6" rx="10.8" fill="#3b4148" stroke="#1f2933" stroke-width="1.5" />
+<polygon points="80,612.8 80,519.2 105.2,519.2 105.2,494 130.4,494 130.4,468.8 188,468.8 188,494 213.2,494 213.2,519.2 238.4,519.2 238.4,612.8" fill="#101418" stroke="none"/>
+<rect x="92.96" y="555.2" width="9.36" height="57.6" fill="#e0b040"/>
+<rect x="116" y="555.2" width="9.36" height="57.6" fill="#e0b040"/>
+<rect x="139.04" y="555.2" width="9.36" height="57.6" fill="#e0b040"/>
+<rect x="162.08" y="555.2" width="9.36" height="57.6" fill="#e0b040"/>
+<rect x="185.12" y="555.2" width="9.36" height="57.6" fill="#e0b040"/>
+<rect x="208.16" y="555.2" width="9.36" height="57.6" fill="#e0b040"/>
+<text x="159.2" y="458.8" font-size="13" font-weight="400" fill="#fff" text-anchor="middle">latch notch at the top</text>
+<text x="97.6" y="542.6" font-size="17" font-weight="400" fill="#9aa5b1" text-anchor="middle">6</text>
+<text x="120.7" y="542.6" font-size="17" font-weight="700" fill="#fff" text-anchor="middle">5</text>
+<text x="143.7" y="542.6" font-size="17" font-weight="700" fill="#fff" text-anchor="middle">4</text>
+<text x="166.8" y="542.6" font-size="17" font-weight="700" fill="#fff" text-anchor="middle">3</text>
+<text x="189.8" y="542.6" font-size="17" font-weight="400" fill="#9aa5b1" text-anchor="middle">2</text>
+<text x="212.8" y="542.6" font-size="17" font-weight="400" fill="#9aa5b1" text-anchor="middle">1</text>
+<text x="288.4" y="464" font-size="15" font-weight="700" fill="#1f2933" text-anchor="start">S1 socket,</text>
+<text x="288.4" y="483" font-size="15" font-weight="400" fill="#1f2933" text-anchor="start">seen from the front</text>
+<text x="288.4" y="506" font-size="15" font-weight="700" fill="#c92a2a" text-anchor="start">Pin 1 is at the RIGHT</text>
+<text x="288.4" y="532" font-size="14" font-weight="400" fill="#52606d" text-anchor="start">Pins 1, 2 and 6 are not used</text>
+<path d="M166.8 598.4 V652 Q166.8 664 178.8 664 H640" fill="none" stroke="#9aa5b1" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" />
+<path d="M166.8 598.4 V652 Q166.8 664 178.8 664 H640" fill="none" stroke="#1f2933" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round" />
+<path d="M120.7 598.4 V708 Q120.7 720 132.7 720 H300 L300 720.0 L304 719.4 L308 717.8 L312 715.3 L316 712.2 L320 708.6 L324 705.0 L328 701.7 L332 698.9 L336 697.0 L340 696.1 L344 696.2 L348 697.5 L352 699.7 L356 702.7 L360 706.2 L364 709.8 L368 713.3 L372 716.3 L376 718.5 L380 719.8 L384 719.9 L388 719.0 L392 717.1 L396 714.3 L400 711.0 L404 707.4 L408 703.8 L412 700.7 L416 698.2 L420 696.6 L424 696.0 L428 696.6 L432 698.2 L436 700.7 L440 703.8 L444 707.4 L448 711.0 L452 714.3 L456 717.1 L460 719.0 L464 719.9 L468 719.8 L472 718.5 L476 716.3 L480 713.3 L484 709.8 L488 706.2 L492 702.7 L496 699.7 L500 697.5 L504 696.2 L508 696.1 L512 697.0 L516 698.9 L520 701.7 L524 705.0 L528 708.6 L532 712.2 L536 715.3 L540 717.8 L544 719.4 L548 720.0 H640" fill="none" stroke="#1f2933" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" />
+<path d="M120.7 598.4 V708 Q120.7 720 132.7 720 H300 L300 720.0 L304 719.4 L308 717.8 L312 715.3 L316 712.2 L320 708.6 L324 705.0 L328 701.7 L332 698.9 L336 697.0 L340 696.1 L344 696.2 L348 697.5 L352 699.7 L356 702.7 L360 706.2 L364 709.8 L368 713.3 L372 716.3 L376 718.5 L380 719.8 L384 719.9 L388 719.0 L392 717.1 L396 714.3 L400 711.0 L404 707.4 L408 703.8 L412 700.7 L416 698.2 L420 696.6 L424 696.0 L428 696.6 L432 698.2 L436 700.7 L440 703.8 L444 707.4 L448 711.0 L452 714.3 L456 717.1 L460 719.0 L464 719.9 L468 719.8 L472 718.5 L476 716.3 L480 713.3 L484 709.8 L488 706.2 L492 702.7 L496 699.7 L500 697.5 L504 696.2 L508 696.1 L512 697.0 L516 698.9 L520 701.7 L524 705.0 L528 708.6 L532 712.2 L536 715.3 L540 717.8 L544 719.4 L548 720.0 H640" fill="none" stroke="#f7c600" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round" />
+<path d="M143.7 598.4 V684 Q143.7 696 155.7 696 H300 L300 696.0 L304 696.6 L308 698.2 L312 700.7 L316 703.8 L320 707.4 L324 711.0 L328 714.3 L332 717.1 L336 719.0 L340 719.9 L344 719.8 L348 718.5 L352 716.3 L356 713.3 L360 709.8 L364 706.2 L368 702.7 L372 699.7 L376 697.5 L380 696.2 L384 696.1 L388 697.0 L392 698.9 L396 701.7 L400 705.0 L404 708.6 L408 712.2 L412 715.3 L416 717.8 L420 719.4 L424 720.0 L428 719.4 L432 717.8 L436 715.3 L440 712.2 L444 708.6 L448 705.0 L452 701.7 L456 698.9 L460 697.0 L464 696.1 L468 696.2 L472 697.5 L476 699.7 L480 702.7 L484 706.2 L488 709.8 L492 713.3 L496 716.3 L500 718.5 L504 719.8 L508 719.9 L512 719.0 L516 717.1 L520 714.3 L524 711.0 L528 707.4 L532 703.8 L536 700.7 L540 698.2 L544 696.6 L548 696.0 H640" fill="none" stroke="#1f2933" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" />
+<path d="M143.7 598.4 V684 Q143.7 696 155.7 696 H300 L300 696.0 L304 696.6 L308 698.2 L312 700.7 L316 703.8 L320 707.4 L324 711.0 L328 714.3 L332 717.1 L336 719.0 L340 719.9 L344 719.8 L348 718.5 L352 716.3 L356 713.3 L360 709.8 L364 706.2 L368 702.7 L372 699.7 L376 697.5 L380 696.2 L384 696.1 L388 697.0 L392 698.9 L396 701.7 L400 705.0 L404 708.6 L408 712.2 L412 715.3 L416 717.8 L420 719.4 L424 720.0 L428 719.4 L432 717.8 L436 715.3 L440 712.2 L444 708.6 L448 705.0 L452 701.7 L456 698.9 L460 697.0 L464 696.1 L468 696.2 L472 697.5 L476 699.7 L480 702.7 L484 706.2 L488 709.8 L492 713.3 L496 716.3 L500 718.5 L504 719.8 L508 719.9 L512 719.0 L516 717.1 L520 714.3 L524 711.0 L528 707.4 L532 703.8 L536 700.7 L540 698.2 L544 696.6 L548 696.0 H640" fill="none" stroke="#ffffff" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round" />
+<text x="424.0" y="748" font-size="13" font-weight="400" fill="#52606d" text-anchor="middle">twisted pair</text>
+<rect x="640" y="620" width="62" height="124" rx="8" fill="#1f2933" stroke="#1f2933" stroke-width="1.5" />
+<text transform="translate(677 682) rotate(-90)" font-size="15" font-weight="700" fill="#fff" text-anchor="middle">FTDI cable</text>
+<text x="726" y="632" font-size="13" font-weight="700" fill="#52606d" text-anchor="start">Wire</text>
+<text x="836" y="632" font-size="13" font-weight="700" fill="#52606d" text-anchor="start">Cable signal</text>
+<text x="926" y="632" font-size="13" font-weight="700" fill="#52606d" text-anchor="start">Meter</text>
+<rect x="726" y="651" width="26" height="18" rx="4" fill="#1f2933" stroke="#1f2933" stroke-width="1.5" />
+<text x="764" y="666" font-size="15" font-weight="700" fill="#1f2933" text-anchor="start">Black</text>
+<text x="836" y="666" font-size="15" font-weight="400" fill="#1f2933" text-anchor="start">GND</text>
+<text x="926" y="666" font-size="15" font-weight="400" fill="#52606d" text-anchor="start">pin 3, GND</text>
+<rect x="726" y="681" width="26" height="18" rx="4" fill="#ffffff" stroke="#1f2933" stroke-width="1.5" />
+<text x="764" y="696" font-size="15" font-weight="700" fill="#1f2933" text-anchor="start">White</text>
+<text x="836" y="696" font-size="15" font-weight="400" fill="#1f2933" text-anchor="start">RXD−</text>
+<text x="926" y="696" font-size="15" font-weight="400" fill="#52606d" text-anchor="start">pin 4, BUS_M (−)</text>
+<rect x="726" y="711" width="26" height="18" rx="4" fill="#f7c600" stroke="#1f2933" stroke-width="1.5" />
+<text x="764" y="726" font-size="15" font-weight="700" fill="#1f2933" text-anchor="start">Yellow</text>
+<text x="836" y="726" font-size="15" font-weight="400" fill="#1f2933" text-anchor="start">RXD+</text>
+<text x="926" y="726" font-size="15" font-weight="400" fill="#52606d" text-anchor="start">pin 5, BUS_P (+)</text>
+<rect x="640" y="440" width="560" height="146" rx="10" fill="#f5f7fa" stroke="#cbd2d9" stroke-width="1.5" />
+<text x="658" y="466" font-size="15" font-weight="700" fill="#1f2933" text-anchor="start">Do not connect: insulate each wire separately</text>
+<rect x="658" y="483" width="26" height="18" rx="4" fill="#e03131" stroke="#1f2933" stroke-width="1.5" />
+<text x="694" y="498" font-size="15" font-weight="400" fill="#1f2933" text-anchor="start">Red</text>
+<text x="760" y="498" font-size="14" font-weight="400" fill="#52606d" text-anchor="start">TXD−</text>
+<rect x="838" y="483" width="26" height="18" rx="4" fill="#f76707" stroke="#1f2933" stroke-width="1.5" />
+<text x="874" y="498" font-size="15" font-weight="400" fill="#1f2933" text-anchor="start">Orange</text>
+<text x="940" y="498" font-size="14" font-weight="400" fill="#52606d" text-anchor="start">TXD+</text>
+<rect x="1018" y="483" width="26" height="18" rx="4" fill="#2f9e44" stroke="#1f2933" stroke-width="1.5" />
+<text x="1054" y="498" font-size="15" font-weight="400" fill="#1f2933" text-anchor="start">Green</text>
+<text x="1120" y="498" font-size="14" font-weight="400" fill="#52606d" text-anchor="start">RTS+</text>
+<rect x="658" y="515" width="26" height="18" rx="4" fill="#1971c2" stroke="#1f2933" stroke-width="1.5" />
+<text x="694" y="530" font-size="15" font-weight="400" fill="#1f2933" text-anchor="start">Blue</text>
+<text x="760" y="530" font-size="14" font-weight="400" fill="#52606d" text-anchor="start">RTS−</text>
+<rect x="838" y="515" width="26" height="18" rx="4" fill="#7a4a21" stroke="#1f2933" stroke-width="1.5" />
+<text x="874" y="530" font-size="15" font-weight="400" fill="#1f2933" text-anchor="start">Brown</text>
+<text x="940" y="530" font-size="14" font-weight="400" fill="#52606d" text-anchor="start">CTS+</text>
+<rect x="1018" y="515" width="26" height="18" rx="4" fill="#868e96" stroke="#1f2933" stroke-width="1.5" />
+<text x="1054" y="530" font-size="15" font-weight="400" fill="#1f2933" text-anchor="start">Grey</text>
+<text x="1120" y="530" font-size="14" font-weight="400" fill="#52606d" text-anchor="start">CTS−</text>
+<text x="658" y="566" font-size="13" font-weight="400" fill="#52606d" text-anchor="start">Red, orange, green and blue are outputs: they would drive against the meter.</text>
+<rect x="1062" y="608" width="138" height="144" rx="10" fill="#fff9db" stroke="#e0b040" stroke-width="1.5" />
+<text x="1076" y="634" font-size="14" font-weight="700" fill="#1f2933" text-anchor="start">Termination</text>
+<text x="1076" y="657" font-size="14" font-weight="400" fill="#1f2933" text-anchor="start">120 Ω is built into</text>
+<text x="1076" y="680" font-size="14" font-weight="400" fill="#1f2933" text-anchor="start">this cable.</text>
+<text x="1076" y="703" font-size="14" font-weight="400" fill="#1f2933" text-anchor="start">Do not add</text>
+<text x="1076" y="726" font-size="14" font-weight="400" fill="#1f2933" text-anchor="start">a second one.</text>
+</svg>
