@@ -2,8 +2,7 @@
 
 Reads raw voltage/current samples from the S1 high speed port of Flemish (Fluvius) digital electricity meters
 (e-MUCS H ed. 1.3, section 4) and feeds them to a standard `AnalyzerSoft`. The specification is published by
-[Fluvius](https://www.fluvius.be/sites/fluvius/files/2019-12/e-mucs_h_ed_1_3.pdf) (copy in
-[`Docs/e-mucs_h_ed_1_3.pdf`](../../../../Docs/e-mucs_h_ed_1_3.pdf)).
+[Fluvius](https://www.fluvius.be/sites/fluvius/files/2019-12/e-mucs_h_ed_1_3.pdf).
 
 ## Hardware
 
@@ -20,7 +19,7 @@ Reads raw voltage/current samples from the S1 high speed port of Flemish (Fluviu
 
 ### Wiring an FTDI USB-RS422-WE cable
 
-Wire colours from FTDI's datasheet ([DS_USB_RS422_CABLES](../../../../Docs/DS_USB_RS422_CABLES.pdf), FT_000116 version
+Wire colours from FTDI's datasheet ([DS_USB_RS422_CABLES](https://www.mouser.com/datasheet/2/163/DS_USB_RS422_CABLES-8618.pdf), FT_000116 version
 1.3, table 5.1). The cable is wire-ended and supports up to 3 Mbaud. It **has a built-in 120 Ω termination** across
 RXD+/RXD- (R1 in the schematic, figure 7.1), so no external resistor is needed. To check it, unplug the cable from the
 meter and measure between Yellow and White: about 120 Ω, whether or not the cable is plugged into USB. (Indirectly

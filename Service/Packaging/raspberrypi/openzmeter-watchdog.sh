@@ -4,6 +4,8 @@
 # hangs. Nothing is done while the service is stopped or (re)starting, shortly after its start, or without database.
 # Runs as openzmeter-watchdog.service. Messages: journalctl -u openzmeter-watchdog
 # ----------------------------------------------------------------------------------------------------------------------
+# This file is part of openZmeter, licensed under the GNU General Public License, version 3 or (at your option) any later
+# version, without any warranty. See the LICENSE file. SPDX-License-Identifier: GPL-3.0-or-later
 set -u
 INTERVAL="${INTERVAL:-60}"        # seconds between checks
 FAILURES="${FAILURES:-3}"         # failed checks in a row before a restart

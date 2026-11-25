@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+# This file is part of openZmeter, licensed under the GNU General Public License, version 3 or (at your option) any later
+# version, without any warranty. See the LICENSE file. SPDX-License-Identifier: GPL-3.0-or-later
 """Simulated Fluvius S1 meter on a pseudo terminal, to try s1monitor or the openZmeter S1 driver without a meter.
 
 Prints the pseudo terminal to use as serial port, then streams S1 frames in real time until Ctrl-C (or -t seconds).

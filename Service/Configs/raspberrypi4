@@ -1,3 +1,6 @@
+# This file is part of openZmeter, licensed under the GNU General Public License, version 3 or (at your option) any later
+# version, without any warranty. See the LICENSE file. SPDX-License-Identifier: GPL-3.0-or-later
+
 #Native build on a Raspberry Pi 4 running Raspberry Pi OS / Debian (64 bit recommended, 32 bit armhf also works) ---------
 #Usage (on the Pi): make CONFIG=Configs/raspberrypi4 -j2
 #See Packaging/raspberrypi/install.sh for a complete install (dependencies, database, systemd service)

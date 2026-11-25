@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+# This file is part of openZmeter, licensed under the GNU General Public License, version 3 or (at your option) any later
+# version, without any warranty. See the LICENSE file. SPDX-License-Identifier: GPL-3.0-or-later
 """Standalone check of the P1 port of a Fluvius digital meter, and reference for openZmeter (S1) measurements.
 
 Without options: shows voltage, current and active power per phase, once per telegram, and checks the telegram CRC.

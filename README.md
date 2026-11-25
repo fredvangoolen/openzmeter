@@ -17,9 +17,8 @@ power and energy, frequency, harmonics, events, alarms, cyclic histograms, MQTT 
 
 ![Connection of the S1 port through an FTDI USB-RS422-WE cable to a Raspberry Pi running openZmeter](Docs/S1_connection.svg)
 
-* **Specification**: e-MUCS H ed. 1.3, section 4
-  ([Fluvius](https://www.fluvius.be/sites/fluvius/files/2019-12/e-mucs_h_ed_1_3.pdf), copy in
-  [`Docs/e-mucs_h_ed_1_3.pdf`](Docs/e-mucs_h_ed_1_3.pdf)).
+* **Specification**: e-MUCS H ed. 1.3, section 4, published by
+  [Fluvius](https://www.fluvius.be/sites/fluvius/files/2019-12/e-mucs_h_ed_1_3.pdf).
 * **Activation**: the S1 port is off by default. Ask Fluvius to activate it for your meter.
 * **Hardware**: a USB to RS-422 adapter that can receive at exactly 2 Mbaud (e.g. FTDI FT232R/FT232H based) connected
   to the RJ12 S1 socket of the meter: pin 3 = GND, pin 4 = BUS- and pin 5 = BUS+. The line needs one 120 Ω termination
@@ -45,3 +44,18 @@ power and energy, frequency, harmonics, events, alarms, cyclic histograms, MQTT 
 
 Details are in the [S1 driver README](Service/Source/Devices/S1/README.md). Architecture, data flow and storage
 notes are in [`Docs/NOTES.md`](Docs/NOTES.md).
+
+License and changes
+===============
+
+This is a **modified version of openZmeter**. The original is [eauel/openzmeter](https://github.com/eauel/openzmeter)
+([openzmeter.com](https://openzmeter.com)). Modified by [fredvangoolen](https://github.com/fredvangoolen) since
+19 November 2026: support for the S1 port of Fluvius digital meters, an installer for the Raspberry Pi, test tools, and
+corrections to existing calculations (listed in [`Docs/NOTES.md`](Docs/NOTES.md)). The commit history has all changes
+with their dates.
+
+Like the original, it is licensed under the GNU General Public License, version 3 or (as stated in the source files) any
+later version: see [`LICENSE`](LICENSE). It comes without any warranty. Libraries in `Service/Libs` have their own licenses, included there.
+
+This project is not affiliated with or endorsed by Fluvius, FTDI or the makers of openZmeter. Product names are only used
+to describe what it works with.

@@ -16,6 +16,8 @@
 #   --http-port N      Port of the web interface (default 80, or the port of an existing config). Use another port
 #                      (e.g. 8080) when port 80 is already used, for example by Pi-hole.
 # ----------------------------------------------------------------------------------------------------------------------
+# This file is part of openZmeter, licensed under the GNU General Public License, version 3 or (at your option) any later
+# version, without any warranty. See the LICENSE file. SPDX-License-Identifier: GPL-3.0-or-later
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -47,7 +49,7 @@ while [ $# -gt 0 ]; do
     --jobs)       shift; JOBS="${1:?--jobs needs a value}" ;;
     --s1-port)    shift; S1_PORT="${1:?--s1-port needs a value}" ;;
     --http-port)  shift; HTTP_PORT="${1:?--http-port needs a value}" ;;
-    -h|--help)    sed -n '2,19p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
+    -h|--help)    sed -n '2,18p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
     *)            die "Unknown option '$1' (use --help)" ;;
   esac
   shift
