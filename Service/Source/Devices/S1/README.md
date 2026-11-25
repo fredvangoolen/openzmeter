@@ -21,10 +21,10 @@ Reads raw voltage/current samples from the S1 high speed port of Flemish (Fluviu
 ### Wiring an FTDI USB-RS422-WE cable
 
 Wire colours from FTDI's datasheet ([DS_USB_RS422_CABLES](../../../../Docs/DS_USB_RS422_CABLES.pdf), FT_000116 version
-1.3, table 5.1). The cable is
-wire-ended and supports up to 3 Mbaud. It **has a built-in 120 Ω termination** across RXD+/RXD- (R1 in the
-schematic, figure 7.1), so no external resistor is needed. To check it, unplug the cable from the meter and measure
-between Yellow and White: about 120 Ω, whether or not the cable is plugged into USB.
+1.3, table 5.1). The cable is wire-ended and supports up to 3 Mbaud. It **has a built-in 120 Ω termination** across
+RXD+/RXD- (R1 in the schematic, figure 7.1), so no external resistor is needed. To check it, unplug the cable from the
+meter and measure between Yellow and White: about 120 Ω, whether or not the cable is plugged into USB. (Indirectly
+confirmed here: with an extra 100 Ω in parallel the unplugged cable measured 55.5 Ω.)
 
 | Meter RJ12 pin | S1 signal | Cable wire | Cable signal |
 |---|---|---|---|
@@ -76,8 +76,9 @@ the received byte rate and the serial port's line counters (framing errors, brea
 
 `Service/Utils/S1Test` works without a meter, database or openZmeter build:
 
-* `make test` runs the unit tests of the sample rate measurement, frame decoder and stream parser (specification example, sign and range of the
-  values, every possible single bit error, split and shared-flag streams, corrupted and truncated frames).
+* `make test` runs the unit tests of the sample rate measurement, frame decoder and stream parser (specification
+  example, sign and range of the values, every possible single bit error, split and shared-flag streams, corrupted and
+  truncated frames).
 * `./s1sim.py` simulates a meter on a pseudo terminal and prints its path, to use as serial port for `s1monitor` or the
   S1 device (the openZmeter service user needs access to it). `./s1sim.py 3p3900 --corrupt 3906` resembles the tested
   Sagemcom meter; `--help` lists all modes. Baud rate, wiring and line errors can not be simulated this way.
@@ -98,9 +99,19 @@ Device `S1` in *Settings » Devices*:
 * **Mode**: `AUTO` picks the mode from the frame flags: single phase gives `1PHASE`, poly phase with neutral current
   gives `3PHASE+N`, and poly phase without it gives `3PHASE`. You can also force a mode.
 
-The analyzer (`S1_1P`, `S1_3P` or `S1_3PN`) is created when the first valid frame arrives. It is called
-"Fluvius S1 meter", with time zone Europe/Brussels, until you configure it yourself; select it with the magnifying glass in the sidebar of the web interface. The device dialog shows
-the meter ID, sampling mode, frequency and frame counters (OK / CRC errors / lost / invalid).
+The analyzer (`S1_1P`, `S1_3P` or `S1_3PN`) is created when the first valid frame arrives. Select it with the magnifying
+glass in the sidebar of the web interface.
+
+* **Defaults**: an analyzer that was never configured is called "Fluvius S1 meter" and gets time zone Europe/Brussels
+  (S1 ports only exist in Belgium). The same goes for one that still has openZmeter's own defaults ("Unnamed analyzer",
+  UTC). A name or time zone you set yourself is kept.
+* **Changing the mode** creates another analyzer with its own, initially empty, history. The old history stays in the
+  database, but the old analyzer is no longer shown.
+
+The device dialog shows the meter ID, sampling mode, frequency and frame counters (OK / CRC errors / lost / invalid).
+It shows what the meter sends: the announced sample rate, and 0 Hz for a meter that does not fill in the frequency field
+(such as the tested Sagemcom). The analyzer measures the frequency itself then. The measured sample rate is in the log:
+`journalctl -u openzmeter | grep measured`.
 
 ## Notes / limitations
 
@@ -108,11 +119,13 @@ the meter ID, sampling mode, frequency and frame counters (OK / CRC errors / los
   25th-40th harmonic, depending on the meter) are reported as 0.
 * Sample rate: the meter announces it in steps of 100 Hz (e-MUCS H 4.2.3), too coarse to measure frequency and energy.
   As it sends exactly one telegram per sample (4.2.4), the driver measures the real rate by counting telegrams against
-  the system clock (`DeviceS1Rate`). The clock must be synchronized (NTP). The announced rate is used for the first
-  20 seconds, until the measured one is known.
+  the system clock (`DeviceS1Rate`). The clock must be synchronized (NTP). The announced rate is used for about the
+  first 17 seconds after every start, until the measured one is known; on the tested meter (announces 3900 Hz, really
+  3906.25 Hz) frequency reads 0.16 % low during that time.
 * Meters sampling at a fixed number of samples per period: grid frequency is taken from the frequency field in each
   frame, and energy uses the effective samplerate (samples per period × frequency). Without this, frequency would
-  always read nominal.
+  always read nominal. If such a meter leaves the frequency field at 0, the measured sample rate is used instead. Only
+  tested with simulated frames.
 * Lost frames (sequence gaps up to 16) are filled with the last sample to keep timing; samples flagged invalid by
   the meter are replaced by the last valid sample.
 
@@ -121,11 +134,18 @@ the meter ID, sampling mode, frequency and frame counters (OK / CRC errors / los
 `Packaging/raspberrypi/install.sh` builds openZmeter on the Pi (`Configs/raspberrypi4`) and installs it with a local
 PostgreSQL database and a systemd service (`openzmeter.service`), with the S1 device preconfigured but disabled. Run
 it from a clone of the repository: `sudo Service/Packaging/raspberrypi/install.sh`. A 2 GB board is enough. If the
-build runs out of memory, enlarge the swap or use `--jobs 1`.
+build runs out of memory, enlarge the swap or use `--jobs 1`. With more than one serial adapter connected (a P1 cable,
+for example) pass the S1 one with `--s1-port /dev/serial/by-id/...`.
 
-A watchdog service (`openzmeter-watchdog.service`) restarts openZmeter when its web interface does not answer for three
-minutes. Messages: `journalctl -u openzmeter-watchdog`. To turn it off: `sudo systemctl disable --now
-openzmeter-watchdog`.
+The clone is only used for building: the running program is the copy in `/usr/local/sbin`. To update, run `git pull` in
+the clone and then the installer again (`--skip-deps` is enough if the dependencies did not change); it keeps the
+settings and the database. `git pull` alone does not change the running program.
+
+A watchdog service (`openzmeter-watchdog.service`) checks every minute whether the web interface answers, and restarts
+openZmeter after three failed checks in a row. It does nothing in the first three minutes after a start, while
+openZmeter is stopped, or while PostgreSQL is not running. It only notices that the web interface does not answer, not
+that measurements stop (an unplugged cable, for example). Messages: `journalctl -u openzmeter-watchdog`. To turn it off:
+`sudo systemctl disable --now openzmeter-watchdog` (running the installer again turns it on again).
 
 The Pi can be shared with other services. If something else already uses port 80 (Pi-hole's web interface, for
 example), use `--http-port 8080`; the installer refuses to continue when the chosen port is taken. The build is the
